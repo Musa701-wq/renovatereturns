@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "996400104370",
+    "project_id": "renovateai-91838",
+    "storage_bucket": "renovateai-91838.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:996400104370:android:6f03d8782e87717505daab",
+        "android_client_info": {
+          "package_name": "com.example.ai_remodeling"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "996400104370-7u5ikqag39ppf0a8s8jnn75u834qjbhf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDvGpvSehWPVkslBxfvxM5KAt4x1twCK_Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "996400104370-7u5ikqag39ppf0a8s8jnn75u834qjbhf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,661 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
+import '../in_app_purchase/credit_manager.dart';
+import '../in_app_purchase/credit_purchase_screen.dart';
+import '../provider/upload_provider.dart';
+import '../screens/result_screen.dart';
+import '../services/api_services.dart';
+import '../widgets/generate_button.dart';
+import '../widgets/image_selection_widget.dart';
+import '../widgets/wall_card.dart';
+import '../utils/theme.dart';
+
+class WaalRedesign extends StatefulWidget {
+  const WaalRedesign({super.key});
+
+  @override
+  State<WaalRedesign> createState() => _WaalRedesignState();
+}
+
+class _WaalRedesignState extends State<WaalRedesign> {
+  final TextEditingController _descriptionController = TextEditingController();
+  bool _showDescriptionField = false;
+  static const int _creditsPerGeneration = 5;
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final bool isTablet = screenWidth >= 600;
+    final double listHeight = AppTheme.responsiveSize(
+      context,
+      phone: 170,
+      tablet: 220,
+    );
+    final double afterListSpacing = AppTheme.responsiveSize(
+      context,
+      phone: 16,
+      tablet: 20,
+    );
+    final double descriptionToButtonSpacing = AppTheme.responsiveSize(
+      context,
+      phone: 80,
+      tablet: 110,
+    );
+
+    return Scaffold(
+      backgroundColor: AppTheme.secondaryColor,
+
+      appBar: AppBar(
+        title: const Text('Wall Redesign'),
+        backgroundColor: AppTheme.secondaryColor,
+        foregroundColor: AppTheme.primaryColor,
+        leading: CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: () {
+            final uploadProvider = Provider.of<UploadProvider>(
+              context,
+              listen: false,
+            );
+            uploadProvider.reset();
+            Navigator.pop(context);
+          },
+          child: const Icon(CupertinoIcons.back),
+        ),
+      ),
+      body: Consumer<UploadProvider>(
+        builder: (context, uploadProvider, child) {
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Padding(
+                    padding: EdgeInsets.all(
+                      AppTheme.responsivePadding(context),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // IMAGE SELECTION WIDGET
+                        ImageSelectionWidget(),
+
+                        SizedBox(
+                          height: AppTheme.responsiveSize(
+                            context,
+                            phone: 40,
+                            tablet: 55,
+                          ),
+                        ),
+
+                        // WALL DESIGNS - HORIZONTAL LIST
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Select Wall Design',
+                              style: TextStyle(
+                                fontSize: AppTheme.responsiveFont(
+                                  context,
+                                  phone: 16,
+                                  tablet: 22,
+                                ),
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                            SizedBox(height: afterListSpacing),
+                            _buildWallDesignsList(uploadProvider, listHeight),
+                          ],
+                        ),
+
+                        if (!isTablet)
+                          SizedBox(
+                            height: AppTheme.responsiveSize(
+                              context,
+                              phone: 20,
+                              tablet: 26,
+                            ),
+                          ),
+
+                        // DESCRIPTION CONTAINER
+                        if (uploadProvider.selectedRoomType != null)
+                          _buildDescriptionContainer(
+                            uploadProvider,
+                            MediaQuery.of(context).size.width,
+                          ),
+
+                        // SPACER - Using SizedBox instead of Expanded
+                        SizedBox(height: descriptionToButtonSpacing),
+
+                        // GENERATE BUTTON WIDGET
+                        GenerateButtonWidget(
+                          onGeneratePressed: () {
+                            _generateWallDesign(uploadProvider, context);
+                          },
+                        ),
+                        SizedBox(
+                          height: AppTheme.responsiveSize(
+                            context,
+                            phone: 10,
+                            tablet: 14,
+                          ),
+                        ),
+                        // Add extra padding at bottom for safe area
+                        SizedBox(height: MediaQuery.of(context).padding.bottom),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildDescriptionContainer(
+    UploadProvider uploadProvider,
+    double screenWidth,
+  ) {
+    return Container(
+      padding: EdgeInsets.all(
+        AppTheme.responsiveSize(context, phone: 16, tablet: 20),
+      ),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryColor.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(
+          AppTheme.responsiveSize(context, phone: 12, tablet: 14),
+        ),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Add Custom Requirements (Optional)',
+                style: TextStyle(
+                  fontSize: AppTheme.responsiveFont(
+                    context,
+                    phone: 14,
+                    tablet: 16,
+                  ),
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.primaryColor,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(
+            height: AppTheme.responsiveSize(context, phone: 10, tablet: 12),
+          ),
+          if (!_showDescriptionField)
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _showDescriptionField = true;
+                });
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: AppTheme.secondaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    AppTheme.responsiveSize(context, phone: 8, tablet: 10),
+                  ),
+                ),
+                padding: EdgeInsets.symmetric(
+                  vertical: AppTheme.responsiveSize(
+                    context,
+                    phone: 12,
+                    tablet: 14,
+                  ),
+                  horizontal: AppTheme.responsiveSize(
+                    context,
+                    phone: 14,
+                    tablet: 18,
+                  ),
+                ),
+              ),
+              child: Text(
+                'Add Custom Requirements',
+                style: TextStyle(
+                  fontSize: AppTheme.responsiveFont(
+                    context,
+                    phone: 14,
+                    tablet: 15,
+                  ),
+                ),
+              ),
+            )
+          else
+            Column(
+              children: [
+                TextField(
+                  controller: _descriptionController,
+                  maxLines: 3,
+                  style: TextStyle(
+                    color: AppTheme.primaryColor,
+                    fontSize: AppTheme.responsiveFont(
+                      context,
+                      phone: 14,
+                      tablet: 16,
+                    ),
+                  ),
+                  decoration: InputDecoration(
+                    hintText:
+                        'Example: Light blue color, textured finish, wainscoting...',
+                    hintStyle: TextStyle(
+                      color: AppTheme.primaryColor.withOpacity(0.5),
+                      fontSize: AppTheme.responsiveFont(
+                        context,
+                        phone: 13,
+                        tablet: 15,
+                      ),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppTheme.responsiveSize(context, phone: 8, tablet: 10),
+                      ),
+                      borderSide: BorderSide(
+                        color: AppTheme.primaryColor.withOpacity(0.3),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppTheme.responsiveSize(context, phone: 8, tablet: 10),
+                      ),
+                      borderSide: BorderSide(color: AppTheme.primaryColor),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppTheme.responsiveSize(context, phone: 8, tablet: 10),
+                      ),
+                      borderSide: BorderSide(
+                        color: AppTheme.primaryColor.withOpacity(0.3),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: AppTheme.responsiveSize(
+                    context,
+                    phone: 10,
+                    tablet: 12,
+                  ),
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _showDescriptionField = false;
+                            _descriptionController.clear();
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.secondaryColor,
+                          foregroundColor: AppTheme.primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.responsiveSize(
+                                context,
+                                phone: 8,
+                                tablet: 10,
+                              ),
+                            ),
+                            side: BorderSide(
+                              color: AppTheme.primaryColor.withOpacity(0.3),
+                            ),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            vertical: AppTheme.responsiveSize(
+                              context,
+                              phone: 12,
+                              tablet: 14,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            fontSize: AppTheme.responsiveFont(
+                              context,
+                              phone: 14,
+                              tablet: 15,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: AppTheme.responsiveSize(
+                        context,
+                        phone: 10,
+                        tablet: 12,
+                      ),
+                    ),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _showDescriptionField = false;
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
+                          foregroundColor: AppTheme.secondaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.responsiveSize(
+                                context,
+                                phone: 8,
+                                tablet: 10,
+                              ),
+                            ),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            vertical: AppTheme.responsiveSize(
+                              context,
+                              phone: 12,
+                              tablet: 14,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          'Save',
+                          style: TextStyle(
+                            fontSize: AppTheme.responsiveFont(
+                              context,
+                              phone: 14,
+                              tablet: 15,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWallDesignsList(
+    UploadProvider uploadProvider,
+    double listHeight,
+  ) {
+    final wallDesigns = [
+      {'name': 'Paint', 'image': 'assets/images/paint.jpg'},
+      {'name': 'Wallpaper', 'image': 'assets/images/wallpaper.jpg'},
+      {'name': 'Wood Paneling', 'image': 'assets/images/wood.jpg'},
+      {'name': 'Stone Veneer', 'image': 'assets/images/stoneveneur.jpg'},
+      {'name': 'Brick', 'image': 'assets/images/bricks.jpg'},
+      {'name': 'Tile', 'image': 'assets/images/tiles.jpg'},
+      {'name': 'Concrete', 'image': 'assets/images/concrete_floor.jpg'},
+      {'name': 'Fabric', 'image': 'assets/images/fabric.jpg'},
+      {'name': 'Venetian Plaster', 'image': 'assets/images/plaster.jpg'},
+      {'name': 'Murals', 'image': 'assets/images/mural.jpg'},
+      {'name': 'Glass', 'image': 'assets/images/glass.jpg'},
+      {'name': 'Mosaic', 'image': 'assets/images/mosaic.jpg'},
+      {'name': 'Cork', 'image': 'assets/images/cork.jpg'},
+      {'name': '3D Wall Panels', 'image': 'assets/images/3dwallpaper.jpg'},
+      {'name': 'Chalkboard', 'image': 'assets/images/chalkboardwall.jpg'},
+    ];
+
+    return SizedBox(
+      height: listHeight,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: wallDesigns.length,
+        itemBuilder: (context, index) {
+          final design = wallDesigns[index];
+          final isSelected = uploadProvider.selectedRoomType == design['name'];
+
+          return WallDesignCard(
+            name: design['name']!,
+            image: design['image']!,
+            isSelected: isSelected,
+            onTap: () {
+              uploadProvider.setSelectedRoomType(design['name']!);
+              setState(() {
+                _showDescriptionField = false;
+                _descriptionController.clear();
+              });
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  void _generateWallDesign(
+    UploadProvider uploadProvider,
+    BuildContext context,
+  ) async {
+    final creditManager = Provider.of<CreditManager>(context, listen: false);
+    try {
+      if (uploadProvider.selectedImage == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select an image first'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (uploadProvider.selectedRoomType == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select a wall design type'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (creditManager.isLoading) {
+        await creditManager.init();
+        if (!mounted) return;
+      }
+
+      if (!creditManager.hasEnoughCredits(_creditsPerGeneration)) {
+        _showInsufficientCreditsDialog(context);
+        return;
+      }
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          backgroundColor: AppTheme.secondaryColor,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: AppTheme.primaryColor),
+              const SizedBox(height: 20),
+              Text(
+                'Generating your wall design...',
+                style: TextStyle(color: AppTheme.primaryColor),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      // Generate combined prompt with user description
+      String customDescription = _descriptionController.text.trim();
+      String finalPrompt = _generateCombinedPrompt(
+        uploadProvider,
+        customDescription,
+      );
+
+      // Use custom method for wall design with combined prompt
+      String generatedImageUrl = await _generateWallImageWithCustomPrompt(
+        uploadProvider,
+        finalPrompt,
+        context,
+      );
+
+      final deductionSucceeded = await creditManager.deductCredits(
+        _creditsPerGeneration,
+        reason: 'wall_generation',
+      );
+
+      if (!deductionSucceeded) {
+        if (context.mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Unable to deduct credits. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+
+        return;
+      }
+
+      if (context.mounted) Navigator.pop(context);
+
+      if (context.mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ResultScreen(
+              generatedImageUrl: generatedImageUrl,
+              roomType: uploadProvider.selectedRoomType!,
+              style: "Wall Design",
+              budget: "Not Specified",
+              prompt: finalPrompt,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Generation failed: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _showInsufficientCreditsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppTheme.secondaryColor,
+          title: Text(
+            'Not enough credits',
+            style: TextStyle(color: AppTheme.primaryColor),
+          ),
+          content: Text(
+            'You need at least $_creditsPerGeneration credits to generate this wall design.',
+            style: TextStyle(color: AppTheme.primaryColor),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              AppTheme.responsiveSize(context, phone: 16, tablet: 20),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                _returnToPreviousScreen(context);
+              },
+              child: const Text(
+                'Maybe later',
+                style: TextStyle(color: AppTheme.primaryColor),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+              ),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                Navigator.of(context)
+                    .push(
+                      MaterialPageRoute(
+                        builder: (_) => const CreditsPurchaseScreen(),
+                      ),
+                    )
+                    .then((_) => _returnToPreviousScreen(context));
+              },
+              child: const Text(
+                'Purchase Credits',
+                style: TextStyle(color: AppTheme.secondaryColor),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _returnToPreviousScreen(BuildContext context) {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  String _generateCombinedPrompt(
+    UploadProvider uploadProvider,
+    String customDescription,
+  ) {
+    String basePrompt = uploadProvider.generateWallAIPrompt();
+
+    if (customDescription.isNotEmpty) {
+      return """
+$basePrompt
+
+ADDITIONAL USER REQUIREMENTS:
+$customDescription
+
+FINAL INSTRUCTIONS: Incorporate the above user requirements while maintaining all previous transformation rules.
+""";
+    }
+
+    return basePrompt;
+  }
+
+  Future<String> _generateWallImageWithCustomPrompt(
+    UploadProvider uploadProvider,
+    String prompt,
+    BuildContext context,
+  ) async {
+    try {
+      print('🚀 Starting wall design generation with custom prompt...');
+      print('📝 Combined Prompt: ${prompt.substring(0, 100)}...');
+
+      String generatedImageUrl = await GeminiService.generateImageFromPrompt(
+        prompt: prompt,
+        imageFile: uploadProvider.selectedImage!,
+      );
+
+      print('✅ Wall design generated successfully with custom requirements');
+      return generatedImageUrl;
+    } catch (e) {
+      throw Exception('Wall design generation failed: $e');
+    }
+  }
+}
