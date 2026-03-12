@@ -6,6 +6,8 @@ import '../in_app_purchase/credit_manager.dart';
 import '../in_app_purchase/credit_purchase_screen.dart';
 import '../provider/upload_provider.dart';
 import '../services/api_services.dart';
+import '../services/exception_handler.dart';
+import '../services/prompt_.dart';
 import '../widgets/generate_button.dart';
 import '../widgets/image_selection_widget.dart';
 import '../utils/theme.dart';
@@ -22,19 +24,17 @@ class _ExteriorRedesignState extends State<ExteriorRedesign> {
   @override
   void initState() {
     super.initState();
-    // Reset provider state when entering screen to avoid conflicts
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final uploadProvider = Provider.of<UploadProvider>(
         context,
         listen: false,
       );
-      uploadProvider.setSelectedRoomType(null); // Clear previous selection
+      uploadProvider.setSelectedRoomType(null);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // Media query for responsive design
     final double screenWidth = MediaQuery.of(context).size.width;
     final bool isSmallScreen = screenWidth < 375;
     final bool isTablet = screenWidth >= 600;
@@ -55,7 +55,10 @@ class _ExteriorRedesignState extends State<ExteriorRedesign> {
             uploadProvider.reset();
             Navigator.pop(context);
           },
-          child: const Icon(CupertinoIcons.back),
+          child: Icon(
+            CupertinoIcons.back,
+            size: AppTheme.backButtonIconSize(context),
+          ),
         ),
       ),
       body: Consumer<UploadProvider>(
@@ -72,9 +75,7 @@ class _ExteriorRedesignState extends State<ExteriorRedesign> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // IMAGE SELECTION WIDGET
                   ImageSelectionWidget(),
-
                   SizedBox(
                     height: isSmallScreen
                         ? 30.0
@@ -82,8 +83,6 @@ class _ExteriorRedesignState extends State<ExteriorRedesign> {
                         ? 50.0
                         : 40.0,
                   ),
-
-                  // EXTERIOR DESIGNS - HORIZONTAL LIST
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -103,8 +102,40 @@ class _ExteriorRedesignState extends State<ExteriorRedesign> {
                       _buildExteriorDesignsList(uploadProvider, screenWidth),
                     ],
                   ),
+                  SizedBox(height: AppTheme.responsiveSize(context, phone: 15, tablet: 20)),
 
-                  // SPACER
+                  // MULTIPLE VARIATIONS TOGGLE
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppTheme.primaryColor.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: SwitchListTile(
+                      title: Text(
+                        'Generate 3 Variations',
+                        style: TextStyle(
+                          fontSize: AppTheme.responsiveFont(context, phone: 15, tablet: 17),
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryColor,
+                        ),
+                      ),
+                      subtitle: Text(
+                        'Costs 15 credits instead of 5',
+                        style: TextStyle(
+                          fontSize: AppTheme.responsiveFont(context, phone: 12, tablet: 14),
+                          color: AppTheme.primaryColor.withOpacity(0.7),
+                        ),
+                      ),
+                      value: uploadProvider.isMultipleVariationsEnabled,
+                      activeColor: AppTheme.primaryColor,
+                      onChanged: (value) => uploadProvider.setMultipleVariationsEnabled(value),
+                    ),
+                  ),
+
                   SizedBox(
                     height: AppTheme.responsiveSize(
                       context,
@@ -112,8 +143,6 @@ class _ExteriorRedesignState extends State<ExteriorRedesign> {
                       tablet: 30,
                     ),
                   ),
-
-                  // GENERATE BUTTON WIDGET
                   GenerateButtonWidget(
                     onGeneratePressed: () =>
                         _generateExteriorDesign(uploadProvider, context),
@@ -135,51 +164,51 @@ class _ExteriorRedesignState extends State<ExteriorRedesign> {
   }
 
   Widget _buildExteriorDesignsList(
-    UploadProvider uploadProvider,
-    double screenWidth,
-  ) {
+      UploadProvider uploadProvider,
+      double screenWidth,
+      ) {
     final exteriorDesigns = [
       {
         'name': 'Modern',
         'image': 'assets/images/modern.jpg',
         'description':
-            'Sleek geometric forms, flat roofs, floor-to-ceiling windows, minimalist aesthetic',
+        'Sleek geometric forms, flat roofs, floor-to-ceiling windows, minimalist aesthetic',
       },
       {
         'name': 'Small House',
         'image': 'assets/images/small.jpg',
         'description':
-            'Compact footprint, efficient layout, cozy proportions, smart storage',
+        'Compact footprint, efficient layout, cozy proportions, smart storage',
       },
       {
         'name': 'Bunglow',
         'image': 'assets/images/banglow.jpg',
         'description':
-            'Single-story layout, wide verandas, low-pitched roofs, cozy living',
+        'Single-story layout, wide verandas, low-pitched roofs, cozy living',
       },
       {
         'name': 'Simple',
         'image': 'assets/images/simple.jpg',
         'description':
-            'Clean rectangular forms, basic rooflines, uncomplicated details',
+        'Clean rectangular forms, basic rooflines, uncomplicated details',
       },
       {
         'name': 'Residential',
         'image': 'assets/images/residential.jpg',
         'description':
-            'Traditional family home, pitched roof, front porch, balanced windows',
+        'Traditional family home, pitched roof, front porch, balanced windows',
       },
       {
         'name': 'Building',
         'image': 'assets/images/building.jpg',
         'description':
-            'Multi-level structure, rectangular massing, repetitive windows',
+        'Multi-level structure, rectangular massing, repetitive windows',
       },
       {
         'name': 'Villa',
         'image': 'assets/images/villa.jpg',
         'description':
-            'Spacious luxury residence, grand entrance, landscaped surroundings',
+        'Spacious luxury residence, grand entrance, landscaped surroundings',
       },
       {
         'name': 'Contemporary',
@@ -190,23 +219,20 @@ class _ExteriorRedesignState extends State<ExteriorRedesign> {
         'name': 'Commercial Building',
         'image': 'assets/images/commercial.jpg',
         'description':
-            'Professional facade, large entrance, corporate identity',
+        'Professional facade, large entrance, corporate identity',
       },
     ];
 
     return SizedBox(
-      // Increased to avoid overflow on tablets
       height: AppTheme.responsiveSize(context, phone: 190, tablet: 260),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: exteriorDesigns.length,
-        // Add cache extent to prevent memory issues
         cacheExtent: 1000,
         itemBuilder: (context, index) {
           final design = exteriorDesigns[index];
           final isSelected = uploadProvider.selectedRoomType == design['name'];
 
-          // Use try-catch to prevent crashes from missing images
           return FloorDesignCard(
             name: design['name']!,
             image: design['image']!,
@@ -220,35 +246,21 @@ class _ExteriorRedesignState extends State<ExteriorRedesign> {
     );
   }
 
-  static const int _creditsPerGeneration = 5;
-
   void _generateExteriorDesign(
-    UploadProvider uploadProvider,
-    BuildContext context,
-  ) async {
+      UploadProvider uploadProvider,
+      BuildContext context,
+      ) async {
     final creditManager = Provider.of<CreditManager>(context, listen: false);
+    final int cost = uploadProvider.isMultipleVariationsEnabled ? 15 : 5;
+
     try {
-      // Check if image is selected
       if (uploadProvider.selectedImage == null) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select an image first'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ExceptionHandler.showToast('Please select an image first');
         return;
       }
 
-      // Check if exterior design is selected
       if (uploadProvider.selectedRoomType == null) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select an exterior design type'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ExceptionHandler.showToast('Please select an exterior design type');
         return;
       }
 
@@ -257,9 +269,8 @@ class _ExteriorRedesignState extends State<ExteriorRedesign> {
         if (!mounted) return;
       }
 
-      // DIRECT API CALL
-      if (!creditManager.hasEnoughCredits(_creditsPerGeneration)) {
-        _showInsufficientCreditsDialog(context);
+      if (!creditManager.hasEnoughCredits(cost)) {
+        _showInsufficientCreditsDialog(context, cost);
         return;
       }
 
@@ -284,32 +295,75 @@ class _ExteriorRedesignState extends State<ExteriorRedesign> {
       );
 
       String selectedStyle = uploadProvider.selectedRoomType ?? 'Modern';
-      String exteriorPrompt =
-          """
-EXTERIOR BUILDING REDESIGN: Transform this building into $selectedStyle style while keeping exact same structure, size, and layout. Only change exterior materials, colors, and details.
+      String designRequirements = ExteriorPromptGenerator.exteriorDesignRequirements[selectedStyle] ??
+          'architectural transformation, improved aesthetics, functional design';
+      
+      String exteriorPrompt = """
+ARCHITECTURAL EXTERIOR REDESIGN - CRITICAL TRANSFORMATION PROMPT
+
+REFERENCE IMAGE ANALYSIS:
+- Analyze the provided building image carefully.
+- Note the exact building structure, shape, and proportions.
+- Identify current roof type, window positions, door locations.
+- Understand the existing architectural layout and scale.
+
+📐 PERSPECTIVE & ANGLE PRESERVATION (STRICT):
+- Analyze the exact camera angle (front, side, or diagonally slanted).
+- If the house is photographed from the side or at an angle, the output MUST maintain that SAME PERSPECTIVE.
+- Do NOT shift to a flat front-facing view; respect the original photo's 3D perspective.
+
+🏠 MANDATORY STRUCTURAL PRESERVATION:
+- MAINTAIN the EXACT SAME building structure, footprint, and height.
+- DO NOT build a "new house"; only restyle the existing one.
+- KEEP identical roof shape, pitch, and profile.
+- PRESERVE all window and door positions exactly as they are.
+- DO NOT alter the fundamental building layout or shape.
+
+$selectedStyle ARCHITECTURAL FEATURES:
+$designRequirements
+
+DESIGN ELEMENTS TO TRANSFORM:
+- EXTERIOR MATERIALS: Update wall finishes, siding, or cladding.
+- COLOR SCHEME: Apply $selectedStyle appropriate colors and tones.
+- WINDOW STYLES: Change window designs while keeping same positions.
+- DOOR DESIGNS: Update door styles within existing openings.
+- ROOFING: Modify roof materials and details.
+- LANDSCAPING: Enhance surrounding environment and landscaping.
+- ARCHITECTURAL DETAILS: Add or modify decorative elements.
+- LIGHTING: Improve exterior lighting features.
+
+STRICT TRANSFORMATION RULES:
+- ONLY modify surface materials, colors, and details.
+- KEEP all structural elements in their exact positions.
+- WORK within the existing building footprint and boundaries.
+
+FINAL RESULT: The generated image must show the SAME building (same size, same structure, same angle) beautifully transformed into $selectedStyle architecture.
 """;
 
-      String generatedImageUrl = await GeminiService.generateImageFromPrompt(
-        prompt: exteriorPrompt,
-        imageFile: uploadProvider.selectedImage!,
-      );
+      List<String> generatedImageUrls = [];
+      if (uploadProvider.isMultipleVariationsEnabled) {
+        generatedImageUrls = await uploadProvider.generateMultipleImagesFromAPI(
+          basePrompt: exteriorPrompt,
+          imageFile: uploadProvider.selectedImage!,
+        );
+      } else {
+        String url = await GeminiService.generateImageFromPrompt(
+          prompt: exteriorPrompt,
+          imageFile: uploadProvider.selectedImage!,
+        );
+        generatedImageUrls = [url];
+      }
 
       final deductionSucceeded = await creditManager.deductCredits(
-        _creditsPerGeneration,
-        reason: 'exterior_generation',
+        cost,
+        reason: uploadProvider.isMultipleVariationsEnabled ? 'multiple_variations' : 'exterior_generation',
       );
 
       if (!deductionSucceeded) {
         if (mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Unable to deduct credits. Please try again.'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          ExceptionHandler.showToast('Unable to deduct credits');
         }
-
         return;
       }
 
@@ -320,29 +374,23 @@ EXTERIOR BUILDING REDESIGN: Transform this building into $selectedStyle style wh
           context,
           MaterialPageRoute(
             builder: (context) => ResultScreen(
-              generatedImageUrl: generatedImageUrl,
+              generatedImageUrls: generatedImageUrls,
               roomType: uploadProvider.selectedRoomType!,
               style: "Exterior Design",
               budget: "Not Specified",
               prompt: exteriorPrompt,
+              beforeImageUrl: uploadProvider.selectedImage?.path,
             ),
           ),
         );
       }
     } catch (e) {
       if (mounted) Navigator.pop(context);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Generation failed: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      ExceptionHandler.handleException(e);
     }
   }
 
-  void _showInsufficientCreditsDialog(BuildContext context) {
+  void _showInsufficientCreditsDialog(BuildContext context, int requiredCredits) {
     showDialog(
       context: context,
       builder: (dialogContext) {
@@ -353,7 +401,7 @@ EXTERIOR BUILDING REDESIGN: Transform this building into $selectedStyle style wh
             style: TextStyle(color: AppTheme.primaryColor),
           ),
           content: Text(
-            'You need at least $_creditsPerGeneration credits to generate this exterior design.',
+            'You need at least $requiredCredits credits to generate this exterior design.',
             style: TextStyle(color: AppTheme.primaryColor),
           ),
           shape: RoundedRectangleBorder(
@@ -367,7 +415,7 @@ EXTERIOR BUILDING REDESIGN: Transform this building into $selectedStyle style wh
                 Navigator.of(dialogContext).pop();
                 _returnToPreviousScreen(context);
               },
-              child: const Text('Maybe later',style: TextStyle(color: AppTheme.primaryColor),),
+              child: const Text('Maybe later', style: TextStyle(color: AppTheme.primaryColor)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -377,13 +425,13 @@ EXTERIOR BUILDING REDESIGN: Transform this building into $selectedStyle style wh
                 Navigator.of(dialogContext).pop();
                 Navigator.of(context)
                     .push(
-                      MaterialPageRoute(
-                        builder: (_) => const CreditsPurchaseScreen(),
-                      ),
-                    )
+                  MaterialPageRoute(
+                    builder: (_) => const CreditsPurchaseScreen(),
+                  ),
+                )
                     .then((_) => _returnToPreviousScreen(context));
               },
-              child: const Text('Purchase Credits',style: TextStyle(color: AppTheme.secondaryColor),),
+              child: const Text('Purchase Credits', style: TextStyle(color: AppTheme.secondaryColor)),
             ),
           ],
         );

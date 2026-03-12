@@ -42,6 +42,13 @@ class FAQScreen extends StatelessWidget {
         foregroundColor: AppTheme.primaryColor,
         elevation: 0,
         title: Text('FAQ', style: AppTheme.appBarTitleStyle(context)),
+        leading: IconButton(
+          icon: Icon(
+            AppTheme.backButtonIcon,
+            size: AppTheme.backButtonIconSize(context),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: ListView.separated(
         padding: const EdgeInsets.symmetric(vertical: 16),

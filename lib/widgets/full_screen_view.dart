@@ -141,7 +141,11 @@ class _FullScreenImageViewState extends State<FullScreenImageView> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    icon: Icon(
+                      AppTheme.backButtonIcon,
+                      color: Colors.white,
+                      size: AppTheme.backButtonIconSize(context),
+                    ),
                     onPressed: () => Navigator.pop(context),
                   ),
                   const SizedBox(width: 10),

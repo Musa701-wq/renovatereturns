@@ -6,6 +6,7 @@ import '../in_app_purchase/credit_manager.dart';
 import '../in_app_purchase/credit_purchase_screen.dart';
 import '../provider/upload_provider.dart';
 import '../services/api_services.dart';
+import '../services/exception_handler.dart';
 import '../widgets/generate_button.dart';
 import '../widgets/image_selection_widget.dart';
 import '../utils/theme.dart';
@@ -21,7 +22,6 @@ class FloorRedesign extends StatefulWidget {
 class _FloorRedesignState extends State<FloorRedesign> {
   final TextEditingController _descriptionController = TextEditingController();
   bool _showDescriptionField = false;
-  static const int _creditsPerGeneration = 5;
 
   @override
   void dispose() {
@@ -49,8 +49,8 @@ class _FloorRedesignState extends State<FloorRedesign> {
     );
     final double descriptionToButtonSpacing = AppTheme.responsiveSize(
       context,
-      phone: 90,
-      tablet: 130,
+      phone: 40,
+      tablet: 60,
     );
 
     return Scaffold(
@@ -59,8 +59,11 @@ class _FloorRedesignState extends State<FloorRedesign> {
         title: const Text('Floor Redesign'),
         backgroundColor: AppTheme.secondaryColor,
         foregroundColor: AppTheme.primaryColor,
-        leading: CupertinoButton(
-          padding: EdgeInsets.zero,
+        leading: IconButton(
+          icon: Icon(
+            AppTheme.backButtonIcon,
+            size: AppTheme.backButtonIconSize(context),
+          ),
           onPressed: () {
             final uploadProvider = Provider.of<UploadProvider>(
               context,
@@ -69,7 +72,6 @@ class _FloorRedesignState extends State<FloorRedesign> {
             uploadProvider.reset();
             Navigator.pop(context);
           },
-          child: const Icon(CupertinoIcons.back),
         ),
       ),
       body: Consumer<UploadProvider>(
@@ -81,9 +83,7 @@ class _FloorRedesignState extends State<FloorRedesign> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   ImageSelectionWidget(),
-
                   SizedBox(height: gapBetweenImageAndList),
-
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -103,14 +103,44 @@ class _FloorRedesignState extends State<FloorRedesign> {
                       _buildFloorDesignsList(uploadProvider, listHeight),
                     ],
                   ),
-
-                 // SizedBox(height: afterListSpacing),
-
                   if (uploadProvider.selectedRoomType != null)
                     _buildDescriptionContainer(uploadProvider),
+                  
+                  SizedBox(height: 20),
+
+                  // MULTIPLE VARIATIONS TOGGLE
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppTheme.primaryColor.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: SwitchListTile(
+                      title: Text(
+                        'Generate 3 Variations',
+                        style: TextStyle(
+                          fontSize: AppTheme.responsiveFont(context, phone: 15, tablet: 17),
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryColor,
+                        ),
+                      ),
+                      subtitle: Text(
+                        'Costs 15 credits instead of 5',
+                        style: TextStyle(
+                          fontSize: AppTheme.responsiveFont(context, phone: 12, tablet: 14),
+                          color: AppTheme.primaryColor.withOpacity(0.7),
+                        ),
+                      ),
+                      value: uploadProvider.isMultipleVariationsEnabled,
+                      activeColor: AppTheme.primaryColor,
+                      onChanged: (value) => uploadProvider.setMultipleVariationsEnabled(value),
+                    ),
+                  ),
 
                   SizedBox(height: descriptionToButtonSpacing),
-
                   GenerateButtonWidget(
                     onGeneratePressed: () =>
                         _generateFloorDesign(uploadProvider, context),
@@ -150,6 +180,7 @@ class _FloorRedesignState extends State<FloorRedesign> {
     );
 
     return Container(
+      margin: const EdgeInsets.only(top: 10),
       padding: EdgeInsets.all(paddingValue),
       decoration: BoxDecoration(
         color: const Color.fromARGB(255, 17, 10, 14).withOpacity(0.2),
@@ -354,9 +385,9 @@ class _FloorRedesignState extends State<FloorRedesign> {
   }
 
   Widget _buildFloorDesignsList(
-    UploadProvider uploadProvider,
-    double listHeight,
-  ) {
+      UploadProvider uploadProvider,
+      double listHeight,
+      ) {
     final floorDesigns = [
       {'name': 'Carpet', 'image': 'assets/images/carpet_floor.jpg'},
       {'name': 'Hardwood', 'image': 'assets/images/hardwood_floor.jpg'},
@@ -383,7 +414,6 @@ class _FloorRedesignState extends State<FloorRedesign> {
           final design = floorDesigns[index];
           final isSelected = uploadProvider.selectedRoomType == design['name'];
 
-          // Using ItemDesignCard (from item_design_card.dart) instead of FloorDesignCard
           return FloorDesignCard(
             name: design['name']!,
             image: design['image']!,
@@ -402,28 +432,20 @@ class _FloorRedesignState extends State<FloorRedesign> {
   }
 
   void _generateFloorDesign(
-    UploadProvider uploadProvider,
-    BuildContext context,
-  ) async {
+      UploadProvider uploadProvider,
+      BuildContext context,
+      ) async {
     final creditManager = Provider.of<CreditManager>(context, listen: false);
+    final int cost = uploadProvider.isMultipleVariationsEnabled ? 15 : 5;
+
     try {
       if (uploadProvider.selectedImage == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select an image first'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ExceptionHandler.showToast('Please select an image first');
         return;
       }
 
       if (uploadProvider.selectedRoomType == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select a floor design type'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ExceptionHandler.showToast('Please select a floor design type');
         return;
       }
 
@@ -432,8 +454,8 @@ class _FloorRedesignState extends State<FloorRedesign> {
         if (!mounted) return;
       }
 
-      if (!creditManager.hasEnoughCredits(_creditsPerGeneration)) {
-        _showInsufficientCreditsDialog(context);
+      if (!creditManager.hasEnoughCredits(cost)) {
+        _showInsufficientCreditsDialog(context, cost);
         return;
       }
 
@@ -462,28 +484,30 @@ class _FloorRedesignState extends State<FloorRedesign> {
         customDescription,
       );
 
-      String generatedImageUrl = await _generateFloorImageWithCustomPrompt(
-        uploadProvider,
-        finalPrompt,
-        context,
-      );
+      List<String> generatedImageUrls = [];
+      if (uploadProvider.isMultipleVariationsEnabled) {
+        generatedImageUrls = await uploadProvider.generateMultipleImagesFromAPI(
+          basePrompt: finalPrompt,
+          imageFile: uploadProvider.selectedImage!,
+        );
+      } else {
+        String url = await GeminiService.generateImageFromPrompt(
+          prompt: finalPrompt,
+          imageFile: uploadProvider.selectedImage!,
+        );
+        generatedImageUrls = [url];
+      }
 
       final deductionSucceeded = await creditManager.deductCredits(
-        _creditsPerGeneration,
-        reason: 'floor_generation',
+        cost,
+        reason: uploadProvider.isMultipleVariationsEnabled ? 'multiple_variations' : 'floor_generation',
       );
 
       if (!deductionSucceeded) {
         if (context.mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Unable to deduct credits. Please try again.'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          ExceptionHandler.showToast('Unable to deduct credits');
         }
-
         return;
       }
 
@@ -494,27 +518,23 @@ class _FloorRedesignState extends State<FloorRedesign> {
           context,
           MaterialPageRoute(
             builder: (context) => ResultScreen(
-              generatedImageUrl: generatedImageUrl,
+              generatedImageUrls: generatedImageUrls,
               roomType: uploadProvider.selectedRoomType!,
               style: "Floor Design",
               budget: "Not Specified",
               prompt: finalPrompt,
+              beforeImageUrl: uploadProvider.selectedImage?.path,
             ),
           ),
         );
       }
     } catch (e) {
       if (context.mounted) Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Generation failed: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      ExceptionHandler.handleException(e);
     }
   }
 
-  void _showInsufficientCreditsDialog(BuildContext context) {
+  void _showInsufficientCreditsDialog(BuildContext context, int requiredCredits) {
     showDialog(
       context: context,
       builder: (dialogContext) {
@@ -525,7 +545,7 @@ class _FloorRedesignState extends State<FloorRedesign> {
             style: TextStyle(color: AppTheme.primaryColor),
           ),
           content: Text(
-            'You need at least $_creditsPerGeneration credits to generate this floor design.',
+            'You need at least $requiredCredits credits to generate this floor design.',
             style: TextStyle(color: AppTheme.primaryColor),
           ),
           shape: RoundedRectangleBorder(
@@ -539,7 +559,7 @@ class _FloorRedesignState extends State<FloorRedesign> {
                 Navigator.of(dialogContext).pop();
                 _returnToPreviousScreen(context);
               },
-              child: const Text('Maybe later',style: TextStyle(color: AppTheme.primaryColor),),
+              child: const Text('Maybe later', style: TextStyle(color: AppTheme.primaryColor)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -549,13 +569,13 @@ class _FloorRedesignState extends State<FloorRedesign> {
                 Navigator.of(dialogContext).pop();
                 Navigator.of(context)
                     .push(
-                      MaterialPageRoute(
-                        builder: (_) => const CreditsPurchaseScreen(),
-                      ),
-                    )
+                  MaterialPageRoute(
+                    builder: (_) => const CreditsPurchaseScreen(),
+                  ),
+                )
                     .then((_) => _returnToPreviousScreen(context));
               },
-              child: const Text('Purchase Credits',style: TextStyle(color: AppTheme.secondaryColor),),
+              child: const Text('Purchase Credits', style: TextStyle(color: AppTheme.secondaryColor)),
             ),
           ],
         );
@@ -570,9 +590,9 @@ class _FloorRedesignState extends State<FloorRedesign> {
   }
 
   String _generateCombinedPrompt(
-    UploadProvider uploadProvider,
-    String customDescription,
-  ) {
+      UploadProvider uploadProvider,
+      String customDescription,
+      ) {
     String basePrompt = uploadProvider.generateFloorAIPrompt();
 
     if (customDescription.isNotEmpty) {
@@ -587,26 +607,5 @@ FINAL INSTRUCTIONS: Incorporate the above user requirements while maintaining al
     }
 
     return basePrompt;
-  }
-
-  Future<String> _generateFloorImageWithCustomPrompt(
-    UploadProvider uploadProvider,
-    String prompt,
-    BuildContext context,
-  ) async {
-    try {
-      print('🚀 Starting floor design generation with custom prompt...');
-      print('📝 Combined Prompt: ${prompt.substring(0, 100)}...');
-
-      String generatedImageUrl = await GeminiService.generateImageFromPrompt(
-        prompt: prompt,
-        imageFile: uploadProvider.selectedImage!,
-      );
-
-      print('✅ Floor design generated successfully with custom requirements');
-      return generatedImageUrl;
-    } catch (e) {
-      throw Exception('Floor design generation failed: $e');
-    }
   }
 }

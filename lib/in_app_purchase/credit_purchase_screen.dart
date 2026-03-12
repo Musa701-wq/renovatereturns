@@ -9,7 +9,8 @@ import 'credit_manager.dart';
 import 'i_ap_manager.dart';
 
 class CreditsPurchaseScreen extends StatefulWidget {
-  const CreditsPurchaseScreen({Key? key}) : super(key: key);
+  final bool showBackButton;
+  const CreditsPurchaseScreen({Key? key, this.showBackButton = true}) : super(key: key);
 
   @override
   State<CreditsPurchaseScreen> createState() => _CreditsPurchaseScreenState();
@@ -31,8 +32,8 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
     // Rewarded ad preload karo
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final adProvider = context.read<AdProvider>();
-      if (!adProvider.isRewardedAdLoaded && !adProvider.isEarningCredits) {
-        adProvider.preloadAd(AdType.rewardedAd);
+      if (!adProvider.isRewardedAdLoaded && !adProvider.isLoadingRewardedAd) {
+        adProvider.loadRewardedAd();
       }
     });
   }
@@ -725,11 +726,6 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
   Future<void> _watchAdForCredits() async {
     final adProvider = context.read<AdProvider>();
 
-    print('🔍 Debug Info:');
-    print('isRewardedAdLoaded: ${adProvider.isRewardedAdLoaded}');
-    print('isEarningCredits: ${adProvider.isEarningCredits}');
-    //print('_rewardedAd: ${adProvider.rewardedAd}'); // If accessible
-
     if (!adProvider.isRewardedAdLoaded) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -743,7 +739,7 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
         ),
       );
 
-      await adProvider.preloadAd(AdType.rewardedAd);
+      await adProvider.loadRewardedAd();
       return;
     }
 
@@ -753,6 +749,7 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
       _showAdRewardDialog();
     }
   }
+
 
   void _showAdRewardDialog() {
     showDialog(
@@ -929,14 +926,14 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
         toolbarHeight: AppTheme.appBarHeight(context),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
+        automaticallyImplyLeading: widget.showBackButton,
+        leading: widget.showBackButton ? IconButton(
           icon: Icon(
-            Icons.arrow_back,
-            color: AppTheme.primaryColor,
-            size: AppTheme.responsiveSize(context, phone: 24, tablet: 28),
+            AppTheme.backButtonIcon,
+            size: AppTheme.backButtonIconSize(context),
           ),
           onPressed: () => Navigator.pop(context),
-        ),
+        ) : null,
         title: Text(
           'Get Credits',
           style: TextStyle(
@@ -1150,7 +1147,7 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
                     child: Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        onTap: (adProvider.isRewardedAdLoaded && !adProvider.isEarningCredits)
+                        onTap: (adProvider.isRewardedAdLoaded && !adProvider.isLoadingRewardedAd)
                             ? _watchAdForCredits
                             : null,
                         borderRadius: BorderRadius.circular(
@@ -1273,9 +1270,9 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
                                     Text(
                                       adProvider.isRewardedAdLoaded
                                           ? 'Tap to watch ad'
-                                          : adProvider.isEarningCredits
-                                          ? 'Playing ad...'
-                                          : 'Loading ad...',
+                                          : adProvider.isLoadingRewardedAd
+                                          ? 'Loading ad...'
+                                          : 'Ad not ready',
                                       style: TextStyle(
                                         fontSize: AppTheme.responsiveFont(
                                           context,

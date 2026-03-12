@@ -8,6 +8,7 @@ import '../provider/navbar_provider.dart';
 import '../widgets/nav_bar.dart';
 import 'generate_screen.dart' show GenerateScreen;
 import 'history_screen.dart';
+import '../in_app_purchase/credit_purchase_screen.dart';
 
 
 class MainScreen extends StatefulWidget {
@@ -46,38 +47,12 @@ if (currentUser == null) {
       builder: (context, navbarProvider, child) {
         final List<Widget> _screens = [
           GenerateScreen(),
-          HistoryScreen(),
+          HistoryScreen(showBackButton: false),
+          CreditsPurchaseScreen(showBackButton: false),
           ProfileScreen(),
         ];
 
         return Scaffold(
-
-          // To use the custom app bar, uncomment below:
-          // appBar: CustomAppBar(),
-
-          // Original app bar (commented):
-          /* appBar: AppBar(
-            title: Text(
-              currentUser.name ?? "Welcome",
-              style: TextStyle(color: Colors.white),
-            ),
-            backgroundColor:AppTheme.secondaryColor,
-            foregroundColor: AppTheme.primaryColor,
-            leading: _buildAppBarProfileImage(currentUser.photoUrl),
-            actions: [
-              IconButton(
-                icon: Icon(Icons.logout),
-                onPressed: () async {
-                  await auth.signOut();
-                  Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => LoginScreen())
-                  );
-                },
-              ),
-            ],
-          ),*/
-
           body: Container(
             child: _screens[navbarProvider.currentIndex],
           ),

@@ -483,7 +483,7 @@ FINAL RESULT: Generate a photorealistic image where ONLY the specified replaceme
 }
 class ExteriorPromptGenerator {
   // Exterior design specific requirements
-  static final Map<String, String> _exteriorDesignRequirements = {
+  static final Map<String, String> exteriorDesignRequirements = {
     'Modern': 'sleek geometric forms, flat roofs, floor-to-ceiling windows, minimalist aesthetic, neutral color palette, clean lines, modern materials like glass and steel',
     'Small House': 'compact footprint, efficient layout, cozy proportions, multi-functional spaces, smart storage, practical design, cost-effective materials',
     'Bunglow': 'single-story layout, wide verandas, low-pitched roofs, exposed rafters, cozy accessible living, traditional charm, wooden elements',
@@ -502,7 +502,7 @@ class ExteriorPromptGenerator {
     required String designStyle,
     required String imageSource, // ✅ YEH PARAMETER ADD KIA
   }) {
-    String designRequirements = _exteriorDesignRequirements[designStyle] ??
+    String designRequirements = exteriorDesignRequirements[designStyle] ??
         'architectural transformation, improved aesthetics, functional design';
 
     return """
@@ -557,7 +557,7 @@ FINAL RESULT: The generated image must clearly show the original building beauti
 
   // Get design style description
   static String getDesignDescription(String designStyle) {
-    return _exteriorDesignRequirements[designStyle] ?? 'architectural redesign';
+    return exteriorDesignRequirements[designStyle] ?? 'architectural redesign';
   }
 }
 // models/floor_prompt_generator.dart

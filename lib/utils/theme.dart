@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 class AppTheme {
 
@@ -27,7 +28,7 @@ class AppTheme {
       isTablet(context) ? (tablet * _tabletScale) : phone;
 
   static double responsivePadding(BuildContext context) =>
-      responsiveSize(context , phone: 20, tablet: 32);
+      responsiveSize(context , phone: 20, tablet: 25);
 
   static double responsiveFont(BuildContext context, {required double phone, required double tablet}) =>
       responsiveSize(context, phone: phone, tablet: tablet);
@@ -37,7 +38,7 @@ class AppTheme {
       responsiveSize(context, phone: kToolbarHeight, tablet: 72);
 
   static TextStyle appBarTitleStyle(BuildContext context) => TextStyle(
-        fontSize: responsiveFont(context, phone: 20, tablet: 24),
+        fontSize: responsiveFont(context, phone: 20, tablet: 18),
         fontWeight: FontWeight.w600,
         color: primaryColor,
       );
@@ -46,6 +47,11 @@ class AppTheme {
         size: responsiveSize(context, phone: 24, tablet: 28),
         color: primaryColor,
       );
+
+  static IconData get backButtonIcon => CupertinoIcons.back;
+
+  static double backButtonIconSize(BuildContext context) =>
+      responsiveSize(context, phone: 22, tablet: 26);
 
   // Theme Data
   static ThemeData get lightTheme {

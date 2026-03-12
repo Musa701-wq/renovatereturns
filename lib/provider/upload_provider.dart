@@ -13,6 +13,7 @@ class UploadProvider with ChangeNotifier {
   String? _selectedRoomType;
   String? _selectedImageSource;
   File? _selectedImage;
+  bool _isMultipleVariationsEnabled = false; // ✅ Multiple variations state
   final ImagePicker _imagePicker = ImagePicker();
 
   // Options lists
@@ -46,6 +47,7 @@ class UploadProvider with ChangeNotifier {
   List<String> get budgetOptions => _budgetOptions;
   List<String> get roomTypes => _roomTypes;
   List<String> get floorTypes => _floorTypes;
+  bool get isMultipleVariationsEnabled => _isMultipleVariationsEnabled;
   bool get isReadyForGeneration {
     return _selectedImage != null && _selectedRoomType != null;
   }
@@ -78,6 +80,11 @@ class UploadProvider with ChangeNotifier {
 
   void setSelectedImage(File? image) {
     _selectedImage = image;
+    notifyListeners();
+  }
+
+  void setMultipleVariationsEnabled(bool enabled) {
+    _isMultipleVariationsEnabled = enabled;
     notifyListeners();
   }
 
@@ -239,8 +246,9 @@ $prompt
     _selectedRoomType = null;
     _selectedImageSource = null;
     _selectedImage = null;
-    _secondaryImage = null;           // ✅ YEH LINE ADD KARO
-    _secondaryImageSource = null;     // ✅ YEH LINE ADD KARO
+    _secondaryImage = null;
+    _secondaryImageSource = null;
+    _isMultipleVariationsEnabled = false; // Reset toggle
     notifyListeners();
   }
 
@@ -1180,6 +1188,37 @@ $prompt
 
     } catch (e) {
       throw Exception('Image generation with customization failed: $e');
+    }
+  }
+
+  // ✅ NEW METHOD: GENERATE MULTIPLE VARIATIONS
+  Future<List<String>> generateMultipleImagesFromAPI({
+    required String basePrompt,
+    required File imageFile,
+    int count = 3,
+  }) async {
+    try {
+      print('🚀 Starting multiple variations (count: $count)...');
+      List<String> results = [];
+
+      for (int i = 0; i < count; i++) {
+        String variationDetails = "";
+        if (i == 0) variationDetails = " Create a first unique variation focused on high-end materials and sleek textures.";
+        if (i == 1) variationDetails = " Create a second distinct variation with a different color palette but following the same design language.";
+        if (i == 2) variationDetails = " Create a third alternative variation exploring a more creative interpretation of the original style.";
+
+        String variedPrompt = "$basePrompt $variationDetails";
+        print('🎨 Generating Variation ${i + 1}...');
+
+        String url = await GeminiService.generateImageFromVariationPrompt(
+          prompt: variedPrompt,
+          imageFile: imageFile,
+        );
+        results.add(url);
+      }
+      return results;
+    } catch (e) {
+      throw Exception('Multiple variations generation failed: $e');
     }
   }
 }

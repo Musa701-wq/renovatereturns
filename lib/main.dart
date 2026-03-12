@@ -9,11 +9,13 @@ import 'package:ai_remodeling/screens/login_screen.dart';
 import 'package:ai_remodeling/screens/main_screen.dart';
 import 'package:ai_remodeling/services/auth_gate.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
 void main() async {
 
@@ -53,6 +55,9 @@ Future<void> initTracking() async {
       final newStatus = await AppTrackingTransparency.requestTrackingAuthorization();
       print('📱 New tracking status: $newStatus');
     }
+    // 4️⃣ Log a test event so device appears in DebugView
+    await analytics.logEvent(name: 'debug_view_test');
+    print('📊 Logged debug_view_test event for DebugView');
   } catch (e) {
     print('❌ App Tracking Transparency failed: $e');
     // Don't rethrow - continue without tracking

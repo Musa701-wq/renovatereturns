@@ -8,7 +8,8 @@ class NavbarProvider with ChangeNotifier {
   final List<NavItem> _navItems = [
     NavItem(icon: Icons.auto_awesome, label: "Generate", index: 0),
     NavItem(icon: Icons.history, label: "History", index: 1),
-    NavItem(icon: Icons.person, label: "Profile", index: 2),
+    NavItem(icon: Icons.shopping_cart, label: "Store", index: 2),
+    NavItem(icon: Icons.person, label: "Profile", index: 3),
   ];
 
   // Getters

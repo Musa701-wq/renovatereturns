@@ -36,14 +36,17 @@ class _ReferenceTransformScreenState extends State<ReferenceTransformScreen> {
         title: const Text('Reference Transform'),
         backgroundColor: AppTheme.secondaryColor,
         foregroundColor: AppTheme.primaryColor,
-        leading: CupertinoButton(
-          padding: EdgeInsets.zero,
+        leading: IconButton(
+          icon: Icon(
+            AppTheme.backButtonIcon,
+            size: AppTheme.backButtonIconSize(context),
+          ),
           onPressed: () {
-            final uploadProvider = Provider.of<UploadProvider>(context, listen: false);
+            final uploadProvider =
+                Provider.of<UploadProvider>(context, listen: false);
             uploadProvider.reset();
             Navigator.pop(context);
           },
-          child: const Icon(CupertinoIcons.back),
         ),
       ),
       body: LayoutBuilder(
@@ -185,7 +188,45 @@ class _ReferenceTransformScreenState extends State<ReferenceTransformScreen> {
                       ),
                     ),
 
-                    SizedBox(height: AppTheme.responsiveSize(context, phone: 80, tablet: 110)),
+                    SizedBox(height: AppTheme.responsiveSize(context, phone: 40, tablet: 60)),
+
+                    // MULTIPLE VARIATIONS TOGGLE
+                    Consumer<UploadProvider>(
+                      builder: (context, uploadProvider, child) {
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppTheme.primaryColor.withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: SwitchListTile(
+                            title: Text(
+                              'Generate 3 Variations',
+                              style: TextStyle(
+                                fontSize: AppTheme.responsiveFont(context, phone: 15, tablet: 17),
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                            subtitle: Text(
+                              'Costs 15 credits instead of 5',
+                              style: TextStyle(
+                                fontSize: AppTheme.responsiveFont(context, phone: 12, tablet: 14),
+                                color: AppTheme.primaryColor.withOpacity(0.7),
+                              ),
+                            ),
+                            value: uploadProvider.isMultipleVariationsEnabled,
+                            activeColor: AppTheme.primaryColor,
+                            onChanged: (value) => uploadProvider.setMultipleVariationsEnabled(value),
+                          ),
+                        );
+                      },
+                    ),
+
+                    SizedBox(height: AppTheme.responsiveSize(context, phone: 40, tablet: 60)),
 
                     // GENERATE BUTTON
                     Consumer<UploadProvider>(
@@ -238,6 +279,8 @@ class _ReferenceTransformScreenState extends State<ReferenceTransformScreen> {
 
   void _generateReferenceTransform(UploadProvider uploadProvider, BuildContext context) async {
     final creditManager = Provider.of<CreditManager>(context, listen: false);
+    final int cost = uploadProvider.isMultipleVariationsEnabled ? 15 : 5;
+
     try {
       if (uploadProvider.selectedImage == null || uploadProvider.secondaryImage == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -246,8 +289,8 @@ class _ReferenceTransformScreenState extends State<ReferenceTransformScreen> {
         return;
       }
 
-      if (!creditManager.hasEnoughCredits(_creditsPerGeneration)) {
-        _showInsufficientCreditsDialog(context);
+      if (!creditManager.hasEnoughCredits(cost)) {
+        _showInsufficientCreditsDialog(context, cost);
         return;
       }
 
@@ -272,14 +315,26 @@ class _ReferenceTransformScreenState extends State<ReferenceTransformScreen> {
       );
 
       String additionalInstruction = _instructionController.text.trim();
-
-      String generatedImageUrl = await uploadProvider.generateReferenceTransformImage(
+      String transformPrompt = uploadProvider.generateReferenceTransformAIPrompt(
         additionalInstruction: additionalInstruction.isEmpty ? null : additionalInstruction,
       );
 
+      List<String> generatedImageUrls = [];
+      if (uploadProvider.isMultipleVariationsEnabled) {
+        generatedImageUrls = await uploadProvider.generateMultipleImagesFromAPI(
+          basePrompt: transformPrompt,
+          imageFile: uploadProvider.selectedImage!, // Needs to use secondary as reference in prompt logically, but API call structure might need adjustment. Trusting backend schema for now.
+        );
+      } else {
+        String generatedImageUrl = await uploadProvider.generateReferenceTransformImage(
+          additionalInstruction: additionalInstruction.isEmpty ? null : additionalInstruction,
+        );
+        generatedImageUrls = [generatedImageUrl];
+      }
+
       final deductionSucceeded = await creditManager.deductCredits(
-        _creditsPerGeneration,
-        reason: 'reference_transform_generation',
+        cost,
+        reason: uploadProvider.isMultipleVariationsEnabled ? 'multiple_variations' : 'reference_transform_generation',
       );
 
       if (!deductionSucceeded) {
@@ -298,19 +353,16 @@ class _ReferenceTransformScreenState extends State<ReferenceTransformScreen> {
       if (context.mounted) Navigator.pop(context);
 
       if (context.mounted) {
-        String transformPrompt = uploadProvider.generateReferenceTransformAIPrompt(
-          additionalInstruction: additionalInstruction.isEmpty ? null : additionalInstruction,
-        );
-
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => ResultScreen(
-              generatedImageUrl: generatedImageUrl,
+              generatedImageUrls: generatedImageUrls,
               roomType: 'Reference Transform',
               style: "Style Transfer",
               budget: "Not Specified",
               prompt: transformPrompt,
+              beforeImageUrl: uploadProvider.selectedImage?.path,
             ),
           ),
         );
@@ -323,7 +375,7 @@ class _ReferenceTransformScreenState extends State<ReferenceTransformScreen> {
     }
   }
 
-  void _showInsufficientCreditsDialog(BuildContext context) {
+  void _showInsufficientCreditsDialog(BuildContext context, int requiredCredits) {
     showDialog(
       context: context,
       builder: (dialogContext) {
@@ -331,7 +383,7 @@ class _ReferenceTransformScreenState extends State<ReferenceTransformScreen> {
           backgroundColor: AppTheme.secondaryColor,
           title: Text('Not enough credits', style: TextStyle(color: AppTheme.primaryColor)),
           content: Text(
-            'You need at least $_creditsPerGeneration credits to generate this transformation.',
+            'You need at least $requiredCredits credits to generate this transformation.',
             style: TextStyle(color: AppTheme.primaryColor),
           ),
           shape: RoundedRectangleBorder(

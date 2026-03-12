@@ -6,6 +6,7 @@ import '../in_app_purchase/credit_purchase_screen.dart';
 import '../provider/upload_provider.dart';
 import '../screens/result_screen.dart';
 import '../services/api_services.dart';
+import '../services/exception_handler.dart';
 import '../widgets/generate_button.dart';
 import '../widgets/image_selection_widget.dart';
 import '../widgets/wall_card.dart';
@@ -51,13 +52,15 @@ class _WaalRedesignState extends State<WaalRedesign> {
 
     return Scaffold(
       backgroundColor: AppTheme.secondaryColor,
-
       appBar: AppBar(
         title: const Text('Wall Redesign'),
         backgroundColor: AppTheme.secondaryColor,
         foregroundColor: AppTheme.primaryColor,
-        leading: CupertinoButton(
-          padding: EdgeInsets.zero,
+        leading: IconButton(
+          icon: Icon(
+            AppTheme.backButtonIcon,
+            size: AppTheme.backButtonIconSize(context),
+          ),
           onPressed: () {
             final uploadProvider = Provider.of<UploadProvider>(
               context,
@@ -66,7 +69,6 @@ class _WaalRedesignState extends State<WaalRedesign> {
             uploadProvider.reset();
             Navigator.pop(context);
           },
-          child: const Icon(CupertinoIcons.back),
         ),
       ),
       body: Consumer<UploadProvider>(
@@ -83,9 +85,7 @@ class _WaalRedesignState extends State<WaalRedesign> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // IMAGE SELECTION WIDGET
                         ImageSelectionWidget(),
-
                         SizedBox(
                           height: AppTheme.responsiveSize(
                             context,
@@ -93,8 +93,6 @@ class _WaalRedesignState extends State<WaalRedesign> {
                             tablet: 55,
                           ),
                         ),
-
-                        // WALL DESIGNS - HORIZONTAL LIST
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -114,7 +112,6 @@ class _WaalRedesignState extends State<WaalRedesign> {
                             _buildWallDesignsList(uploadProvider, listHeight),
                           ],
                         ),
-
                         if (!isTablet)
                           SizedBox(
                             height: AppTheme.responsiveSize(
@@ -123,18 +120,46 @@ class _WaalRedesignState extends State<WaalRedesign> {
                               tablet: 26,
                             ),
                           ),
-
-                        // DESCRIPTION CONTAINER
                         if (uploadProvider.selectedRoomType != null)
                           _buildDescriptionContainer(
                             uploadProvider,
                             MediaQuery.of(context).size.width,
                           ),
+                        SizedBox(height: 20),
 
-                        // SPACER - Using SizedBox instead of Expanded
+                        // MULTIPLE VARIATIONS TOGGLE
+                        Container(
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppTheme.primaryColor.withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: SwitchListTile(
+                            title: Text(
+                              'Generate 3 Variations',
+                              style: TextStyle(
+                                fontSize: AppTheme.responsiveFont(context, phone: 15, tablet: 17),
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                            subtitle: Text(
+                              'Costs 15 credits instead of 5',
+                              style: TextStyle(
+                                fontSize: AppTheme.responsiveFont(context, phone: 12, tablet: 14),
+                                color: AppTheme.primaryColor.withOpacity(0.7),
+                              ),
+                            ),
+                            value: uploadProvider.isMultipleVariationsEnabled,
+                            activeColor: AppTheme.primaryColor,
+                            onChanged: (value) => uploadProvider.setMultipleVariationsEnabled(value),
+                          ),
+                        ),
+
                         SizedBox(height: descriptionToButtonSpacing),
-
-                        // GENERATE BUTTON WIDGET
                         GenerateButtonWidget(
                           onGeneratePressed: () {
                             _generateWallDesign(uploadProvider, context);
@@ -147,7 +172,6 @@ class _WaalRedesignState extends State<WaalRedesign> {
                             tablet: 14,
                           ),
                         ),
-                        // Add extra padding at bottom for safe area
                         SizedBox(height: MediaQuery.of(context).padding.bottom),
                       ],
                     ),
@@ -162,9 +186,9 @@ class _WaalRedesignState extends State<WaalRedesign> {
   }
 
   Widget _buildDescriptionContainer(
-    UploadProvider uploadProvider,
-    double screenWidth,
-  ) {
+      UploadProvider uploadProvider,
+      double screenWidth,
+      ) {
     return Container(
       padding: EdgeInsets.all(
         AppTheme.responsiveSize(context, phone: 16, tablet: 20),
@@ -254,7 +278,7 @@ class _WaalRedesignState extends State<WaalRedesign> {
                   ),
                   decoration: InputDecoration(
                     hintText:
-                        'Example: Light blue color, textured finish, wainscoting...',
+                    'Example: Light blue color, textured finish, wainscoting...',
                     hintStyle: TextStyle(
                       color: AppTheme.primaryColor.withOpacity(0.5),
                       fontSize: AppTheme.responsiveFont(
@@ -395,9 +419,9 @@ class _WaalRedesignState extends State<WaalRedesign> {
   }
 
   Widget _buildWallDesignsList(
-    UploadProvider uploadProvider,
-    double listHeight,
-  ) {
+      UploadProvider uploadProvider,
+      double listHeight,
+      ) {
     final wallDesigns = [
       {'name': 'Paint', 'image': 'assets/images/paint.jpg'},
       {'name': 'Wallpaper', 'image': 'assets/images/wallpaper.jpg'},
@@ -443,28 +467,20 @@ class _WaalRedesignState extends State<WaalRedesign> {
   }
 
   void _generateWallDesign(
-    UploadProvider uploadProvider,
-    BuildContext context,
-  ) async {
+      UploadProvider uploadProvider,
+      BuildContext context,
+      ) async {
     final creditManager = Provider.of<CreditManager>(context, listen: false);
+    final int cost = uploadProvider.isMultipleVariationsEnabled ? 15 : 5;
+
     try {
       if (uploadProvider.selectedImage == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select an image first'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ExceptionHandler.showToast('Please select an image first');
         return;
       }
 
       if (uploadProvider.selectedRoomType == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select a wall design type'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ExceptionHandler.showToast('Please select a wall design type');
         return;
       }
 
@@ -473,8 +489,8 @@ class _WaalRedesignState extends State<WaalRedesign> {
         if (!mounted) return;
       }
 
-      if (!creditManager.hasEnoughCredits(_creditsPerGeneration)) {
-        _showInsufficientCreditsDialog(context);
+      if (!creditManager.hasEnoughCredits(cost)) {
+        _showInsufficientCreditsDialog(context, cost);
         return;
       }
 
@@ -497,36 +513,37 @@ class _WaalRedesignState extends State<WaalRedesign> {
         ),
       );
 
-      // Generate combined prompt with user description
       String customDescription = _descriptionController.text.trim();
       String finalPrompt = _generateCombinedPrompt(
         uploadProvider,
         customDescription,
       );
 
-      // Use custom method for wall design with combined prompt
-      String generatedImageUrl = await _generateWallImageWithCustomPrompt(
-        uploadProvider,
-        finalPrompt,
-        context,
-      );
+      List<String> generatedImageUrls = [];
+      if (uploadProvider.isMultipleVariationsEnabled) {
+        generatedImageUrls = await uploadProvider.generateMultipleImagesFromAPI(
+          basePrompt: finalPrompt,
+          imageFile: uploadProvider.selectedImage!,
+        );
+      } else {
+        String url = await _generateWallImageWithCustomPrompt(
+          uploadProvider,
+          finalPrompt,
+          context,
+        );
+        generatedImageUrls = [url];
+      }
 
       final deductionSucceeded = await creditManager.deductCredits(
-        _creditsPerGeneration,
-        reason: 'wall_generation',
+        cost,
+        reason: uploadProvider.isMultipleVariationsEnabled ? 'multiple_variations' : 'wall_generation',
       );
 
       if (!deductionSucceeded) {
         if (context.mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Unable to deduct credits. Please try again.'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          ExceptionHandler.showToast('Unable to deduct credits');
         }
-
         return;
       }
 
@@ -537,27 +554,23 @@ class _WaalRedesignState extends State<WaalRedesign> {
           context,
           MaterialPageRoute(
             builder: (context) => ResultScreen(
-              generatedImageUrl: generatedImageUrl,
+              generatedImageUrls: generatedImageUrls,
               roomType: uploadProvider.selectedRoomType!,
               style: "Wall Design",
               budget: "Not Specified",
               prompt: finalPrompt,
+              beforeImageUrl: uploadProvider.selectedImage?.path,
             ),
           ),
         );
       }
     } catch (e) {
       if (context.mounted) Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Generation failed: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      ExceptionHandler.handleException(e);
     }
   }
 
-  void _showInsufficientCreditsDialog(BuildContext context) {
+  void _showInsufficientCreditsDialog(BuildContext context, int requiredCredits) {
     showDialog(
       context: context,
       builder: (dialogContext) {
@@ -568,7 +581,7 @@ class _WaalRedesignState extends State<WaalRedesign> {
             style: TextStyle(color: AppTheme.primaryColor),
           ),
           content: Text(
-            'You need at least $_creditsPerGeneration credits to generate this wall design.',
+            'You need at least $requiredCredits credits to generate this wall design.',
             style: TextStyle(color: AppTheme.primaryColor),
           ),
           shape: RoundedRectangleBorder(
@@ -595,10 +608,10 @@ class _WaalRedesignState extends State<WaalRedesign> {
                 Navigator.of(dialogContext).pop();
                 Navigator.of(context)
                     .push(
-                      MaterialPageRoute(
-                        builder: (_) => const CreditsPurchaseScreen(),
-                      ),
-                    )
+                  MaterialPageRoute(
+                    builder: (_) => const CreditsPurchaseScreen(),
+                  ),
+                )
                     .then((_) => _returnToPreviousScreen(context));
               },
               child: const Text(
@@ -619,9 +632,9 @@ class _WaalRedesignState extends State<WaalRedesign> {
   }
 
   String _generateCombinedPrompt(
-    UploadProvider uploadProvider,
-    String customDescription,
-  ) {
+      UploadProvider uploadProvider,
+      String customDescription,
+      ) {
     String basePrompt = uploadProvider.generateWallAIPrompt();
 
     if (customDescription.isNotEmpty) {
@@ -639,10 +652,10 @@ FINAL INSTRUCTIONS: Incorporate the above user requirements while maintaining al
   }
 
   Future<String> _generateWallImageWithCustomPrompt(
-    UploadProvider uploadProvider,
-    String prompt,
-    BuildContext context,
-  ) async {
+      UploadProvider uploadProvider,
+      String prompt,
+      BuildContext context,
+      ) async {
     try {
       print('🚀 Starting wall design generation with custom prompt...');
       print('📝 Combined Prompt: ${prompt.substring(0, 100)}...');

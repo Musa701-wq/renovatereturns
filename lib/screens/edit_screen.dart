@@ -256,7 +256,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, size: getIconSize()),
+          icon: Icon(
+            AppTheme.backButtonIcon,
+            size: AppTheme.backButtonIconSize(context),
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         elevation: 0,

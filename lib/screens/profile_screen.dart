@@ -11,6 +11,7 @@ import 'edit_screen.dart';
 import 'login_screen.dart';
 import '../utils/theme.dart';
 import 'faq_screen.dart';
+import 'feedback_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -224,6 +225,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const HistoryScreen()),
+                );
+              },
+            ),
+
+            const SizedBox(height: 12),
+
+            _buildProfileTile(
+              context,
+              Icons.feedback_outlined,
+              'Feedback',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const FeedbackScreen()),
                 );
               },
             ),

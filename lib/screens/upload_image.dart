@@ -1,4 +1,3 @@
-/*
 import 'package:ai_remodeling/screens/result_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -6,770 +5,7 @@ import 'package:provider/provider.dart';
 import '../in_app_purchase/credit_manager.dart';
 import '../in_app_purchase/credit_purchase_screen.dart';
 import '../provider/upload_provider.dart';
-import '../widgets/generate_button.dart';
-import '../widgets/image_selection_widget.dart';
-import '../utils/theme.dart'; // Import your theme
-
-class UploadScreen extends StatefulWidget {
-  const UploadScreen({super.key});
-
-  @override
-  State<UploadScreen> createState() => _UploadScreenState();
-}
-
-class _UploadScreenState extends State<UploadScreen> {
-  static const int _creditsPerGeneration = 5;
-  // Search controllers for each dropdown
-  final TextEditingController _roomTypeSearchController =
-      TextEditingController();
-  final TextEditingController _styleSearchController = TextEditingController();
-  final TextEditingController _budgetSearchController = TextEditingController();
-
-  // Filtered lists for search functionality
-  List<String> _filteredRoomTypes = [];
-  List<String> _filteredStyles = [];
-  List<String> _filteredBudgets = [];
-
-  @override
-  void initState() {
-    super.initState();
-    // Initialize filtered lists with all items
-    _filteredRoomTypes = Provider.of<UploadProvider>(
-      context,
-      listen: false,
-    ).roomTypes;
-    _filteredStyles = Provider.of<UploadProvider>(
-      context,
-      listen: false,
-    ).styleOptions;
-    _filteredBudgets = Provider.of<UploadProvider>(
-      context,
-      listen: false,
-    ).budgetOptions;
-  }
-
-  @override
-  void dispose() {
-    _roomTypeSearchController.dispose();
-    _styleSearchController.dispose();
-    _budgetSearchController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.secondaryColor, // Secondary color background
-      appBar: AppBar(
-        title: const Text('Upload & Generate'),
-        backgroundColor: AppTheme.secondaryColor,
-        foregroundColor: AppTheme.primaryColor,
-        leading: CupertinoButton(
-          padding: EdgeInsets.zero,
-          onPressed: () {
-            final uploadProvider = Provider.of<UploadProvider>(
-              context,
-              listen: false,
-            );
-            uploadProvider.setSelectedRoomType(null);
-            uploadProvider.setSelectedImage(null);
-            uploadProvider.setSelectedImageSource(null);
-            Navigator.pop(context);
-          },
-          child: const Icon(CupertinoIcons.back),
-        ),
-      ),
-
-      body: Consumer<UploadProvider>(
-        builder: (context, uploadProvider, child) {
-          return Padding(
-            padding: EdgeInsets.all(AppTheme.responsivePadding(context)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // IMAGE SELECTION WIDGET
-                ImageSelectionWidget(),
-
-                SizedBox(
-                  height: AppTheme.responsiveSize(
-                    context,
-                    phone: 20,
-                    tablet: 28,
-                  ),
-                ),
-
-                // ROOM TYPE CATEGORY
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Room Type',
-                      style: TextStyle(
-                        fontSize: AppTheme.responsiveFont(
-                          context,
-                          phone: 16,
-                          tablet: 18,
-                        ),
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryColor, // Primary color text
-                      ),
-                    ),
-                    SizedBox(
-                      height: AppTheme.responsiveSize(
-                        context,
-                        phone: 8,
-                        tablet: 10,
-                      ),
-                    ),
-                    _buildSelectionField(
-                      value: uploadProvider.selectedRoomType,
-                      onTap: () =>
-                          _showRoomTypeBottomSheet(context, uploadProvider),
-                    ),
-                  ],
-                ),
-
-                SizedBox(
-                  height: AppTheme.responsiveSize(
-                    context,
-                    phone: 20,
-                    tablet: 28,
-                  ),
-                ),
-
-                // STYLE AND BUDGET CATEGORIES
-                Row(
-                  children: [
-                    // STYLE CATEGORY
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Ai Intervention',
-                            style: TextStyle(
-                              fontSize: AppTheme.responsiveFont(
-                                context,
-                                phone: 16,
-                                tablet: 22,
-                              ),
-                              fontWeight: FontWeight.bold,
-                              color:
-                                  AppTheme.primaryColor, // Primary color text
-                            ),
-                          ),
-                          SizedBox(
-                            height: AppTheme.responsiveSize(
-                              context,
-                              phone: 8,
-                              tablet: 10,
-                            ),
-                          ),
-                          _buildSelectionField(
-                            value: uploadProvider.selectedStyle,
-                            onTap: () =>
-                                _showStyleBottomSheet(context, uploadProvider),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    SizedBox(
-                      width: AppTheme.responsiveSize(
-                        context,
-                        phone: 15,
-                        tablet: 20,
-                      ),
-                    ),
-
-                    // BUDGET CATEGORY
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Budget',
-                            style: TextStyle(
-                              fontSize: AppTheme.responsiveFont(
-                                context,
-                                phone: 16,
-                                tablet: 22,
-                              ),
-                              fontWeight: FontWeight.bold,
-                              color:
-                                  AppTheme.primaryColor, // Primary color text
-                            ),
-                          ),
-                          SizedBox(
-                            height: AppTheme.responsiveSize(
-                              context,
-                              phone: 8,
-                              tablet: 10,
-                            ),
-                          ),
-                          _buildSelectionField(
-                            value: uploadProvider.selectedBudget,
-                            onTap: () =>
-                                _showBudgetBottomSheet(context, uploadProvider),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-                // SPACER
-                Expanded(child: Container()),
-
-                // GENERATE BUTTON WIDGET
-                GenerateButtonWidget(
-                  onGeneratePressed: () =>
-                      _generateImage(uploadProvider, context),
-                ),
-                SizedBox(
-                  height: AppTheme.responsiveSize(
-                    context,
-                    phone: 10,
-                    tablet: 14,
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildSelectionField({
-    required String? value,
-    required VoidCallback onTap,
-  }) {
-    final double paddingH = AppTheme.responsiveSize(
-      context,
-      phone: 16,
-      tablet: 24,
-    );
-    final double paddingV = AppTheme.responsiveSize(
-      context,
-      phone: 14,
-      tablet: 20,
-    );
-    final double fontSize = AppTheme.responsiveFont(
-      context,
-      phone: 16,
-      tablet: 22,
-    );
-    final double iconSize = AppTheme.responsiveSize(
-      context,
-      phone: 20,
-      tablet: 30,
-    );
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: paddingH, vertical: paddingV),
-        decoration: BoxDecoration(
-          color: AppTheme.primaryColor.withOpacity(
-            0.3,
-          ), // Primary color with 0.3 opacity
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.white.withOpacity(0.3)),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                value ?? 'Select',
-                style: TextStyle(
-                  color: value != null
-                      ? AppTheme.primaryColor
-                      : AppTheme.primaryColor, // Primary color text
-                  fontSize: fontSize,
-                ),
-              ),
-            ),
-            Icon(
-              Icons.arrow_drop_down,
-              color: AppTheme.primaryColor, // Primary color icon
-              size: iconSize,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showRoomTypeBottomSheet(
-    BuildContext context,
-    UploadProvider uploadProvider,
-  ) {
-    _roomTypeSearchController.clear();
-    _filteredRoomTypes = uploadProvider.roomTypes;
-    _showSelectionBottomSheet(
-      context: context,
-      title: 'Room Type',
-      searchController: _roomTypeSearchController,
-      allItems: uploadProvider.roomTypes,
-      filteredItems: _filteredRoomTypes,
-      selectedItem: uploadProvider.selectedRoomType,
-      onSearchChanged: (query) {
-        setState(() {
-          _filteredRoomTypes = uploadProvider.roomTypes
-              .where((item) => item.toLowerCase().contains(query.toLowerCase()))
-              .toList();
-        });
-      },
-      onSelect: (value) => uploadProvider.setSelectedRoomType(value),
-    );
-  }
-
-  void _showStyleBottomSheet(
-    BuildContext context,
-    UploadProvider uploadProvider,
-  ) {
-    _styleSearchController.clear();
-    _filteredStyles = uploadProvider.styleOptions;
-    _showSelectionBottomSheet(
-      context: context,
-      title: 'Intervention',
-      description: 'Choose the design intensity for your room',
-      searchController: _styleSearchController,
-      allItems: uploadProvider.styleOptions,
-      filteredItems: _filteredStyles,
-      selectedItem: uploadProvider.selectedStyle,
-      onSearchChanged: (query) {
-        setState(() {
-          _filteredStyles = uploadProvider.styleOptions
-              .where((item) => item.toLowerCase().contains(query.toLowerCase()))
-              .toList();
-        });
-      },
-      onSelect: (value) => uploadProvider.setSelectedStyle(value),
-    );
-  }
-
-  void _showBudgetBottomSheet(
-    BuildContext context,
-    UploadProvider uploadProvider,
-  ) {
-    _budgetSearchController.clear();
-    _filteredBudgets = uploadProvider.budgetOptions;
-    _showSelectionBottomSheet(
-      context: context,
-      title: 'Budget',
-      description: 'Choose your budget level for the project',
-      searchController: _budgetSearchController,
-      allItems: uploadProvider.budgetOptions,
-      filteredItems: _filteredBudgets,
-      selectedItem: uploadProvider.selectedBudget,
-      onSearchChanged: (query) {
-        setState(() {
-          _filteredBudgets = uploadProvider.budgetOptions
-              .where((item) => item.toLowerCase().contains(query.toLowerCase()))
-              .toList();
-        });
-      },
-      onSelect: (value) => uploadProvider.setSelectedBudget(value),
-    );
-  }
-
-  void _showSelectionBottomSheet({
-    required BuildContext context,
-    required String title,
-    String? description,
-    required TextEditingController searchController,
-    required List<String> allItems,
-    required List<String> filteredItems,
-    required String? selectedItem,
-    required Function(String) onSearchChanged,
-    required Function(String) onSelect,
-  }) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppTheme.secondaryColor, // Secondary color background
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          height: MediaQuery.of(context).size.height * 0.8,
-          child: Column(
-            children: [
-              // HEADER
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryColor, // Primary color text
-                ),
-              ),
-              if (description != null) ...[
-                const SizedBox(height: 5),
-                Text(
-                  description,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppTheme.primaryColor.withOpacity(
-                      0.7,
-                    ), // Primary color with opacity
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-              const SizedBox(height: 15),
-
-              */
-/* // SEARCH BAR
-              Container(
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withOpacity(0.3), // Primary color with 0.3 opacity
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: TextField(
-                  controller: searchController,
-                  style: TextStyle(color: AppTheme.primaryColor), // Primary color text
-                  decoration: InputDecoration(
-                    hintText: 'Search $title...',
-                    hintStyle: TextStyle(
-                      color: AppTheme.primaryColor.withOpacity(0.5), // Primary color with opacity
-                      fontSize: 16,
-                    ),
-                    prefixIcon: Icon(
-                      Icons.search,
-                      color: AppTheme.primaryColor, // Primary color icon
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 15,
-                      vertical: 15,
-                    ),
-                    filled: true,
-                    fillColor: Colors.transparent,
-                  ),
-                  onChanged: onSearchChanged,
-                ),
-              ),
-              const SizedBox(height: 15),*//*
-
-
-              // RESULTS COUNT
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${filteredItems.length} results',
-                      style: TextStyle(
-                        color: AppTheme.primaryColor.withOpacity(
-                          0.7,
-                        ), // Primary color with opacity
-                        fontSize: 12,
-                      ),
-                    ),
-                    if (searchController.text.isNotEmpty)
-                      GestureDetector(
-                        onTap: () {
-                          searchController.clear();
-                          onSearchChanged('');
-                        },
-                        child: Text(
-                          'Clear',
-                          style: TextStyle(
-                            color: AppTheme.primaryColor, // Primary color text
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-
-              // LIST ITEMS
-              Expanded(
-                child: filteredItems.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.search_off,
-                              color: AppTheme.primaryColor.withOpacity(
-                                0.5,
-                              ), // Primary color with opacity
-                              size: 50,
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              'No results found',
-                              style: TextStyle(
-                                color: AppTheme.primaryColor.withOpacity(
-                                  0.7,
-                                ), // Primary color with opacity
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            Text(
-                              'Try different keywords',
-                              style: TextStyle(
-                                color: AppTheme.primaryColor.withOpacity(
-                                  0.5,
-                                ), // Primary color with opacity
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: filteredItems.length,
-                        itemBuilder: (context, index) {
-                          final item = filteredItems[index];
-                          return GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: () {
-                              onSelect(item);
-                              Navigator.pop(context);
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(vertical: 4),
-                              decoration: BoxDecoration(
-                                color: selectedItem == item
-                                    ? AppTheme.primaryColor.withOpacity(
-                                        0.3,
-                                      ) // Primary color with opacity
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: ListTile(
-                                title: Text(
-                                  item,
-                                  style: TextStyle(
-                                    color: AppTheme
-                                        .primaryColor, // Primary color text
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                trailing: selectedItem == item
-                                    ? Icon(
-                                        Icons.check,
-                                        color: AppTheme.primaryColor,
-                                      ) // Primary color icon
-                                    : null,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-              ),
-
-              // CLOSE BUTTON
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor.withOpacity(
-                      0.3,
-                    ), // Primary color with 0.3 opacity
-                    foregroundColor:
-                        AppTheme.primaryColor, // Primary color text
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text('Close'),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _generateImage(
-    UploadProvider uploadProvider,
-    BuildContext context,
-  ) async {
-    final creditManager = Provider.of<CreditManager>(context, listen: false);
-    if (creditManager.isLoading) {
-      await creditManager.init();
-      if (!mounted) return;
-    }
-    if (!creditManager.hasEnoughCredits(_creditsPerGeneration)) {
-      _showInsufficientCreditsDialog(context);
-      return;
-    }
-
-    try {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          backgroundColor:
-              AppTheme.secondaryColor, // Secondary color background
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(
-                color: AppTheme.primaryColor,
-              ), // Primary color
-              const SizedBox(height: 20),
-              Text(
-                'Generating your design...',
-                style: TextStyle(
-                  color: AppTheme.primaryColor,
-                ), // Primary color text
-              ),
-            ],
-          ),
-        ),
-      );
-
-      String generatedImageUrl = await uploadProvider.generateImage();
-
-      final deductionSucceeded = await creditManager.deductCredits(
-        _creditsPerGeneration,
-        reason: 'instant_generation',
-      );
-
-      if (!deductionSucceeded) {
-        if (context.mounted) {
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Unable to deduct credits. Please try again.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-
-        return;
-      }
-
-      if (context.mounted) Navigator.pop(context);
-
-      _showSuccessSnackBar(
-        context,
-        '${uploadProvider.selectedRoomType} design generated successfully!',
-      );
-
-      if (context.mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ResultScreen(
-              generatedImageUrl: generatedImageUrl,
-              roomType: uploadProvider.selectedRoomType!,
-              style: uploadProvider.selectedStyle!,
-              budget: uploadProvider.selectedBudget!,
-              prompt: uploadProvider.generateAIPrompt(),
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) Navigator.pop(context);
-      _showErrorSnackBar(context, 'Generation failed: ${e.toString()}');
-    }
-  }
-
-  void _showSuccessSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppTheme.primaryColor, // Primary color background
-        duration: const Duration(seconds: 3),
-      ),
-    );
-  }
-
-  void _showErrorSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 3),
-      ),
-    );
-  }
-
-  void _showInsufficientCreditsDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppTheme.secondaryColor,
-          title: Text(
-            'Not enough credits',
-            style: TextStyle(color: AppTheme.primaryColor),
-          ),
-          content: Text(
-            'You need at least $_creditsPerGeneration credits to generate this design.',
-            style: TextStyle(color: AppTheme.primaryColor),
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              AppTheme.responsiveSize(context, phone: 16, tablet: 20),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                _returnToPreviousScreen(context);
-              },
-              child: const Text('Maybe later',style: TextStyle(color: AppTheme.primaryColor),),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryColor,
-              ),
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                Navigator.of(context)
-                    .push(
-                      MaterialPageRoute(
-                        builder: (_) => const CreditsPurchaseScreen(),
-                      ),
-                    )
-                    .then((_) => _returnToPreviousScreen(context));
-              },
-              child: const Text('Purchase Credits',style: TextStyle(color: AppTheme.secondaryColor),),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _returnToPreviousScreen(BuildContext context) {
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
-    }
-  }
-}
-
-*/
-// lib/screens/upload_screen.dart - FIXED VERSION
-// Expanded widget ko hata diya, ab sab kaam karega!
-
-import 'package:ai_remodeling/screens/result_screen.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../in_app_purchase/credit_manager.dart';
-import '../in_app_purchase/credit_purchase_screen.dart';
-import '../provider/upload_provider.dart';
+import '../services/exception_handler.dart';
 import '../widgets/generate_button.dart';
 import '../widgets/image_selection_widget.dart';
 import '../utils/theme.dart';
@@ -818,8 +54,11 @@ class _UploadScreenState extends State<UploadScreen> {
         title: const Text('Upload & Generate'),
         backgroundColor: AppTheme.secondaryColor,
         foregroundColor: AppTheme.primaryColor,
-        leading: CupertinoButton(
-          padding: EdgeInsets.zero,
+        leading: IconButton(
+          icon: Icon(
+            AppTheme.backButtonIcon,
+            size: AppTheme.backButtonIconSize(context),
+          ),
           onPressed: () {
             final uploadProvider = Provider.of<UploadProvider>(context, listen: false);
             uploadProvider.setSelectedRoomType(null);
@@ -827,7 +66,6 @@ class _UploadScreenState extends State<UploadScreen> {
             uploadProvider.setSelectedImageSource(null);
             Navigator.pop(context);
           },
-          child: const Icon(CupertinoIcons.back),
         ),
       ),
       body: Consumer<UploadProvider>(
@@ -916,7 +154,7 @@ class _UploadScreenState extends State<UploadScreen> {
 
                   SizedBox(height: AppTheme.responsiveSize(context, phone: 20, tablet: 28)),
 
-                  // ✅ CUSTOMIZATION TEXT FIELD (OPTIONAL)
+                  // CUSTOMIZATION TEXT FIELD (OPTIONAL)
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -987,7 +225,40 @@ class _UploadScreenState extends State<UploadScreen> {
                     ],
                   ),
 
-                  // ✅ SPACER REPLACEMENT (ab Expanded ki jagah SizedBox)
+                  SizedBox(height: AppTheme.responsiveSize(context, phone: 15, tablet: 20)),
+
+                  // MULTIPLE VARIATIONS TOGGLE
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppTheme.primaryColor.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: SwitchListTile(
+                      title: Text(
+                        'Generate 3 Variations',
+                        style: TextStyle(
+                          fontSize: AppTheme.responsiveFont(context, phone: 15, tablet: 17),
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryColor,
+                        ),
+                      ),
+                      subtitle: Text(
+                        'Costs 15 credits instead of 5',
+                        style: TextStyle(
+                          fontSize: AppTheme.responsiveFont(context, phone: 12, tablet: 14),
+                          color: AppTheme.primaryColor.withOpacity(0.7),
+                        ),
+                      ),
+                      value: uploadProvider.isMultipleVariationsEnabled,
+                      activeColor: AppTheme.primaryColor,
+                      onChanged: (value) => uploadProvider.setMultipleVariationsEnabled(value),
+                    ),
+                  ),
+
                   SizedBox(height: AppTheme.responsiveSize(context, phone: 30, tablet: 40)),
 
                   // GENERATE BUTTON WIDGET
@@ -1148,23 +419,6 @@ class _UploadScreenState extends State<UploadScreen> {
               ],
               const SizedBox(height: 15),
 
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${filteredItems.length} results',
-                      style: TextStyle(
-                        color: AppTheme.primaryColor.withOpacity(0.7),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-
               Expanded(
                 child: filteredItems.isEmpty
                     ? Center(
@@ -1250,18 +504,19 @@ class _UploadScreenState extends State<UploadScreen> {
 
   void _generateImage(UploadProvider uploadProvider, BuildContext context) async {
     final creditManager = Provider.of<CreditManager>(context, listen: false);
-
-    if (creditManager.isLoading) {
-      await creditManager.init();
-      if (!mounted) return;
-    }
-
-    if (!creditManager.hasEnoughCredits(_creditsPerGeneration)) {
-      _showInsufficientCreditsDialog(context);
-      return;
-    }
+    final int cost = uploadProvider.isMultipleVariationsEnabled ? 15 : 5;
 
     try {
+      if (creditManager.isLoading) {
+        await creditManager.init();
+        if (!mounted) return;
+      }
+
+      if (!creditManager.hasEnoughCredits(cost)) {
+        _showInsufficientCreditsDialog(context, cost);
+        return;
+      }
+
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -1282,33 +537,40 @@ class _UploadScreenState extends State<UploadScreen> {
       );
 
       String customization = _customizationController.text.trim();
-      String generatedImageUrl = await uploadProvider.generateImageWithCustomization(
+      List<String> generatedImageUrls = [];
+      String prompt = uploadProvider.generateAIPromptWithCustomization(
         customization: customization.isEmpty ? null : customization,
       );
 
+      if (uploadProvider.isMultipleVariationsEnabled) {
+        generatedImageUrls = await uploadProvider.generateMultipleImagesFromAPI(
+          basePrompt: prompt,
+          imageFile: uploadProvider.selectedImage!,
+        );
+      } else {
+        String url = await uploadProvider.generateImageWithCustomization(
+          customization: customization.isEmpty ? null : customization,
+        );
+        generatedImageUrls = [url];
+      }
+
       final deductionSucceeded = await creditManager.deductCredits(
-        _creditsPerGeneration,
-        reason: 'instant_generation',
+        cost,
+        reason: uploadProvider.isMultipleVariationsEnabled ? 'multiple_variations' : 'instant_generation',
       );
 
       if (!deductionSucceeded) {
         if (context.mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Unable to deduct credits. Please try again.'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          ExceptionHandler.showToast('Unable to deduct credits');
         }
         return;
       }
 
       if (context.mounted) Navigator.pop(context);
 
-      _showSuccessSnackBar(
-        context,
-        '${uploadProvider.selectedRoomType} design generated successfully!',
+      ExceptionHandler.showSuccess(
+        '${uploadProvider.selectedRoomType} design generated!',
       );
 
       if (context.mounted) {
@@ -1316,44 +578,23 @@ class _UploadScreenState extends State<UploadScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => ResultScreen(
-              generatedImageUrl: generatedImageUrl,
+              generatedImageUrls: generatedImageUrls,
               roomType: uploadProvider.selectedRoomType!,
               style: uploadProvider.selectedStyle!,
               budget: uploadProvider.selectedBudget!,
-              prompt: uploadProvider.generateAIPromptWithCustomization(
-                customization: customization.isEmpty ? null : customization,
-              ),
+              prompt: prompt,
+              beforeImageUrl: uploadProvider.selectedImage?.path,
             ),
           ),
         );
       }
     } catch (e) {
       if (context.mounted) Navigator.pop(context);
-      _showErrorSnackBar(context, 'Generation failed: ${e.toString()}');
+      ExceptionHandler.handleException(e);
     }
   }
 
-  void _showSuccessSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppTheme.primaryColor,
-        duration: const Duration(seconds: 3),
-      ),
-    );
-  }
-
-  void _showErrorSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 3),
-      ),
-    );
-  }
-
-  void _showInsufficientCreditsDialog(BuildContext context) {
+  void _showInsufficientCreditsDialog(BuildContext context, int requiredCredits) {
     showDialog(
       context: context,
       builder: (dialogContext) {
@@ -1364,7 +605,7 @@ class _UploadScreenState extends State<UploadScreen> {
             style: TextStyle(color: AppTheme.primaryColor),
           ),
           content: Text(
-            'You need at least $_creditsPerGeneration credits to generate this design.',
+            'You need at least $requiredCredits credits to generate this design.',
             style: TextStyle(color: AppTheme.primaryColor),
           ),
           shape: RoundedRectangleBorder(

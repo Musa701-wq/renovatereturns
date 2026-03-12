@@ -4,7 +4,7 @@ description: "A new Flutter project."
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 
-version: 1.0.1+2
+version: 4.0.0+1
 environment:
   sdk: ^3.10.1
 dependencies:
@@ -35,8 +35,11 @@ dependencies:
   url_launcher: ^6.1.10
   http: ^1.1.0
   app_tracking_transparency: ^2.0.6+1
+  firebase_analytics: ^12.1.0
+  fluttertoast: ^9.0.0
 
   flutter_launcher_icons: ^0.14.4
+  curved_navigation_bar: ^1.0.6
 
 flutter_launcher_icons:
   android: "launcher_icon"
