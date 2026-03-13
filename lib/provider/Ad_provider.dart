@@ -45,6 +45,7 @@ class AdProvider with ChangeNotifier {
     _isGenerateNativeAdLoaded = false;
     notifyListeners();
 
+    /*
     final ad = NativeAd(
       adUnitId: AdHelper.getNative(),
       request: const AdRequest(),
@@ -66,6 +67,7 @@ class AdProvider with ChangeNotifier {
     );
 
     await ad.load();
+    */
   }
 
   /// Load Native Ad for History Screen
@@ -75,6 +77,7 @@ class AdProvider with ChangeNotifier {
     _isHistoryNativeAdLoaded = false;
     notifyListeners();
 
+    /*
     final ad = NativeAd(
       adUnitId: AdHelper.getNative(),
       request: const AdRequest(),
@@ -96,12 +99,14 @@ class AdProvider with ChangeNotifier {
     );
 
     await ad.load();
+    */
   }
 
   // ============ LOAD REWARDED ADS ============
 
   /// Load Rewarded Ad (Credit screen & Save button)
   Future<void> loadRewardedAd() async {
+    /*
     if (_isLoadingRewardedAd) {
       debugPrint("⏳ [Ad] Already loading rewarded ad");
       return;
@@ -137,12 +142,15 @@ class AdProvider with ChangeNotifier {
       _isLoadingRewardedAd = false;
       notifyListeners();
     }
+    */
+    return;
   }
 
   // ============ SHOW REWARDED ADS ============
 
   /// Show Rewarded Ad for Credits
   Future<bool> showRewardedAdForCredits() async {
+    /*
     if (_rewardedAd == null) {
       debugPrint("⚠️ [Ad] Rewarded ad not loaded");
       return false;
@@ -186,10 +194,13 @@ class AdProvider with ChangeNotifier {
       debugPrint("❌ [Ad] Show rewarded ad error: $e");
       return false;
     }
+    */
+    return false;
   }
 
   /// Show Rewarded Ad (Save Button - No Credits)
   Future<bool> showRewardedAd() async {
+    /*
     if (_rewardedAd == null) {
       debugPrint("⚠️ [Ad] Rewarded ad not loaded for save");
       return false;
@@ -230,6 +241,8 @@ class AdProvider with ChangeNotifier {
       debugPrint("❌ [Ad] Show rewarded ad error: $e");
       return false;
     }
+    */
+    return false;
   }
 
   @override

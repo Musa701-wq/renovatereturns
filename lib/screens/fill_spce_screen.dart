@@ -817,7 +817,13 @@ class _FillSpaceScreenState extends State<FillSpaceScreen> {
       }
 
       if (!creditManager.hasEnoughCredits(cost)) {
-        _showInsufficientCreditsDialog(context, cost);
+        if (mounted) {
+          CreditDialog.show(
+            context,
+            'You need at least $cost credits to fill space.',
+            IAPManager().products,
+          );
+        }
         return;
       }
 
@@ -894,64 +900,4 @@ class _FillSpaceScreenState extends State<FillSpaceScreen> {
     }
   }
 
-  void _showInsufficientCreditsDialog(BuildContext context, int requiredCredits) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppTheme.secondaryColor,
-          title: Text(
-            'Not enough credits',
-            style: TextStyle(color: AppTheme.primaryColor),
-          ),
-          content: Text(
-            'You need at least $requiredCredits credits to fill space.',
-            style: TextStyle(color: AppTheme.primaryColor),
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              AppTheme.responsiveSize(context, phone: 16, tablet: 20),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                _returnToPreviousScreen(context);
-              },
-              child: const Text(
-                'Maybe later',
-                style: TextStyle(color: AppTheme.primaryColor),
-              ),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryColor,
-              ),
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                Navigator.of(context)
-                    .push(
-                  MaterialPageRoute(
-                    builder: (_) => const CreditsPurchaseScreen(),
-                  ),
-                )
-                    .then((_) => _returnToPreviousScreen(context));
-              },
-              child: const Text(
-                'Purchase Credits',
-                style: TextStyle(color: AppTheme.secondaryColor),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _returnToPreviousScreen(BuildContext context) {
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
-    }
-  }
 }

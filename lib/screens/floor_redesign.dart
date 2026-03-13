@@ -11,6 +11,8 @@ import '../widgets/generate_button.dart';
 import '../widgets/image_selection_widget.dart';
 import '../utils/theme.dart';
 import '../widgets/item_design_card.dart';
+import '../widgets/credit_dialog.dart';
+import '../in_app_purchase/i_ap_manager.dart';
 
 class FloorRedesign extends StatefulWidget {
   const FloorRedesign({super.key});
@@ -455,7 +457,13 @@ class _FloorRedesignState extends State<FloorRedesign> {
       }
 
       if (!creditManager.hasEnoughCredits(cost)) {
-        _showInsufficientCreditsDialog(context, cost);
+        if (mounted) {
+          CreditDialog.show(
+            context,
+            'You need at least $cost credits to generate this floor design.',
+            IAPManager().products,
+          );
+        }
         return;
       }
 
@@ -534,60 +542,6 @@ class _FloorRedesignState extends State<FloorRedesign> {
     }
   }
 
-  void _showInsufficientCreditsDialog(BuildContext context, int requiredCredits) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppTheme.secondaryColor,
-          title: Text(
-            'Not enough credits',
-            style: TextStyle(color: AppTheme.primaryColor),
-          ),
-          content: Text(
-            'You need at least $requiredCredits credits to generate this floor design.',
-            style: TextStyle(color: AppTheme.primaryColor),
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              AppTheme.responsiveSize(context, phone: 16, tablet: 20),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                _returnToPreviousScreen(context);
-              },
-              child: const Text('Maybe later', style: TextStyle(color: AppTheme.primaryColor)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryColor,
-              ),
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                Navigator.of(context)
-                    .push(
-                  MaterialPageRoute(
-                    builder: (_) => const CreditsPurchaseScreen(),
-                  ),
-                )
-                    .then((_) => _returnToPreviousScreen(context));
-              },
-              child: const Text('Purchase Credits', style: TextStyle(color: AppTheme.secondaryColor)),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _returnToPreviousScreen(BuildContext context) {
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
-    }
-  }
 
   String _generateCombinedPrompt(
       UploadProvider uploadProvider,

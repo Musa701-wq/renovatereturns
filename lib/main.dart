@@ -24,7 +24,7 @@ void main() async {
   await Firebase.initializeApp();
 
   await _requestTrackingPermission();
-  await MobileAds.instance.initialize();
+  // await MobileAds.instance.initialize();
 
   runApp(MyApp());
 }

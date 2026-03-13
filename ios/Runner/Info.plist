@@ -37,8 +37,6 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>FirebaseAppDelegateProxyEnabled</key>
 	<false/>
-	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-3774337907915828~2657005737</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
@@ -56,8 +54,6 @@
 	<string>This app needs permission to save images to your photo library</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs access to photo library to select images</string>
-	<key>NSUserTrackingUsageDescription</key>
-	<string>This app uses your data to show personalized ads and improve your experience</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>
@@ -85,7 +81,5 @@
 	<array>
 		<string>Default</string>
 	</array>
-	<key>NSLocationWhenInUseUsageDescription</key>
-    <string>Used to provide more relevant advertising content based on your location.</string>
 </dict>
 </plist>

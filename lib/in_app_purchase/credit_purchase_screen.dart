@@ -723,6 +723,7 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
     );
   }
 
+  /*
   Future<void> _watchAdForCredits() async {
     final adProvider = context.read<AdProvider>();
 
@@ -897,6 +898,7 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
       },
     );
   }
+  */
 
   Future<void> _launchExternalLink(String url) async {
     final uri = Uri.parse(url);
@@ -1111,8 +1113,7 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
                           ),
                         ],
                       ),
-                    ),
-
+                        /*
                   // Watch Ad Section
                   Container(
                     margin: EdgeInsets.symmetric(
@@ -1297,6 +1298,8 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
                       ),
                     ),
                   ),
+                  */
+               ),
 
                   // Buy Credits Section Header
                   Padding(
