@@ -382,7 +382,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
-                "Powered by Sabasoft Games",
+                "Powered by Vector Labs FZE LLC",
                 style: TextStyle(
                   color: AppTheme.primaryColor.withOpacity(0.7),
                   fontSize: 12,

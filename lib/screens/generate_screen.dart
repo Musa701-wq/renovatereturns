@@ -5,7 +5,6 @@ import 'package:ai_remodeling/utils/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../provider/image_provider.dart';
-import '../provider/Ad_provider.dart';
 import '../services/google_analytics_services.dart';
 import '../widgets/comparison_card_widget.dart';
 import '../widgets/custom_app_bar.dart';
@@ -13,8 +12,10 @@ import 'RemoveObject.dart' show ObjectRemove;
 import 'exterior_design.dart';
 import 'fill_spce_screen.dart';
 import 'floor_redesign.dart';
-import 'replace_screen.dart';
+import 'package:ai_remodeling/provider/ad_provider.dart';
+import 'package:ai_remodeling/screens/replace_screen.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:provider/provider.dart';
 
 class GenerateScreen extends StatefulWidget {
   const GenerateScreen({super.key});
@@ -27,37 +28,26 @@ class _GenerateScreenState extends State<GenerateScreen> {
   @override
   void initState() {
     super.initState();
-
-    // Load native ad through AdProvider
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final adProvider = context.read<AdProvider>();
-
-      if (!adProvider.isGenerateNativeAdLoaded) {
-        adProvider.loadGenerateNativeAd(TemplateType.small);
-      }
-    });
   }
 
-  IconData _getIconForTitle(String title) {
+  String? _getIconPathForTitle(String title) {
     switch (title) {
       case 'Instant Redesign':
-        return Icons.room;
+        return 'assets/images/interior.png';
       case 'Exterior Redesign':
-        return Icons.house;
+        return 'assets/images/exterior.png';
       case 'Wall Redesign':
-        return Icons.wallpaper;
+        return 'assets/images/wall.png';
       case 'Floor Redesign':
-        return Icons.square_foot;
+        return 'assets/images/floor.png';
       case 'Remove Object':
-        return Icons.remove_circle;
+        return 'assets/images/remove.png';
       case 'Replace':
-        return Icons.swap_horiz;
+        return 'assets/images/replace.png';
       case 'Fill Space':
-        return Icons.auto_fix_high;
-      case 'Reference':
-        return Icons.compare_arrows;
+        return 'assets/images/fill.png';
       default:
-        return Icons.category;
+        return null;
     }
   }
 
@@ -71,8 +61,8 @@ class _GenerateScreenState extends State<GenerateScreen> {
       appBar: CustomAppBar(),
       backgroundColor: AppTheme.secondaryColor,
       body: SafeArea(
-        child: Consumer2<ImageDataProvider, AdProvider>(
-          builder: (context, imageProvider, adProvider, _) {
+        child: Consumer<ImageDataProvider>(
+          builder: (context, imageProvider, _) {
             final list = imageProvider.imageList;
 
             return SingleChildScrollView(
@@ -88,7 +78,7 @@ class _GenerateScreenState extends State<GenerateScreen> {
                       title: list[0].title,
                       subtitle: list[0].subtitle,
                       isLiked: list[0].isLiked,
-                      categoryIcon: _getIconForTitle(list[0].title),
+                      categoryIconPath: _getIconPathForTitle(list[0].title),
                       onLikePressed: () => imageProvider.toggleLike(0),
                       onArrowPressed: () {
                         AnalyticsService.logInstantClick();
@@ -102,112 +92,31 @@ class _GenerateScreenState extends State<GenerateScreen> {
 
                   SizedBox(height: getCardSpacing()),
 
-                  // CARD 2 - Exterior Redesign
-                  if (list.length > 1)
-                    ComparisonCardWidget(
-                      beforeImage: list[1].beforeImage,
-                      afterImage: list[1].afterImage,
-                      title: list[1].title,
-                      subtitle: list[1].subtitle,
-                      isLiked: list[1].isLiked,
-                      categoryIcon: _getIconForTitle(list[1].title),
-                      onLikePressed: () => imageProvider.toggleLike(1),
-                      onArrowPressed: () {
-                        AnalyticsService.logExteriorClick();
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const ExteriorRedesign()),
+                  // Banner Ad
+                  Consumer<AdProvider>(
+                    builder: (context, adProvider, child) {
+                      if (adProvider.isBannerAdLoaded && adProvider.bannerAd != null) {
+                        return Container(
+                          alignment: Alignment.center,
+                          width: adProvider.bannerAd!.size.width.toDouble(),
+                          height: adProvider.bannerAd!.size.height.toDouble(),
+                          child: AdWidget(ad: adProvider.bannerAd!),
                         );
-                      },
-                    ),
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
 
-                  if (adProvider.isGenerateNativeAdLoaded && adProvider.generateNativeAd != null)
-                    Container(
-                      height: 130.0,
-                      margin: EdgeInsets.symmetric(
-                        horizontal: AppTheme.responsiveSize(context, phone: 16, tablet: 20),
-                        vertical: AppTheme.responsiveSize(context, phone: 8, tablet: 8),
-                      ),
-                      child: AdWidget(ad: adProvider.generateNativeAd!),
-                    )
-                  else
-                    SizedBox(height: getCardSpacing()),
+                  SizedBox(height: getCardSpacing()),
                   
-                  // CARD 3 - Wall Redesign
-                  if (list.length > 2)
-                    ComparisonCardWidget(
-                      beforeImage: list[2].beforeImage,
-                      afterImage: list[2].afterImage,
-                      title: list[2].title,
-                      subtitle: list[2].subtitle,
-                      isLiked: list[2].isLiked,
-                      categoryIcon: _getIconForTitle(list[2].title),
-                      onLikePressed: () => imageProvider.toggleLike(2),
-                      onArrowPressed: () {
-                        AnalyticsService.logWallClick();
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const WaalRedesign()),
-                        );
-                      },
-                    ),
-
-                  SizedBox(height: getCardSpacing()),
-
-                  // CARD 4 - Floor Redesign
-                  if (list.length > 3)
-                    ComparisonCardWidget(
-                      beforeImage: list[3].beforeImage,
-                      afterImage: list[3].afterImage,
-                      title: list[3].title,
-                      subtitle: list[3].subtitle,
-                      isLiked: list[3].isLiked,
-                      categoryIcon: _getIconForTitle(list[3].title),
-                      onLikePressed: () => imageProvider.toggleLike(3),
-                      onArrowPressed: () {
-                        AnalyticsService.logFloorClick();
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const FloorRedesign()),
-                        );
-                      },
-                    ),
-
-                  SizedBox(height: getCardSpacing()),
-
-                  // CARD 5 - Remove Object
-                  if (list.length > 4)
-                    ComparisonCardWidget(
-                      beforeImage: list[4].beforeImage,
-                      afterImage: list[4].afterImage,
-                      title: list[4].title,
-                      subtitle: list[4].subtitle,
-                      isLiked: list[4].isLiked,
-                      categoryIcon: _getIconForTitle(list[4].title),
-                      onLikePressed: () => imageProvider.toggleLike(4),
-                      onArrowPressed: () {
-                        AnalyticsService.logRemoveObjectClick();
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const ObjectRemove()),
-                        );
-                      },
-                    ),
-
-                  SizedBox(height: getCardSpacing()),
-
-                  // CARD 6 - Replace
+                  // CARD 2 - Replace
                   ComparisonCardWidget(
                     beforeImage: 'assets/images/re1.jpg',
                     afterImage: 'assets/images/re.jpg',
                     title: 'Replace',
                     subtitle: 'Replace any object with AI',
                     isLiked: false,
-                    categoryIcon: _getIconForTitle('Replace'),
+                    categoryIconPath: _getIconPathForTitle('Replace'),
                     onLikePressed: () {},
                     onArrowPressed: () {
                       AnalyticsService.logReplaceClick();
@@ -221,14 +130,36 @@ class _GenerateScreenState extends State<GenerateScreen> {
 
                   SizedBox(height: getCardSpacing()),
 
-                  // CARD 7 - Fill Space
+                  // CARD 3 - Exterior Redesign
+                  if (list.length > 1)
+                    ComparisonCardWidget(
+                      beforeImage: list[1].beforeImage,
+                      afterImage: list[1].afterImage,
+                      title: list[1].title,
+                      subtitle: list[1].subtitle,
+                      isLiked: list[1].isLiked,
+                      categoryIconPath: _getIconPathForTitle(list[1].title),
+                      onLikePressed: () => imageProvider.toggleLike(1),
+                      onArrowPressed: () {
+                        AnalyticsService.logExteriorClick();
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const ExteriorRedesign()),
+                        );
+                      },
+                    ),
+
+                  SizedBox(height: getCardSpacing()),
+
+                  // CARD 4 - Fill Space
                   ComparisonCardWidget(
                     beforeImage: 'assets/images/fi1.jpeg',
                     afterImage: 'assets/images/fi.png',
                     title: 'Fill Space',
                     subtitle: 'Fill empty areas intelligently',
                     isLiked: false,
-                    categoryIcon: _getIconForTitle('Fill Space'),
+                    categoryIconPath: _getIconPathForTitle('Fill Space'),
                     onLikePressed: () {},
                     onArrowPressed: () {
                       AnalyticsService.logFillSpaceClick();
@@ -239,6 +170,72 @@ class _GenerateScreenState extends State<GenerateScreen> {
                       );
                     },
                   ),
+                  
+                  SizedBox(height: getCardSpacing()),
+
+                  // CARD 5 - Wall Redesign
+                  if (list.length > 2)
+                    ComparisonCardWidget(
+                      beforeImage: list[2].beforeImage,
+                      afterImage: list[2].afterImage,
+                      title: list[2].title,
+                      subtitle: list[2].subtitle,
+                      isLiked: list[2].isLiked,
+                      categoryIconPath: _getIconPathForTitle(list[2].title),
+                      onLikePressed: () => imageProvider.toggleLike(2),
+                      onArrowPressed: () {
+                        AnalyticsService.logWallClick();
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const WaalRedesign()),
+                        );
+                      },
+                    ),
+
+                  SizedBox(height: getCardSpacing()),
+
+                  // CARD 6 - Floor Redesign
+                  if (list.length > 3)
+                    ComparisonCardWidget(
+                      beforeImage: list[3].beforeImage,
+                      afterImage: list[3].afterImage,
+                      title: list[3].title,
+                      subtitle: list[3].subtitle,
+                      isLiked: list[3].isLiked,
+                      categoryIconPath: _getIconPathForTitle(list[3].title),
+                      onLikePressed: () => imageProvider.toggleLike(3),
+                      onArrowPressed: () {
+                        AnalyticsService.logFloorClick();
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const FloorRedesign()),
+                        );
+                      },
+                    ),
+
+                  SizedBox(height: getCardSpacing()),
+
+                  // CARD 7 - Remove Object
+                  if (list.length > 4)
+                    ComparisonCardWidget(
+                      beforeImage: list[4].beforeImage,
+                      afterImage: list[4].afterImage,
+                      title: list[4].title,
+                      subtitle: list[4].subtitle,
+                      isLiked: list[4].isLiked,
+                      categoryIconPath: _getIconPathForTitle(list[4].title),
+                      onLikePressed: () => imageProvider.toggleLike(4),
+                      onArrowPressed: () {
+                        AnalyticsService.logRemoveObjectClick();
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const ObjectRemove()),
+                        );
+                      },
+                    ),
 
                   SizedBox(height: getCardSpacing()),
                 ],

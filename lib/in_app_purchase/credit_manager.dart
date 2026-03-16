@@ -13,15 +13,13 @@ class CreditManager extends ChangeNotifier {
   bool _isInitInProgress = false;
   Completer<void>? _initCompleter;
 
-  static const int _initialCredits = 30;
-  static const int _rewardedAdCredits = 3;
+  static const int _initialCredits = 10;
 
   int _credits = 0;
   bool _isLoading = true;
 
   int get credits => _credits;
   bool get isLoading => _isLoading;
-  static int get rewardedAdCredits => _rewardedAdCredits;
 
   CreditManager() {
     _authSubscription = _auth.authStateChanges().listen((user) {
@@ -206,11 +204,6 @@ class CreditManager extends ChangeNotifier {
       debugPrint("❌ [CreditManager] Deduct credits error: $e");
       return false;
     }
-  }
-
-  /// Reward user with credits for watching ad
-  Future<bool> rewardForAd() async {
-    return await addCredits(_rewardedAdCredits, reason: 'rewarded_ad');
   }
 
   /// Check if user has enough credits

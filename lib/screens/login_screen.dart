@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../provider/auth_provider.dart';
 import '../in_app_purchase/credit_manager.dart';
 import '../utils/theme.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/gestures.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,9 +19,25 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isGoogleLoading = false;
   bool _isAppleLoading = false;
 
+  Future<void> _launchExternalLink(String url) async {
+    final uri = Uri.parse(url);
+    if (!await canLaunchUrl(uri)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to open link. Please try again later.')),
+        );
+      }
+      return;
+    }
+
+    await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
+  }
+
   late double screenWidth;
   late double screenHeight;
-  late bool isPortrait;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +46,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
-    isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
 
     double getLogoSize() {
       if (screenWidth > 800) return 160.0;
@@ -100,262 +117,289 @@ class _LoginScreenState extends State<LoginScreen> {
       return 16.0;
     }
 
-    final bool isTablet = screenWidth >= 600;
     final bool isWide = screenWidth >= 900;
     final double sectionSpacing = isWide ? 36.0 : getSpacing();
 
     return Scaffold(
       backgroundColor: AppTheme.secondaryColor,
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(vertical: isTablet ? 32 : 16),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: isWide ? 720 : double.infinity),
-              child: Padding(
-                padding: getScreenPadding(),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: getLogoSize(),
-                      height: getLogoSize(),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(getLogoBorderRadius()),
-                        color: AppTheme.primaryColor,
-                        border: Border.all(
-                          color: AppTheme.primaryColor.withOpacity(0.8),
-                          width: screenWidth > 600 ? 3.0 : 2.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.primaryColor.withOpacity(0.3),
-                            blurRadius: 15,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(getLogoBorderRadius()),
-                        child: Image.asset(
-                          'assets/images/logo.png',
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Center(
-                              child: Icon(
-                                Icons.auto_awesome,
-                                size: screenWidth > 800 ? 70.0 : screenWidth > 600 ? 60.0 : 50.0,
-                                color: AppTheme.secondaryColor,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
+                ),
+                child: IntrinsicHeight(
+                  child: Padding(
+                    padding: getScreenPadding(),
+                    child: Column(
+                      children: [
+                        // Push Top Section slightly up
+                        SizedBox(height: screenHeight * 0.08),
 
-                    SizedBox(height: sectionSpacing),
-
-                    Text(
-                      'AI Remodeling',
-                      style: TextStyle(
-                        fontSize: getTitleFontSize(),
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryColor,
-                        letterSpacing: screenWidth > 600 ? 1.0 : 0.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    Text(
-                      'Transform your spaces with AI',
-                      style: TextStyle(
-                        fontSize: getSubtitleFontSize(),
-                        color: AppTheme.primaryColor.withOpacity(0.8),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-
-                    SizedBox(height: sectionSpacing),
-
-                    SizedBox(
-                      width: double.infinity,
-                      height: getButtonHeight(),
-                      child: ElevatedButton(
-                        onPressed: _isGoogleLoading || _isAppleLoading
-                            ? null
-                            : () async {
-                          setState(() {
-                            _isGoogleLoading = true;
-                          });
-
-                          try {
-                            // ✅ Pass creditManager to loginWithGoogle
-                            bool success = await auth.loginWithGoogle(creditManager);
-                            if (success && context.mounted) {
-                              Navigator.pushReplacementNamed(context, '/main');
-                            }
-                          } catch (e) {
-                            print("Google login error: $e");
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text("Login failed: ${e.toString()}"),
-                                  backgroundColor: Colors.red,
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            }
-                          } finally {
-                            if (mounted) {
-                              setState(() {
-                                _isGoogleLoading = false;
-                              });
-                            }
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primaryColor,
-                          foregroundColor: AppTheme.secondaryColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          elevation: 4,
-                          shadowColor: AppTheme.primaryColor.withOpacity(0.3),
-                        ),
-                        child: _isGoogleLoading
-                            ? SizedBox(
-                          width: screenWidth > 600 ? 28.0 : 24.0,
-                          height: screenWidth > 600 ? 28.0 : 24.0,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 3,
-                            color: AppTheme.secondaryColor,
-                          ),
-                        )
-                            : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        // TOP SECTION: Logo, Title, Subtitle
+                        Column(
                           children: [
-                            Icon(
-                              Icons.g_mobiledata,
-                              size: getButtonIconSize(),
-                            ),
-                            SizedBox(width: screenWidth > 600 ? 12 : 10),
-                            Text(
-                              "Continue with Google",
-                              style: TextStyle(
-                                fontSize: getButtonFontSize(),
-                                fontWeight: FontWeight.w600,
+                            Container(
+                              width: getLogoSize(),
+                              height: getLogoSize(),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(getLogoBorderRadius()),
+                                color: AppTheme.primaryColor,
+                                border: Border.all(
+                                  color: AppTheme.primaryColor.withValues(alpha: 0.8),
+                                  width: screenWidth > 600 ? 3.0 : 2.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
                               ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(getLogoBorderRadius()),
+                                child: Image.asset(
+                                  'assets/images/logo.png',
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Center(
+                                      child: Icon(
+                                        Icons.auto_awesome,
+                                        size: screenWidth > 800 ? 70.0 : screenWidth > 600 ? 60.0 : 50.0,
+                                        color: AppTheme.secondaryColor,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: sectionSpacing),
+                            Text(
+                              'AI Remodeling',
+                              style: TextStyle(
+                                fontSize: getTitleFontSize(),
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryColor,
+                                letterSpacing: screenWidth > 600 ? 1.0 : 0.5,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Transform your spaces with AI',
+                              style: TextStyle(
+                                fontSize: getSubtitleFontSize(),
+                                color: AppTheme.primaryColor.withValues(alpha: 0.8),
+                              ),
+                              textAlign: TextAlign.center,
                             ),
                           ],
                         ),
-                      ),
-                    ),
 
-                    SizedBox(height: getButtonSpacing()),
+                        // Dynamic Spacer to push buttons to bottom
+                        const Spacer(),
 
-                    SizedBox(
-                      width: double.infinity,
-                      height: getButtonHeight(),
-                      child: ElevatedButton(
-                        onPressed: _isGoogleLoading || _isAppleLoading
-                            ? null
-                            : () async {
-                          setState(() {
-                            _isAppleLoading = true;
-                          });
-
-                          try {
-                            // ✅ Pass creditManager to loginWithApple
-                            bool success = await auth.loginWithApple(creditManager);
-                            if (success && context.mounted) {
-                              Navigator.pushReplacementNamed(context, '/main');
-                            }
-                          } catch (e) {
-                            print("Apple login error: $e");
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text("Login failed: ${e.toString()}"),
-                                  backgroundColor: Colors.red,
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            }
-                          } finally {
-                            if (mounted) {
-                              setState(() {
-                                _isAppleLoading = false;
-                              });
-                            }
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.tilescolor,
-                          foregroundColor: AppTheme.primaryColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                            side: BorderSide(
-                              color: AppTheme.primaryColor,
-                              width: 1.5,
-                            ),
-                          ),
-                          elevation: 2,
-                        ),
-                        child: _isAppleLoading
-                            ? SizedBox(
-                          width: screenWidth > 600 ? 28.0 : 24.0,
-                          height: screenWidth > 600 ? 28.0 : 24.0,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 3,
-                            color: AppTheme.primaryColor,
-                          ),
-                        )
-                            : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        // BOTTOM SECTION: Buttons and Footer
+                        Column(
                           children: [
-                            Icon(
-                              Icons.apple,
-                              size: getButtonIconSize(),
-                            ),
-                            SizedBox(width: screenWidth > 600 ? 12 : 10),
-                            Text(
-                              "Continue with Apple",
-                              style: TextStyle(
-                                fontSize: getButtonFontSize(),
-                                fontWeight: FontWeight.w600,
+                            SizedBox(
+                              width: double.infinity,
+                              height: getButtonHeight(),
+                              child: ElevatedButton(
+                                onPressed: _isGoogleLoading || _isAppleLoading
+                                    ? null
+                                    : () async {
+                                        setState(() {
+                                          _isGoogleLoading = true;
+                                        });
+
+                                        try {
+                                          bool success = await auth.loginWithGoogle(creditManager);
+                                          if (success && context.mounted) {
+                                            Navigator.pushReplacementNamed(context, '/main');
+                                          }
+                                        } catch (e) {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text("Login failed: ${e.toString()}"),
+                                                backgroundColor: Colors.red,
+                                                behavior: SnackBarBehavior.floating,
+                                              ),
+                                            );
+                                          }
+                                        } finally {
+                                          if (mounted) {
+                                            setState(() {
+                                              _isGoogleLoading = false;
+                                            });
+                                          }
+                                        }
+                                      },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.primaryColor,
+                                  foregroundColor: AppTheme.secondaryColor,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  elevation: 4,
+                                  shadowColor: AppTheme.primaryColor.withValues(alpha: 0.3),
+                                ),
+                                child: _isGoogleLoading
+                                    ? SizedBox(
+                                        width: screenWidth > 600 ? 28.0 : 24.0,
+                                        height: screenWidth > 600 ? 28.0 : 24.0,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 3,
+                                          color: AppTheme.secondaryColor,
+                                        ),
+                                      )
+                                    : Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Image.asset(
+                                            'assets/icons/google.png',
+                                            width: getButtonIconSize(),
+                                            height: getButtonIconSize(),
+                                            color: AppTheme.secondaryColor,
+                                          ),
+                                          SizedBox(width: screenWidth > 600 ? 12 : 10),
+                                          Text(
+                                            "Continue with Google",
+                                            style: TextStyle(
+                                              fontSize: getButtonFontSize(),
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                               ),
                             ),
+                            SizedBox(height: getButtonSpacing()),
+                            SizedBox(
+                              width: double.infinity,
+                              height: getButtonHeight(),
+                              child: ElevatedButton(
+                                onPressed: _isGoogleLoading || _isAppleLoading
+                                    ? null
+                                    : () async {
+                                        setState(() {
+                                          _isAppleLoading = true;
+                                        });
+
+                                        try {
+                                          bool success = await auth.loginWithApple(creditManager);
+                                          if (success && context.mounted) {
+                                            Navigator.pushReplacementNamed(context, '/main');
+                                          }
+                                        } catch (e) {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text("Login failed: ${e.toString()}"),
+                                                backgroundColor: Colors.red,
+                                                behavior: SnackBarBehavior.floating,
+                                              ),
+                                            );
+                                          }
+                                        } finally {
+                                          if (mounted) {
+                                            setState(() {
+                                              _isAppleLoading = false;
+                                            });
+                                          }
+                                        }
+                                      },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.tilescolor,
+                                  foregroundColor: AppTheme.primaryColor,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15),
+                                    side: BorderSide(
+                                      color: AppTheme.primaryColor,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  elevation: 2,
+                                ),
+                                child: _isAppleLoading
+                                    ? SizedBox(
+                                        width: screenWidth > 600 ? 28.0 : 24.0,
+                                        height: screenWidth > 600 ? 28.0 : 24.0,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 3,
+                                          color: AppTheme.primaryColor,
+                                        ),
+                                      )
+                                    : Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.apple,
+                                            size: getButtonIconSize(),
+                                          ),
+                                          SizedBox(width: screenWidth > 600 ? 12 : 10),
+                                          Text(
+                                            "Continue with Apple",
+                                            style: TextStyle(
+                                              fontSize: getButtonFontSize(),
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                              ),
+                            ),
+                            SizedBox(height: getSpacing()),
+                            RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                style: TextStyle(
+                                  fontSize: getFooterFontSize(),
+                                  color: AppTheme.primaryColor.withValues(alpha: 0.6),
+                                  fontFamily: 'Poppins',
+                                ),
+                                children: [
+                                  const TextSpan(text: "By continuing, you agree to our "),
+                                  TextSpan(
+                                    text: "Terms of Service",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.primaryColor,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () => _launchExternalLink('https://vectorlabzlimited.com/terms-of-use/'),
+                                  ),
+                                  const TextSpan(text: " and "),
+                                  TextSpan(
+                                    text: "Privacy Policy",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.primaryColor,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () => _launchExternalLink('https://vectorlabzlimited.com/privacy-policy/'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: getSpacing() / 2),
                           ],
                         ),
-                      ),
+                      ],
                     ),
-
-                    SizedBox(height: getSpacing()),
-
-                    Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: screenWidth > 600 ? 40.0 : 20.0,
-                      ),
-                      child: Text(
-                        "By continuing, you agree to our Terms of Service and Privacy Policy",
-                        style: TextStyle(
-                          fontSize: getFooterFontSize(),
-                          color: AppTheme.primaryColor.withOpacity(0.6),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-
-                    SizedBox(height: getSpacing()),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );

@@ -9,6 +9,8 @@ import '../widgets/nav_bar.dart';
 import 'generate_screen.dart' show GenerateScreen;
 import 'history_screen.dart';
 import '../in_app_purchase/credit_purchase_screen.dart';
+import '../in_app_purchase/i_ap_manager.dart';
+import '../in_app_purchase/credit_manager.dart';
 
 
 class MainScreen extends StatefulWidget {
@@ -20,13 +22,21 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   @override
+  void initState() {
+    super.initState();
+    // Initialize IAP early so products are ready when needed
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final creditManager = Provider.of<CreditManager>(context, listen: false);
+        IAPManager().init(creditManager);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
     final currentUser = auth.currentUser;
-
-
-
-
 
 if (currentUser == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {

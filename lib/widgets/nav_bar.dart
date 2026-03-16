@@ -13,14 +13,14 @@ class CustomNavBar extends StatelessWidget {
       builder: (context, navbarProvider, child) {
         return CurvedNavigationBar(
           index: navbarProvider.currentIndex,
-          height: AppTheme.responsiveSize(context, phone: 60, tablet: 60),
+          height: AppTheme.responsiveSize(context, phone: 75, tablet: 60),
           items: navbarProvider.navItems.map((item) {
             return Icon(
               item.icon,
               size: AppTheme.responsiveSize(context, phone: 30, tablet: 28),
               color: navbarProvider.currentIndex == item.index 
                   ? AppTheme.secondaryColor 
-                  : AppTheme.primaryColor,
+                  : AppTheme.primaryColor.withValues(alpha: 0.5),
             );
           }).toList(),
           color: AppTheme.tilescolor,

@@ -2,10 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:provider/provider.dart';
 import '../in_app_purchase/credit_purchase_screen.dart';
+import '../in_app_purchase/credit_manager.dart';
+import '../in_app_purchase/i_ap_manager.dart';
 import '../utils/theme.dart';
 
-class CreditDialog extends StatelessWidget {
+class CreditDialog extends StatefulWidget {
   final String message;
   final List<ProductDetails> products;
 
@@ -27,7 +30,7 @@ class CreditDialog extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
             child: CreditDialog(
               message: message,
-              products: products,
+              products: products.isNotEmpty ? products : IAPManager().products,
             ),
           ),
         ),
@@ -36,11 +39,84 @@ class CreditDialog extends StatelessWidget {
   }
 
   @override
+  State<CreditDialog> createState() => _CreditDialogState();
+}
+
+class _CreditDialogState extends State<CreditDialog> {
+  bool _isPurchasing = false;
+  List<ProductDetails> _displayProducts = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _displayProducts = widget.products;
+    if (_displayProducts.isEmpty) {
+      _loadProducts();
+    }
+  }
+
+  Future<void> _loadProducts() async {
+    final iapManager = IAPManager();
+    // If singleton already has products, use them immediately
+    if (iapManager.products.isNotEmpty) {
+      if (mounted) {
+        setState(() => _displayProducts = iapManager.products);
+      }
+      return;
+    }
+
+    // Otherwise, attempt a fetch
+    final creditManager = context.read<CreditManager>();
+    if (!iapManager.isAvailable) {
+      await iapManager.init(creditManager);
+    } else {
+      await iapManager.loadProducts();
+    }
+
+    if (mounted) {
+      setState(() => _displayProducts = iapManager.products);
+    }
+  }
+
+  Future<void> _handleDirectPurchase(ProductDetails product) async {
+    setState(() => _isPurchasing = true);
+    
+    try {
+      final iapManager = IAPManager();
+      final creditManager = context.read<CreditManager>();
+      
+      if (!iapManager.isAvailable) {
+        await iapManager.init(creditManager);
+      }
+
+      final success = await iapManager.purchaseProduct(product);
+      
+      if (!success && mounted) {
+        setState(() => _isPurchasing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Purchase could not be initiated. Please try again.')),
+        );
+      } else {
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isPurchasing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Find the cheapest credit product by parsing numeric price value
+    // Find the cheapest credit product
     ProductDetails? smallestProduct;
     double? lowestPrice;
-    for (final p in products) {
+    for (final p in _displayProducts) {
       final price = p.rawPrice;
       if (lowestPrice == null || price < lowestPrice) {
         lowestPrice = price;
@@ -48,7 +124,6 @@ class CreditDialog extends StatelessWidget {
       }
     }
 
-    // Use AppTheme primary color
     final primaryColor = AppTheme.primaryColor;
 
     return Container(
@@ -58,7 +133,7 @@ class CreditDialog extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -67,13 +142,13 @@ class CreditDialog extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Promotional Banner
+          // Premium Header Banner
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 12),
+            padding: const EdgeInsets.symmetric(vertical: 14),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [primaryColor, primaryColor.withOpacity(0.8)],
+                colors: [primaryColor, primaryColor.withValues(alpha: 0.8)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -83,166 +158,235 @@ class CreditDialog extends StatelessWidget {
               ),
             ),
             child: Text(
-              "EXCLUSIVE OFFER: UNLOCK PREMIUM",
+              "EXCLUSIVE STARTER OFFER",
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
                 color: Colors.white,
-                letterSpacing: 1.2,
+                letterSpacing: 1.5,
               ),
             ),
           ),
           
           Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
             child: Column(
               children: [
-                // Icon or Image
+                // Star Icon
                 Container(
-                  height: 80,
-                  width: 80,
+                  height: 70,
+                  width: 70,
                   decoration: BoxDecoration(
-                    color: primaryColor.withOpacity(0.05),
+                    color: primaryColor.withValues(alpha: 0.08),
                     shape: BoxShape.circle,
                   ),
-                  child: Center(
-                    child: Icon(
-                      Icons.stars_rounded,
-                      size: 50,
-                      color: primaryColor,
-                    ),
+                  child: Icon(
+                    Icons.stars_rounded,
+                    size: 45,
+                    color: primaryColor,
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 
                 Text(
                   "Insufficient Credits",
                   style: GoogleFonts.poppins(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                    color: primaryColor,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 
                 Text(
-                  message,
+                  widget.message,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     color: Colors.grey[600],
-                    height: 1.5,
+                    height: 1.4,
                   ),
                 ),
                 
-                if (smallestProduct != null) ...[
-                  const SizedBox(height: 24),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[50],
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: primaryColor.withOpacity(0.1)),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: primaryColor.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(10),
+                const SizedBox(height: 24),
+
+                // THE SMALLEST PRODUCT CARD (Clickable)
+                if (smallestProduct != null)
+                  GestureDetector(
+                    onTap: _isPurchasing ? null : () => _handleDirectPurchase(smallestProduct!),
+                    child: Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: primaryColor.withValues(alpha: 0.03),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: primaryColor.withValues(alpha: 0.2), width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primaryColor.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
-                          child: Icon(Icons.flash_on, color: primaryColor, size: 24),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: primaryColor.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.flash_on_rounded, color: primaryColor, size: 28),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "STARTER PACK",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                    color: primaryColor,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                Text(
+                                  "${IAPManager.productCredits[smallestProduct.id] ?? 250} Credits",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: primaryColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                "STARTER PACK",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              Text(
-                                "250 Credits", // Updated to match IAPManager
+                                smallestProduct.price,
                                 style: GoogleFonts.poppins(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.black,
+                                  color: primaryColor,
+                                ),
+                              ),
+                              Text(
+                                "BUY NOW",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor,
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                        Text(
-                          smallestProduct.price,
-                          style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                
-                const SizedBox(height: 32),
-                
-                // Primary Action Button
-                GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      CupertinoPageRoute(
-                        builder: (context) => const CreditsPurchaseScreen(),
+                        ],
                       ),
-                    );
-                  },
+                    ),
+                  )
+                else
+                   Padding(
+                     padding: const EdgeInsets.symmetric(vertical: 20),
+                     child: Column(
+                       children: [
+                         const CircularProgressIndicator(),
+                         const SizedBox(height: 12),
+                         Text(
+                           "Loading exclusive offer...",
+                           style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
+                         )
+                       ],
+                     ),
+                   ),
+
+                const SizedBox(height: 28),
+                
+                // MAIN ACTION BUTTON
+                GestureDetector(
+                  onTap: _isPurchasing 
+                    ? null 
+                    : (smallestProduct != null 
+                        ? () => _handleDirectPurchase(smallestProduct!) 
+                        : () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              CupertinoPageRoute(
+                                builder: (context) => const CreditsPurchaseScreen(),
+                              ),
+                            );
+                          }),
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 18),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [primaryColor, primaryColor.withOpacity(0.8)],
+                        colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
                         begin: Alignment.centerLeft,
                         end: Alignment.centerRight,
                       ),
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: primaryColor.withOpacity(0.2),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+                          color: primaryColor.withValues(alpha: 0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
                         ),
                       ],
                     ),
-                    child: Text(
-                      smallestProduct != null ? "GET CREDITS NOW" : "GO TO STORE",
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 1,
-                      ),
-                    ),
+                    child: _isPurchasing 
+                      ? const Center(child: SizedBox(height: 22, width: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5)))
+                      : Text(
+                          smallestProduct != null ? "RESTORE / PURCHASE NOW" : "GO TO STORE",
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 1,
+                          ),
+                        ),
                   ),
                 ),
                 
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
+                
+                // View All Packages Link
+                if (smallestProduct != null)
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    child: Text(
+                      "Explore Other Credit Packs",
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: primaryColor.withValues(alpha: 0.7),
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        CupertinoPageRoute(
+                          builder: (context) => const CreditsPurchaseScreen(),
+                        ),
+                      );
+                    },
+                  ),
+
+                const SizedBox(height: 4),
                 
                 // Cancel Button
                 CupertinoButton(
                   padding: EdgeInsets.zero,
                   child: Text(
-                    "Maybe Later",
+                    "Decide Later",
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       color: Colors.grey[500],

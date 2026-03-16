@@ -475,9 +475,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import '../in_app_purchase/credit_manager.dart';
 import '../in_app_purchase/credit_purchase_screen.dart';
+import '../in_app_purchase/i_ap_manager.dart';
 import '../provider/upload_provider.dart';
 import '../services/exception_handler.dart';
 import '../utils/theme.dart';
+import '../widgets/credit_dialog.dart';
 import '../widgets/image_selection_widget.dart';
 
 class FillSpaceScreen extends StatefulWidget {

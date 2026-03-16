@@ -329,20 +329,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 controller: _nameController,
                 style: TextStyle(
                 //  color: AppTheme.secondaryColor,
-                  color: Colors.black,
+                  color: AppTheme.primaryColor,
                   fontSize: getFontSize(),
                 ),
                 decoration: InputDecoration(
                   labelText: 'Name',
                   labelStyle: TextStyle(
-                    color: Colors.black,
-                  //  color: AppTheme.secondaryColor,
+                    color: AppTheme.primaryColor,
                     fontSize: getFontSize() * 0.9,
                   ),
                   prefixIcon: Icon(
                     Icons.person,
                   //  color: AppTheme.secondaryColor,
-                    color: Colors.black,
+                    color: AppTheme.primaryColor,
                     size: getIconSize(),
                   ),
                   border: InputBorder.none,
@@ -370,7 +369,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 style: TextStyle(
-                  color: AppTheme.secondaryColor,
+                  color: AppTheme.primaryColor,
                   fontSize: getFontSize(),
                 ),
                 readOnly: true,
@@ -378,14 +377,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 decoration: InputDecoration(
                   labelText: 'Email',
                   labelStyle: TextStyle(
-                    color: Colors.black,
-                 //   color: AppTheme.secondaryColor,
+                    color: AppTheme.primaryColor,
                     fontSize: getFontSize() * 0.9,
                   ),
                   prefixIcon: Icon(
                     Icons.email,
-                    color: Colors.black,
-                   // color: AppTheme.secondaryColor,
+                    color: AppTheme.primaryColor,
                     size: getIconSize(),
                   ),
                   border: InputBorder.none,

@@ -182,7 +182,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           ),
                         ),
                         TextSpan(
-                          text: "SabaSoft Games",
+                          text: "Vector Labs FZE LLC",
                           style: TextStyle(
                             fontSize: subtitleFontSize,
                             fontWeight: FontWeight.bold,

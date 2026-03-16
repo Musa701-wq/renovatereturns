@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../utils/theme.dart';
-import '../provider/Ad_provider.dart';
 
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'credit_manager.dart';
@@ -23,19 +22,10 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
   String? _errorMessage;
   String? _currentPurchasingProductId;
 
-// CreditsPurchaseScreen ke initState mein ye add karo:
   @override
   void initState() {
     super.initState();
     _initIAP();
-
-    // Rewarded ad preload karo
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final adProvider = context.read<AdProvider>();
-      if (!adProvider.isRewardedAdLoaded && !adProvider.isLoadingRewardedAd) {
-        adProvider.loadRewardedAd();
-      }
-    });
   }
 
   Future<void> _initIAP() async {
@@ -724,180 +714,10 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
   }
 
   /*
-  Future<void> _watchAdForCredits() async {
-    final adProvider = context.read<AdProvider>();
-
-    if (!adProvider.isRewardedAdLoaded) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Loading ad... Please try again in a moment.',
-            style: TextStyle(
-              fontSize: AppTheme.responsiveFont(context, phone: 14, tablet: 16),
-            ),
-          ),
-          backgroundColor: AppTheme.primaryColor,
-        ),
-      );
-
-      await adProvider.loadRewardedAd();
-      return;
-    }
-
-    final earned = await adProvider.showRewardedAdForCredits();
-
-    if (earned && mounted) {
-      _showAdRewardDialog();
-    }
-  }
 
 
-  void _showAdRewardDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: AppTheme.responsiveSize(
-                    context,
-                    phone: 80,
-                    tablet: 100,
-                  ),
-                  height: AppTheme.responsiveSize(
-                    context,
-                    phone: 80,
-                    tablet: 100,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.play_circle_filled,
-                    color: AppTheme.primaryColor,
-                    size: AppTheme.responsiveSize(
-                      context,
-                      phone: 50,
-                      tablet: 60,
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  height: AppTheme.responsiveSize(
-                    context,
-                    phone: 24,
-                    tablet: 30,
-                  ),
-                ),
-                Text(
-                  'Credits Earned!',
-                  style: TextStyle(
-                    fontSize: AppTheme.responsiveFont(
-                      context,
-                      phone: 24,
-                      tablet: 28,
-                    ),
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                SizedBox(
-                  height: AppTheme.responsiveSize(
-                    context,
-                    phone: 12,
-                    tablet: 16,
-                  ),
-                ),
-                Text(
-                  '+${CreditManager.rewardedAdCredits} Credits',
-                  style: TextStyle(
-                    fontSize: AppTheme.responsiveFont(
-                      context,
-                      phone: 20,
-                      tablet: 24,
-                    ),
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryColor,
-                  ),
-                ),
-                SizedBox(
-                  height: AppTheme.responsiveSize(
-                    context,
-                    phone: 16,
-                    tablet: 20,
-                  ),
-                ),
-                Text(
-                  'Thanks for watching! Your credits have been added.',
-                  style: TextStyle(
-                    fontSize: AppTheme.responsiveFont(
-                      context,
-                      phone: 14,
-                      tablet: 16,
-                    ),
-                    color: Colors.grey[600],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(
-                  height: AppTheme.responsiveSize(
-                    context,
-                    phone: 24,
-                    tablet: 28,
-                  ),
-                ),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryColor,
-                      padding: EdgeInsets.symmetric(
-                        vertical: AppTheme.responsiveSize(
-                          context,
-                          phone: 16,
-                          tablet: 20,
-                        ),
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppTheme.responsiveSize(
-                            context,
-                            phone: 12,
-                            tablet: 16,
-                          ),
-                        ),
-                      ),
-                    ),
-                    child: Text(
-                      'Awesome!',
-                      style: TextStyle(
-                        fontSize: AppTheme.responsiveFont(
-                          context,
-                          phone: 16,
-                          tablet: 18,
-                        ),
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.secondaryColor,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+
+
   */
 
   Future<void> _launchExternalLink(String url) async {
@@ -920,7 +740,6 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
   @override
   Widget build(BuildContext context) {
     final creditManager = context.watch<CreditManager>();
-    final adProvider = context.watch<AdProvider>();
 
     return Scaffold(
       backgroundColor: AppTheme.secondaryColor,
@@ -1114,190 +933,7 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
                         ],
                       ),
                         /*
-                  // Watch Ad Section
-                  Container(
-                    margin: EdgeInsets.symmetric(
-                      horizontal: AppTheme.responsiveSize(
-                        context,
-                        phone: 16,
-                        tablet: 22,
-                      ),
-                      vertical: AppTheme.responsiveSize(
-                        context,
-                        phone: 8,
-                        tablet: 12,
-                      ),
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(
-                        AppTheme.responsiveSize(context, phone: 16, tablet: 20),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: AppTheme.responsiveSize(
-                            context,
-                            phone: 10,
-                            tablet: 14,
-                          ),
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: (adProvider.isRewardedAdLoaded && !adProvider.isLoadingRewardedAd)
-                            ? _watchAdForCredits
-                            : null,
-                        borderRadius: BorderRadius.circular(
-                          AppTheme.responsiveSize(
-                            context,
-                            phone: 16,
-                            tablet: 20,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.all(
-                            AppTheme.responsiveSize(
-                              context,
-                              phone: 16,
-                              tablet: 20,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: EdgeInsets.all(
-                                  AppTheme.responsiveSize(
-                                    context,
-                                    phone: 12,
-                                    tablet: 16,
-                                  ),
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.secondaryColor1.withOpacity(
-                                    0.8,
-                                  ),
-                                  borderRadius: BorderRadius.circular(
-                                    AppTheme.responsiveSize(
-                                      context,
-                                      phone: 12,
-                                      tablet: 16,
-                                    ),
-                                  ),
-                                ),
-                                child: Icon(
-                                  Icons.play_circle_filled,
-                                  color: AppTheme.primaryColor,
-                                  size: AppTheme.responsiveSize(
-                                    context,
-                                    phone: 32,
-                                    tablet: 40,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(
-                                width: AppTheme.responsiveSize(
-                                  context,
-                                  phone: 16,
-                                  tablet: 20,
-                                ),
-                              ),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          'Watch a video to earn ',
-                                          style: TextStyle(
-                                            fontSize: AppTheme.responsiveFont(
-                                              context,
-                                              phone: 15,
-                                              tablet: 18,
-                                            ),
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.black87,
-                                          ),
-                                        ),
-                                        Container(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: AppTheme.responsiveSize(
-                                              context,
-                                              phone: 8,
-                                              tablet: 10,
-                                            ),
-                                            vertical: AppTheme.responsiveSize(
-                                              context,
-                                              phone: 2,
-                                              tablet: 4,
-                                            ),
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: AppTheme.primaryColor,
-                                            borderRadius: BorderRadius.circular(
-                                              AppTheme.responsiveSize(
-                                                context,
-                                                phone: 8,
-                                                tablet: 10,
-                                              ),
-                                            ),
-                                          ),
-                                          child: Text(
-                                            '+${CreditManager.rewardedAdCredits}',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: AppTheme.responsiveFont(
-                                                context,
-                                                phone: 13,
-                                                tablet: 16,
-                                              ),
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    SizedBox(
-                                      height: AppTheme.responsiveSize(
-                                        context,
-                                        phone: 4,
-                                        tablet: 6,
-                                      ),
-                                    ),
-                                    Text(
-                                      adProvider.isRewardedAdLoaded
-                                          ? 'Tap to watch ad'
-                                          : adProvider.isLoadingRewardedAd
-                                          ? 'Loading ad...'
-                                          : 'Ad not ready',
-                                      style: TextStyle(
-                                        fontSize: AppTheme.responsiveFont(
-                                          context,
-                                          phone: 13,
-                                          tablet: 16,
-                                        ),
-                                        color: Colors.grey[600],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Icon(
-                                adProvider.isRewardedAdLoaded
-                                    ? Icons.chevron_right
-                                    : Icons.hourglass_empty,
-                                color: Colors.grey[600],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+
                   */
                ),
 
@@ -1321,7 +957,7 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
                               tablet: 26,
                             ),
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                            color: AppTheme.primaryColor,
                           ),
                         ),
                         SizedBox(
@@ -1457,6 +1093,7 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
                             price: product.price,
                             credits: credits,
                             isPurchasing: isThisProductPurchasing,
+                            isBestSeller: credits >= 100 && credits <= 500, // Mark mid-range as best seller
                             onTap: () => _handlePurchase(product),
                           );
                         },
@@ -1692,6 +1329,7 @@ class NatureCreditCard extends StatelessWidget {
   final String price;
   final int credits;
   final bool isPurchasing;
+  final bool isBestSeller;
   final VoidCallback onTap;
 
   const NatureCreditCard({
@@ -1699,6 +1337,7 @@ class NatureCreditCard extends StatelessWidget {
     required this.price,
     required this.credits,
     required this.isPurchasing,
+    this.isBestSeller = false,
     required this.onTap,
   }) : super(key: key);
 
@@ -1733,142 +1372,171 @@ class NatureCreditCard extends StatelessWidget {
               ),
             ],
           ),
-          child: Padding(
-            padding: EdgeInsets.all(
-              AppTheme.responsiveSize(context, phone: 12, tablet: 16),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: EdgeInsets.all(
-                    AppTheme.responsiveSize(context, phone: 12, tablet: 16),
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(
-                      AppTheme.responsiveSize(context, phone: 12, tablet: 16),
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.credit_card_rounded,
-                    color: AppTheme.primaryColor,
-                    size: AppTheme.responsiveSize(
-                      context,
-                      phone: 28,
-                      tablet: 34,
-                    ),
-                  ),
+          child: Stack(
+            children: [
+              Padding(
+                padding: EdgeInsets.only(
+                  top: AppTheme.responsiveSize(context, phone: 12, tablet: 16),
+                  left: AppTheme.responsiveSize(context, phone: 12, tablet: 16),
+                  right: AppTheme.responsiveSize(context, phone: 12, tablet: 16),
+                  bottom: AppTheme.responsiveSize(context, phone: 2, tablet: 4),
                 ),
-                SizedBox(
-                  height: AppTheme.responsiveSize(
-                    context,
-                    phone: 8,
-                    tablet: 12,
-                  ),
-                ),
-                Flexible(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '$credits Credits',
-                        style: TextStyle(
-                          fontSize: AppTheme.responsiveFont(
-                            context,
-                            phone: 16,
-                            tablet: 20,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(
+                            AppTheme.responsiveSize(
+                                context, phone: 12, tablet: 16),
                           ),
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.responsiveSize(
+                                  context, phone: 12, tablet: 16),
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.credit_card_rounded,
+                            color: AppTheme.primaryColor,
+                            size: AppTheme.responsiveSize(
+                              context,
+                              phone: 28,
+                              tablet: 34,
+                            ),
+                          ),
                         ),
+                        if (isBestSeller)
+                          Positioned(
+                            top: -15,
+                            right: -15,
+                            child: Transform.rotate(
+                              angle: 0.698, // Exactly 40 degrees
+                              child: Image.asset(
+                                'assets/icons/crown.png',
+                                width: 38,
+                                height: 38,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    SizedBox(
+                      height: AppTheme.responsiveSize(
+                        context,
+                        phone: 14,
+                        tablet: 18,
                       ),
+                    ),
+                    Flexible(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '$credits Credits',
+                            style: TextStyle(
+                              fontSize: AppTheme.responsiveFont(
+                                context,
+                                phone: 16,
+                                tablet: 20,
+                              ),
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryColor,
+                            ),
+                          ),
+                          SizedBox(
+                            height: AppTheme.responsiveSize(
+                              context,
+                              phone: 4,
+                              tablet: 6,
+                            ),
+                          ),
+                          Text(
+                            '$credits Credits for Renovate AI makeovers',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: AppTheme.responsiveFont(
+                                context,
+                                phone: 11,
+                                tablet: 14,
+                              ),
+                              color: Colors.grey[700],
+                              height: 1.2,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      height: AppTheme.responsiveSize(
+                        context,
+                        phone: 18,
+                        tablet: 24,
+                      ),
+                    ),
+                    if (isPurchasing)
                       SizedBox(
+                        width: AppTheme.responsiveSize(
+                          context,
+                          phone: 24,
+                          tablet: 28,
+                        ),
                         height: AppTheme.responsiveSize(
                           context,
-                          phone: 4,
-                          tablet: 6,
+                          phone: 24,
+                          tablet: 28,
                         ),
-                      ),
-                      Text(
-                        '$credits Credits for Renovate AI makeovers',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: AppTheme.responsiveFont(
+                        child: CircularProgressIndicator(
+                          strokeWidth: AppTheme.responsiveSize(
                             context,
-                            phone: 11,
-                            tablet: 14,
+                            phone: 2,
+                            tablet: 2.5,
                           ),
-                          color: Colors.grey[700],
-                          height: 1.2,
+                          color: AppTheme.primaryColor,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  height: AppTheme.responsiveSize(
-                    context,
-                    phone: 8,
-                    tablet: 12,
-                  ),
-                ),
-                if (isPurchasing)
-                  SizedBox(
-                    width: AppTheme.responsiveSize(
-                      context,
-                      phone: 24,
-                      tablet: 28,
-                    ),
-                    height: AppTheme.responsiveSize(
-                      context,
-                      phone: 24,
-                      tablet: 28,
-                    ),
-                    child: CircularProgressIndicator(
-                      strokeWidth: AppTheme.responsiveSize(
-                        context,
-                        phone: 2,
-                        tablet: 2.5,
-                      ),
-                      color: AppTheme.primaryColor,
-                    ),
-                  )
-                else
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(
-                      vertical: AppTheme.responsiveSize(
-                        context,
-                        phone: 8,
-                        tablet: 12,
-                      ),
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor,
-                      borderRadius: BorderRadius.circular(
-                        AppTheme.responsiveSize(context, phone: 12, tablet: 16),
-                      ),
-                    ),
-                    child: Text(
-                      price,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: AppTheme.responsiveFont(
-                          context,
-                          phone: 14,
-                          tablet: 18,
+                      )
+                    else
+                      Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(
+                          vertical: AppTheme.responsiveSize(
+                            context,
+                            phone: 8,
+                            tablet: 12,
+                          ),
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryColor,
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.responsiveSize(
+                                context, phone: 12, tablet: 16),
+                          ),
+                        ),
+                        child: Text(
+                          price,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: AppTheme.responsiveFont(
+                              context,
+                              phone: 14,
+                              tablet: 18,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-              ],
-            ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),

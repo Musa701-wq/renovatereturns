@@ -611,6 +611,7 @@ class ComparisonCardWidget extends StatefulWidget {
   final VoidCallback onLikePressed;
   final VoidCallback onArrowPressed;
   final IconData? categoryIcon;
+  final String? categoryIconPath;
   final List<String>? tags;
 
   const ComparisonCardWidget({
@@ -623,6 +624,7 @@ class ComparisonCardWidget extends StatefulWidget {
     required this.onLikePressed,
     required this.onArrowPressed,
     this.categoryIcon,
+    this.categoryIconPath,
     this.tags,
   });
 
@@ -867,11 +869,18 @@ class _ComparisonCardWidgetState extends State<ComparisonCardWidget> {
                             color: Colors.white,
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(
-                            displayIcon, // Use the displayIcon here
-                            color: const Color(0xFF8B5A7C),
-                            size: isSmallScreen ? 16.0 : isTablet ? 32.0 : 20.0,
-                          ),
+                          child: widget.categoryIconPath != null
+                              ? Image.asset(
+                                  widget.categoryIconPath!,
+                                  color: AppTheme.primaryColor,
+                                  width: isSmallScreen ? 16.0 : isTablet ? 32.0 : 20.0,
+                                  height: isSmallScreen ? 16.0 : isTablet ? 32.0 : 20.0,
+                                )
+                              : Icon(
+                                  displayIcon,
+                                  color: AppTheme.primaryColor,
+                                  size: isSmallScreen ? 16.0 : isTablet ? 32.0 : 20.0,
+                                ),
                         ),
 
                         SizedBox(height: isSmallScreen ? 6.0 : isTablet ? 14.0 : 10.0),
