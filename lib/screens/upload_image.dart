@@ -9,6 +9,8 @@ import '../services/exception_handler.dart';
 import '../widgets/generate_button.dart';
 import '../widgets/image_selection_widget.dart';
 import '../utils/theme.dart';
+import '../services/api_services.dart';
+import '../services/prompt_v2.dart';
 
 class UploadScreen extends StatefulWidget {
   const UploadScreen({super.key});
@@ -537,20 +539,37 @@ class _UploadScreenState extends State<UploadScreen> {
       );
 
       String customization = _customizationController.text.trim();
-      List<String> generatedImageUrls = [];
-      String prompt = uploadProvider.generateAIPromptWithCustomization(
-        customization: customization.isEmpty ? null : customization,
-      );
+      bool isFreeTier = !creditManager.hasPurchased;
 
+      String prompt = isFreeTier
+          ? PromptGeneratorV2.generateFreeTierRedesignPrompt(
+              roomType: uploadProvider.selectedRoomType!,
+              style: uploadProvider.selectedStyle!,
+              budget: uploadProvider.selectedBudget!,
+              imageSource: uploadProvider.selectedImageSource ?? 'Unknown',
+            )
+          : uploadProvider.generateAIPromptWithCustomization(
+              customization: customization.isEmpty ? null : customization,
+            );
+
+      List<String> generatedImageUrls = [];
       if (uploadProvider.isMultipleVariationsEnabled) {
         generatedImageUrls = await uploadProvider.generateMultipleImagesFromAPI(
           basePrompt: prompt,
           imageFile: uploadProvider.selectedImage!,
         );
       } else {
-        String url = await uploadProvider.generateImageWithCustomization(
-          customization: customization.isEmpty ? null : customization,
-        );
+        String url;
+        if (isFreeTier) {
+          url = await GeminiService.generateImageFreeTier(
+            prompt: prompt,
+            imageFile: uploadProvider.selectedImage!,
+          );
+        } else {
+          url = await uploadProvider.generateImageWithCustomization(
+            customization: customization.isEmpty ? null : customization,
+          );
+        }
         generatedImageUrls = [url];
       }
 

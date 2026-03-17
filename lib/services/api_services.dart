@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'exception_handler.dart';
+import 'image_utils.dart';
+import 'prompt_v2.dart';
 
 class GeminiService {
   static final String? _apiKey = dotenv.env['GEMINI_API_KEY'];
@@ -35,9 +38,13 @@ class GeminiService {
       const String _dualImageEndpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image:generateContent";
       // OR: "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent"
 
+      // Compress & Resize images for global optimization (Quality 85%, Max 1024px)
+      File compressedReference = await ImageUtils.compressImage(referenceImageFile, quality: 85, maxDimension: 1024);
+      File compressedTarget = await ImageUtils.compressImage(targetImageFile, quality: 85, maxDimension: 1024);
+
       // DONO images ko read karo
-      List<int> referenceImageBytes = await referenceImageFile.readAsBytes();
-      List<int> targetImageBytes = await targetImageFile.readAsBytes();
+      List<int> referenceImageBytes = await compressedReference.readAsBytes();
+      List<int> targetImageBytes = await compressedTarget.readAsBytes();
 
       // DONO ko base64 mein convert karo
       String referenceBase64 = base64Encode(referenceImageBytes);
@@ -85,6 +92,14 @@ class GeminiService {
         final Map<String, dynamic> data = jsonDecode(response.body);
         print('✅ Gemini Dual Image Generation Success!');
 
+        if (data['usageMetadata'] != null) {
+          final usage = data['usageMetadata'];
+          print('📊 Token Usage:');
+          print('   Input Tokens (Prompt Text + Image): ${usage["promptTokenCount"]}');
+          print('   Output Tokens (Generated Content): ${usage["candidatesTokenCount"]}');
+          print('   Total Tokens: ${usage["totalTokenCount"]}');
+        }
+
         String generatedImage = _extractGeneratedImage(data);
         return generatedImage;
 
@@ -96,6 +111,82 @@ class GeminiService {
     } catch (e) {
       print('❌ Dual Image Generation Failed: $e');
       throw Exception('Reference transform generation failed: $e');
+    }
+  }
+
+  /// Optimized image generation for free tier users
+  /// Compresses image by 30-35% and limits output to 1000 tokens
+  static Future<String> generateImageFreeTier({
+    required String prompt,
+    required File imageFile,
+  }) async {
+    try {
+      if (_apiKey == null) {
+        throw Exception('Gemini API key not found in .env file');
+      }
+
+      print('🚀 Starting Free Tier Optimized Image Generation...');
+      
+      // 1. Compress & Resize image for free tier (Quality 10%, Max 256px) - minimize input tokens
+      File compressedFile = await ImageUtils.compressImage(imageFile, quality: 10, maxDimension: 256);
+      print('📦 Image compressed & resized for free tier: ${compressedFile.path}');
+
+      List<int> imageBytes = await compressedFile.readAsBytes();
+      String base64Image = base64Encode(imageBytes);
+
+      final requestBody = {
+        "contents": [
+          {
+            "parts": [
+              {"text": prompt},
+              {
+                "inline_data": {
+                  "mime_type": "image/jpeg",
+                  "data": base64Image
+                }
+              }
+            ]
+          }
+        ],
+        "generationConfig": {
+          "temperature": 0.5,
+          "topK": 20,
+          "topP": 0.7,
+          "maxOutputTokens": 1290, // Set to model baseline floor as discussed
+        }
+      };
+
+      print('📤 Sending restricted request to Gemini (Free Tier)...');
+
+      final response = await http.post(
+        Uri.parse('$_imageGenEndpoint?key=$_apiKey'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
+
+      print('📥 Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        print('✅ Free Tier Image Generation Success!');
+
+        if (data['usageMetadata'] != null) {
+          final usage = data['usageMetadata'];
+          print('📊 Token Usage (FREE TIER):');
+          print('   Input Tokens: ${usage["promptTokenCount"]}');
+          print('   Output Tokens: ${usage["candidatesTokenCount"]}');
+        }
+
+        String generatedImage = _extractGeneratedImage(data);
+        return generatedImage;
+
+      } else {
+        print('❌ Gemini Free Tier API Error: ${response.statusCode}');
+        throw Exception('Gemini API Error: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ Gemini Free Tier Failed: $e');
+      throw Exception('Free tier generation failed: $e');
     }
   }
 
@@ -112,11 +203,13 @@ class GeminiService {
         throw Exception('Gemini API key not found in .env file');
       }
 
-      print('🔑 Using API Key: ${_apiKey!.substring(0, 10)}...');
-      print('🚀 Starting Gemini 2.5 Flash Image Generation...');
       print('📝 Prompt: ${prompt.substring(0, 100)}...');
 
-      List<int> imageBytes = await imageFile.readAsBytes();
+      // Compress & Resize image for global optimization (Quality 85%, Max 1024px)
+      File compressedFile = await ImageUtils.compressImage(imageFile, quality: 85, maxDimension: 1024);
+      print('📦 Image compressed & resized: ${compressedFile.path}');
+
+      List<int> imageBytes = await compressedFile.readAsBytes();
       String base64Image = base64Encode(imageBytes);
 
       final requestBody = {
@@ -155,6 +248,14 @@ class GeminiService {
         final Map<String, dynamic> data = jsonDecode(response.body);
         print('✅ Gemini 2.5 Flash Image Generation Success!');
 
+        if (data['usageMetadata'] != null) {
+          final usage = data['usageMetadata'];
+          print('📊 Token Usage:');
+          print('   Input Tokens (Prompt Text + Image): ${usage["promptTokenCount"]}');
+          print('   Output Tokens (Generated Content): ${usage["candidatesTokenCount"]}');
+          print('   Total Tokens: ${usage["totalTokenCount"]}');
+        }
+
         String generatedImage = _extractGeneratedImage(data);
         return generatedImage;
 
@@ -179,10 +280,13 @@ class GeminiService {
       }
 
       print('🔑 Using API Key: ${_apiKey!.substring(0, 10)}...');
-      print('🚀 Starting Gemini 2.5 Flash Image Generation (Variations)...');
       print('📝 Prompt: ${prompt.substring(0, 100)}...');
 
-      List<int> imageBytes = await imageFile.readAsBytes();
+      // Compress & Resize image for global optimization (Quality 85%, Max 1024px)
+      File compressedFile = await ImageUtils.compressImage(imageFile, quality: 85, maxDimension: 1024);
+      print('📦 Image compressed & resized (Variations): ${compressedFile.path}');
+
+      List<int> imageBytes = await compressedFile.readAsBytes();
       String base64Image = base64Encode(imageBytes);
 
       final requestBody = {
@@ -220,6 +324,15 @@ class GeminiService {
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
         print('✅ Gemini 2.5 Flash Image Generation Success!');
+
+        if (data['usageMetadata'] != null) {
+          final usage = data['usageMetadata'];
+          print('📊 Token Usage:');
+          print('   Input Tokens (Prompt Text + Image): ${usage["promptTokenCount"]}');
+          print('   Output Tokens (Generated Content): ${usage["candidatesTokenCount"]}');
+          print('   Total Tokens: ${usage["totalTokenCount"]}');
+        }
+
         String generatedImage = _extractGeneratedImage(data);
         return generatedImage;
       } else {

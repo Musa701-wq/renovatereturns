@@ -7,6 +7,7 @@ import '../provider/upload_provider.dart';
 import '../screens/result_screen.dart';
 import '../services/api_services.dart';
 import '../services/exception_handler.dart';
+import '../services/prompt_v2.dart';
 import '../widgets/generate_button.dart';
 import '../widgets/image_selection_widget.dart';
 import '../widgets/wall_card.dart';
@@ -522,10 +523,17 @@ class _WaalRedesignState extends State<WaalRedesign> {
       );
 
       String customDescription = _descriptionController.text.trim();
-      String finalPrompt = _generateCombinedPrompt(
-        uploadProvider,
-        customDescription,
-      );
+      bool isFreeTier = !creditManager.hasPurchased;
+
+      String finalPrompt = isFreeTier
+          ? PromptGeneratorV2.generateFreeTierWallPrompt(
+              wallType: uploadProvider.selectedRoomType!,
+              imageSource: uploadProvider.selectedImageSource ?? 'Unknown',
+            )
+          : _generateCombinedPrompt(
+              uploadProvider,
+              customDescription,
+            );
 
       List<String> generatedImageUrls = [];
       if (uploadProvider.isMultipleVariationsEnabled) {
@@ -534,11 +542,19 @@ class _WaalRedesignState extends State<WaalRedesign> {
           imageFile: uploadProvider.selectedImage!,
         );
       } else {
-        String url = await _generateWallImageWithCustomPrompt(
-          uploadProvider,
-          finalPrompt,
-          context,
-        );
+        String url;
+        if (isFreeTier) {
+          url = await GeminiService.generateImageFreeTier(
+            prompt: finalPrompt,
+            imageFile: uploadProvider.selectedImage!,
+          );
+        } else {
+          url = await _generateWallImageWithCustomPrompt(
+            uploadProvider,
+            finalPrompt,
+            context,
+          );
+        }
         generatedImageUrls = [url];
       }
 

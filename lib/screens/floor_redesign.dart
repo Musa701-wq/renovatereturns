@@ -7,6 +7,7 @@ import '../in_app_purchase/credit_purchase_screen.dart';
 import '../provider/upload_provider.dart';
 import '../services/api_services.dart';
 import '../services/exception_handler.dart';
+import '../services/prompt_v2.dart';
 import '../widgets/generate_button.dart';
 import '../widgets/image_selection_widget.dart';
 import '../utils/theme.dart';
@@ -487,10 +488,17 @@ class _FloorRedesignState extends State<FloorRedesign> {
       );
 
       String customDescription = _descriptionController.text.trim();
-      String finalPrompt = _generateCombinedPrompt(
-        uploadProvider,
-        customDescription,
-      );
+      bool isFreeTier = !creditManager.hasPurchased;
+
+      String finalPrompt = isFreeTier
+          ? PromptGeneratorV2.generateFreeTierFloorPrompt(
+              floorType: uploadProvider.selectedRoomType!,
+              imageSource: uploadProvider.selectedImageSource ?? 'Unknown',
+            )
+          : _generateCombinedPrompt(
+              uploadProvider,
+              customDescription,
+            );
 
       List<String> generatedImageUrls = [];
       if (uploadProvider.isMultipleVariationsEnabled) {
@@ -499,10 +507,18 @@ class _FloorRedesignState extends State<FloorRedesign> {
           imageFile: uploadProvider.selectedImage!,
         );
       } else {
-        String url = await GeminiService.generateImageFromPrompt(
-          prompt: finalPrompt,
-          imageFile: uploadProvider.selectedImage!,
-        );
+        String url;
+        if (isFreeTier) {
+          url = await GeminiService.generateImageFreeTier(
+            prompt: finalPrompt,
+            imageFile: uploadProvider.selectedImage!,
+          );
+        } else {
+          url = await GeminiService.generateImageFromPrompt(
+            prompt: finalPrompt,
+            imageFile: uploadProvider.selectedImage!,
+          );
+        }
         generatedImageUrls = [url];
       }
 

@@ -477,7 +477,9 @@ import '../in_app_purchase/credit_manager.dart';
 import '../in_app_purchase/credit_purchase_screen.dart';
 import '../in_app_purchase/i_ap_manager.dart';
 import '../provider/upload_provider.dart';
+import '../services/api_services.dart';
 import '../services/exception_handler.dart';
+import '../services/prompt_v2.dart';
 import '../utils/theme.dart';
 import '../widgets/credit_dialog.dart';
 import '../widgets/image_selection_widget.dart';
@@ -849,9 +851,16 @@ class _FillSpaceScreenState extends State<FillSpaceScreen> {
       );
 
       String fillInstruction = _fillInstructionController.text.trim();
-      String fillPrompt = uploadProvider.generateFillSpaceAIPrompt(
-        fillInstruction: fillInstruction,
-      );
+      bool isFreeTier = !creditManager.hasPurchased;
+
+      String fillPrompt = isFreeTier
+          ? PromptGeneratorV2.generateFreeTierFillPrompt(
+              fillInstruction: fillInstruction,
+              imageSource: uploadProvider.selectedImageSource ?? 'Unknown',
+            )
+          : uploadProvider.generateFillSpaceAIPrompt(
+              fillInstruction: fillInstruction,
+            );
 
       List<String> generatedImageUrls = [];
       if (uploadProvider.isMultipleVariationsEnabled) {
@@ -860,9 +869,17 @@ class _FillSpaceScreenState extends State<FillSpaceScreen> {
           imageFile: uploadProvider.selectedImage!,
         );
       } else {
-        String url = await uploadProvider.generateFillSpaceImage(
-          fillInstruction: fillInstruction,
-        );
+        String url;
+        if (isFreeTier) {
+          url = await GeminiService.generateImageFreeTier(
+            prompt: fillPrompt,
+            imageFile: uploadProvider.selectedImage!,
+          );
+        } else {
+          url = await uploadProvider.generateFillSpaceImage(
+            fillInstruction: fillInstruction,
+          );
+        }
         generatedImageUrls = [url];
       }
 

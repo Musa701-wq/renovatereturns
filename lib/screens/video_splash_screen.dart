@@ -3,6 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
+import 'package:provider/provider.dart';
+import '../provider/ad_provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import '../main.dart';
 import '../services/auth_gate.dart';
 import '../utils/theme.dart';
 
@@ -16,58 +20,104 @@ class VideoSplashScreen extends StatefulWidget {
 class _VideoSplashScreenState extends State<VideoSplashScreen> {
   late VideoPlayerController _controller;
   bool _initialized = false;
+  bool _attHandled = false;
+  bool _readyToNavigate = false;
 
   @override
   void initState() {
     super.initState();
+    debugPrint('🚀🚀 ATT FORCED SPLASH SCREEN STARTED');
     
-    // Force ATT on Splash Screen - Best for first-load reliability
-    _initTracking();
+    // Start the heavy lifting sequence
+    _forceAttAndInitialize();
+  }
 
-    _controller = VideoPlayerController.asset("assets/video/splash_video.mp4")
-      ..initialize().then((_) {
+  Future<void> _forceAttAndInitialize() async {
+    debugPrint('🔥🔥 FORCING ATT FIRST - NO QUEUE');
+
+    // STEP 1: Process ATT strictly first
+    if (Platform.isIOS) {
+      try {
+        debugPrint('📱 STEP 1: Checking ATT status...');
+        
+        // Small delay to ensure Flutter UI is mounted enough for native dialogs
+        await Future.delayed(const Duration(milliseconds: 500));
+        
+        final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+        debugPrint('📱 Current ATT Status: $status');
+
+        if (status == TrackingStatus.notDetermined) {
+          debugPrint('✅✅✅ SHOWING ATT DIALOG NOW - FIRST THING!');
+          final newStatus = await AppTrackingTransparency.requestTrackingAuthorization();
+          debugPrint('📱 User responded with: $newStatus');
+        } else {
+          debugPrint('ℹ️ ATT already handled: $status');
+        }
+      } catch (e) {
+        debugPrint('❌ ATT Error: $e');
+      }
+    } else {
+      debugPrint('📱 Not iOS - Skipping ATT');
+    }
+
+    _attHandled = true;
+
+    // STEP 2: Now it's safe to start Firebase & Video
+    debugPrint('📱 STEP 2: Initializing Firebase and Video...');
+    await _initializeServicesAndVideo();
+  }
+
+  Future<void> _initializeServicesAndVideo() async {
+    try {
+      // Initialize Firebase strictly AFTER ATT
+      await Firebase.initializeApp();
+      debugPrint('✅ Firebase initialized');
+    } catch (e) {
+      debugPrint("❌ Firebase App Init Error: $e");
+    }
+
+    // Initialize Video Player
+    _controller = VideoPlayerController.asset("assets/video/splash_video.mp4");
+    
+    try {
+      await _controller.initialize();
+      if (mounted) {
         setState(() {
           _initialized = true;
         });
         _controller.play();
         _controller.setLooping(false);
-      });
-
-    _controller.addListener(() {
-      if (_controller.value.position >= _controller.value.duration && _controller.value.duration != Duration.zero) {
-        _navigateToNext();
       }
-    });
-
-    Future.delayed(const Duration(seconds: 6), () {
-      if (mounted) {
-        _navigateToNext();
-      }
-    });
-  }
-
-  Future<void> _initTracking() async {
-    if (!Platform.isIOS) return;
-
-    try {
-      // 1 second delay ensures the native UI is ready to receive the dialog signal
-      await Future.delayed(const Duration(milliseconds: 1000));
       
-      final status = await AppTrackingTransparency.trackingAuthorizationStatus;
-      if (status == TrackingStatus.notDetermined) {
-        await AppTrackingTransparency.requestTrackingAuthorization();
-      }
+      // Navigate when video finishes
+      _controller.addListener(() {
+        if (_controller.value.position >= _controller.value.duration && _controller.value.duration != Duration.zero) {
+          _readyToNavigate = true;
+          _checkAndNavigate();
+        }
+      });
+      
+      // Fallback timer just in case video hangs
+      Future.delayed(const Duration(seconds: 4), () {
+        if (mounted) {
+          _readyToNavigate = true;
+          _checkAndNavigate();
+        }
+      });
+      
     } catch (e) {
-      debugPrint("❌ Splash ATT Error: $e");
+      debugPrint("❌ Video Init Error: $e");
+      // If video fails, just proceed
+      if (mounted) {
+        _readyToNavigate = true;
+        _checkAndNavigate();
+      }
     }
   }
 
-  void _navigateToNext() {
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const AuthGate()),
-      );
+  void _checkAndNavigate() {
+    if (_attHandled && _readyToNavigate && mounted) {
+      runApp(const MyApp());
     }
   }
 

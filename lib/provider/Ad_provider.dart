@@ -35,11 +35,22 @@ class AdProvider with ChangeNotifier {
   }
 
   Future<void> initialize() async {
-    // Initializing MobileAds happens in main.dart as per user's logic
-    loadBannerAd();
+    try {
+      await MobileAds.instance.initialize();
+      loadBannerAd();
+    } catch (e) {
+      print('❌ AdProvider: Failed to init MobileAds $e');
+    }
   }
 
   void loadBannerAd() {
+    if (creditManager?.hasPurchased == true) {
+      print('📱 AdProvider: User is PAID. Skipping Banner Ad load.');
+      _isBannerAdLoaded = false;
+      notifyListeners();
+      return;
+    }
+
     print('📱 AdProvider: Starting to load Banner Ad...');
     print('📱 AdProvider: Ad Unit ID: $bannerAdUnitId');
     

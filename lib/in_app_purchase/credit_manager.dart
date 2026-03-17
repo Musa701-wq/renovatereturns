@@ -17,9 +17,12 @@ class CreditManager extends ChangeNotifier {
 
   int _credits = 0;
   bool _isLoading = true;
+  bool _hasPurchased = false; 
 
   int get credits => _credits;
   bool get isLoading => _isLoading;
+  bool get hasPurchased => false; // 🧪 TESTING: force free tier (change back to _hasPurchased for prod)
+  //bool get hasPurchased => true;
 
   CreditManager() {
     _authSubscription = _auth.authStateChanges().listen((user) {
@@ -74,7 +77,12 @@ class CreditManager extends ChangeNotifier {
         // Existing user - load credits
         final data = docSnapshot.data() as Map<String, dynamic>;
         _credits = data['credits'] ?? 0;
-        debugPrint("💰 [CreditManager] Loaded credits: $_credits");
+        
+        // Check if any transaction is a purchase
+        final List<dynamic> transactions = data['transactions'] ?? [];
+        _hasPurchased = transactions.any((t) => t['type'] == 'credit' && (t['reason']?.toString().contains('iap') ?? false));
+        
+        debugPrint("💰 [CreditManager] Loaded credits: $_credits, Has Purchased: $_hasPurchased");
       }
     } catch (e) {
       debugPrint("❌ [CreditManager] Init error: $e");
@@ -135,6 +143,9 @@ class CreditManager extends ChangeNotifier {
 
       // Update local state
       _credits += amount;
+      if (reason != null && reason.contains('iap')) {
+        _hasPurchased = true;
+      }
       print("✅ [CreditManager] Credits added. New balance: $_credits");
       notifyListeners();
       return true;
@@ -261,6 +272,42 @@ class CreditManager extends ChangeNotifier {
     } catch (e) {
       debugPrint("❌ [CreditManager] Get history error: $e");
       return [];
+    }
+  }
+
+  /// Reset purchase status - removes all IAP transactions from Firestore
+  /// Use this to reset a test account back to FREE tier
+  Future<void> resetPurchaseStatus() async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return;
+
+      debugPrint("🔄 [CreditManager] Resetting purchase status to FREE TIER");
+
+      final docRef = _firestore.collection('user_credits').doc(user.uid);
+      final docSnapshot = await docRef.get();
+
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data() as Map<String, dynamic>;
+        final List<dynamic> transactions = data['transactions'] ?? [];
+
+        // Remove all IAP credit transactions
+        final filteredTransactions = transactions.where((t) {
+          final reason = t['reason']?.toString() ?? '';
+          return !(t['type'] == 'credit' && reason.contains('iap'));
+        }).toList();
+
+        await docRef.update({
+          'transactions': filteredTransactions,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      _hasPurchased = false;
+      notifyListeners();
+      debugPrint("✅ [CreditManager] Purchase status reset. User is now FREE TIER.");
+    } catch (e) {
+      debugPrint("❌ [CreditManager] Reset purchase error: $e");
     }
   }
 

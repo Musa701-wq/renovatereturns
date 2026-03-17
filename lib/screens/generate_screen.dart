@@ -4,6 +4,7 @@ import 'package:ai_remodeling/screens/wall_screen.dart';
 import 'package:ai_remodeling/utils/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../in_app_purchase/credit_manager.dart';
 import '../provider/image_provider.dart';
 import '../services/google_analytics_services.dart';
 import '../widgets/comparison_card_widget.dart';
@@ -93,8 +94,11 @@ class _GenerateScreenState extends State<GenerateScreen> {
                   SizedBox(height: getCardSpacing()),
 
                   // Banner Ad
-                  Consumer<AdProvider>(
-                    builder: (context, adProvider, child) {
+                  Consumer2<AdProvider, CreditManager>(
+                    builder: (context, adProvider, creditManager, child) {
+                      if (creditManager.hasPurchased) {
+                        return const SizedBox.shrink(); // Hide ad for paid users
+                      }
                       if (adProvider.isBannerAdLoaded && adProvider.bannerAd != null) {
                         return Container(
                           alignment: Alignment.center,

@@ -10,6 +10,8 @@ import '../utils/theme.dart';
 import '../widgets/image_selection_widget.dart';
 import '../widgets/credit_dialog.dart';
 import '../in_app_purchase/i_ap_manager.dart';
+import '../services/api_services.dart';
+import '../services/prompt_v2.dart';
 
 class ObjectRemove extends StatefulWidget {
   const ObjectRemove({super.key});
@@ -375,9 +377,15 @@ class _ObjectRemoveState extends State<ObjectRemove> {
       );
 
       if (context.mounted) {
-        String removePrompt = uploadProvider.generateObjectRemoveAIPrompt(
-          objectToRemove: _objectController.text.trim(),
-        );
+        bool isFreeTier = !creditManager.hasPurchased;
+        String removePrompt = isFreeTier
+            ? PromptGeneratorV2.generateFreeTierRemovePrompt(
+                objectToRemove: _objectController.text.trim(),
+                imageSource: uploadProvider.selectedImageSource ?? 'Unknown',
+              )
+            : uploadProvider.generateObjectRemoveAIPrompt(
+                objectToRemove: _objectController.text.trim(),
+              );
 
         List<String> generatedImageUrls = [];
         if (uploadProvider.isMultipleVariationsEnabled) {
@@ -386,9 +394,17 @@ class _ObjectRemoveState extends State<ObjectRemove> {
             imageFile: uploadProvider.selectedImage!,
           );
         } else {
-          String url = await uploadProvider.generateObjectRemoveImage(
-            objectToRemove: _objectController.text.trim(),
-          );
+          String url;
+          if (isFreeTier) {
+            url = await GeminiService.generateImageFreeTier(
+              prompt: removePrompt,
+              imageFile: uploadProvider.selectedImage!,
+            );
+          } else {
+            url = await uploadProvider.generateObjectRemoveImage(
+              objectToRemove: _objectController.text.trim(),
+            );
+          }
           generatedImageUrls = [url];
         }
 
