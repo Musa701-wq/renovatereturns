@@ -8,6 +8,10 @@ import 'package:image_gallery_saver/image_gallery_saver.dart';
 
 import '../widgets/save_button.dart';
 import '../widgets/share_button.dart';
+import '../widgets/watermark_upsell_dialog.dart';
+import '../services/image_utils.dart';
+import '../in_app_purchase/credit_manager.dart';
+import 'package:provider/provider.dart';
 import '../utils/theme.dart';
 
 class FullScreenImageView extends StatefulWidget {
@@ -33,89 +37,107 @@ class _FullScreenImageViewState extends State<FullScreenImageView> {
   bool _isSharing = false;
 
   Future<void> _saveImage() async {
-    setState(() {
-      _isSaving = true;
-    });
-
-    try {
-      final result = await ImageGallerySaver.saveImage(
-        widget.imageData,
-        name: 'AI_Design_${DateTime.now().millisecondsSinceEpoch}.png',
-        quality: 100,
-      );
-
-      if (result['isSuccess'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Image saved to Photos!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to save image'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
+    Future<void> performSave(Uint8List finalBytes) async {
       setState(() {
-        _isSaving = false;
+        _isSaving = true;
       });
+
+      try {
+        final result = await ImageGallerySaver.saveImage(
+          finalBytes,
+          name: 'AI_Design_${DateTime.now().millisecondsSinceEpoch}.png',
+          quality: 100,
+        );
+
+        if (result['isSuccess'] == true) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Image saved to Photos!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to save image'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      } finally {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
+
+    final isPremium = Provider.of<CreditManager>(context, listen: false).hasPurchased;
+
+    if (!isPremium) {
+      final String? result = await WatermarkUpsell.show(context);
+      if (result == 'watermark') {
+        final watermarkedBytes = await ImageUtils.addWatermarkToBytes(widget.imageData);
+        await performSave(watermarkedBytes);
+      } else if (result == 'purchased') {
+        await performSave(widget.imageData);
+      }
+    } else {
+      await performSave(widget.imageData);
     }
   }
 
   Future<void> _shareImage() async {
-    setState(() {
-      _isSharing = true;
-    });
-
-    try {
-      final directory = await getTemporaryDirectory();
-      final imagePath = '${directory.path}/share_${DateTime.now().millisecondsSinceEpoch}.png';
-      final file = File(imagePath);
-
-      await file.writeAsBytes(widget.imageData);
-
-      final xFile = XFile(imagePath);
-      await Share.shareXFiles([xFile]);
-
-      // Cleanup
-      Future.delayed(const Duration(seconds: 10), () async {
-        try {
-          if (await file.exists()) {
-            await file.delete();
-          }
-        } catch (e) {
-          print('Error deleting temp file: $e');
-        }
-      });
-
-     /* ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ Image shared successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );*/
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to share: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
+    Future<void> performShare(Uint8List finalBytes) async {
       setState(() {
-        _isSharing = false;
+        _isSharing = true;
       });
+
+      try {
+        final directory = await getTemporaryDirectory();
+        final imagePath =
+            '${directory.path}/share_${DateTime.now().millisecondsSinceEpoch}.png';
+        final file = File(imagePath);
+
+        await file.writeAsBytes(finalBytes);
+
+        final xFile = XFile(imagePath);
+        await Share.shareXFiles([xFile]);
+
+        // Cleanup
+        Future.delayed(const Duration(seconds: 10), () async {
+          try {
+            if (await file.exists()) {
+              await file.delete();
+            }
+          } catch (e) {
+            print('Error deleting temp file: $e');
+          }
+        });
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to share: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } finally {
+        setState(() {
+          _isSharing = false;
+        });
+      }
+    }
+
+    final isPremium = Provider.of<CreditManager>(context, listen: false).hasPurchased;
+
+    if (!isPremium) {
+      final watermarkedBytes = await ImageUtils.addWatermarkToBytes(widget.imageData);
+      await performShare(watermarkedBytes);
+    } else {
+      await performShare(widget.imageData);
     }
   }
 
@@ -171,10 +193,7 @@ class _FullScreenImageViewState extends State<FullScreenImageView> {
                   panEnabled: true,
                   minScale: 0.5,
                   maxScale: 4.0,
-                  child: Image.memory(
-                    widget.imageData,
-                    fit: BoxFit.contain,
-                  ),
+                  child: Image.memory(widget.imageData, fit: BoxFit.contain),
                 ),
               ),
             ),

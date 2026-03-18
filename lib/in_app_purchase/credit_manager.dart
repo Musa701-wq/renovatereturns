@@ -21,8 +21,7 @@ class CreditManager extends ChangeNotifier {
 
   int get credits => _credits;
   bool get isLoading => _isLoading;
-  bool get hasPurchased => false; // 🧪 TESTING: force free tier (change back to _hasPurchased for prod)
-  //bool get hasPurchased => true;
+  bool get hasPurchased => _hasPurchased;
 
   CreditManager() {
     _authSubscription = _auth.authStateChanges().listen((user) {

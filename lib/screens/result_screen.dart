@@ -10,6 +10,9 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import '../services/database_services.dart';
+import '../services/image_utils.dart';
+import '../in_app_purchase/credit_manager.dart';
+import '../widgets/watermark_upsell_dialog.dart';
 import '../widgets/create_new_button.dart';
 import 'package:provider/provider.dart';
 import '../provider/upload_provider.dart';
@@ -44,7 +47,7 @@ class _ResultScreenState extends State<ResultScreen> {
   bool _isLoading = false;
   bool _isAutoSaved = false;
   final DatabaseHelper _dbHelper = DatabaseHelper();
-  List<Uint8List?> _imagesBytes = []; 
+  List<Uint8List?> _imagesBytes = [];
   String? _autoBeforeImageUrl;
   int _currentPage = 0;
   final PageController _pageController = PageController();
@@ -52,7 +55,8 @@ class _ResultScreenState extends State<ResultScreen> {
   @override
   void initState() {
     super.initState();
-    _autoBeforeImageUrl = widget.beforeImageUrl ??
+    _autoBeforeImageUrl =
+        widget.beforeImageUrl ??
         Provider.of<UploadProvider>(context, listen: false).selectedImage?.path;
     _loadImage();
   }
@@ -69,7 +73,7 @@ class _ResultScreenState extends State<ResultScreen> {
       Uint8List? bytes = await _getImageBytesFromUrl(url);
       _imagesBytes.add(bytes);
     }
-    await Future.delayed(const Duration(milliseconds: 500)); 
+    await Future.delayed(const Duration(milliseconds: 500));
     if (mounted) {
       setState(() {
         _isLoading = false;
@@ -102,9 +106,10 @@ class _ResultScreenState extends State<ResultScreen> {
 
       for (int i = 0; i < _imagesBytes.length; i++) {
         if (_imagesBytes[i] == null) continue;
-        
+
         await _dbHelper.insertImage(
-          name: '${widget.roomType} - ${widget.style} ${widget.generatedImageUrls.length > 1 ? "(Var ${i+1})" : ""}',
+          name:
+              '${widget.roomType} - ${widget.style} ${widget.generatedImageUrls.length > 1 ? "(Var ${i + 1})" : ""}',
           imageData: _imagesBytes[i]!,
           description: 'Budget: ${widget.budget}\nPrompt: ${widget.prompt}',
           category: category,
@@ -119,61 +124,87 @@ class _ResultScreenState extends State<ResultScreen> {
   Future _saveDesign(Uint8List? bytes) async {
     if (bytes == null) return;
 
-    try {
-      final result = await ImageGallerySaver.saveImage(
-        bytes,
-        name: 'AI_Design_${DateTime.now().millisecondsSinceEpoch}.png',
-        quality: 100,
-      );
+    Future<void> performSave(Uint8List finalBytes) async {
+      try {
+        final result = await ImageGallerySaver.saveImage(
+          finalBytes,
+          name: 'AI_Design_${DateTime.now().millisecondsSinceEpoch}.png',
+          quality: 100,
+        );
 
-      if (mounted) {
-        if (result['isSuccess'] == true) {
+        if (mounted) {
+          if (result['isSuccess'] == true) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('✅ Design saved to Photos!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Failed to save image'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ Design saved to Photos!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to save image'),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
           );
         }
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+    }
+
+    final isPremium = Provider.of<CreditManager>(context, listen: false).hasPurchased;
+
+    if (!isPremium) {
+      final String? result = await WatermarkUpsell.show(context);
+      if (result == 'watermark') {
+        final watermarkedBytes = await ImageUtils.addWatermarkToBytes(bytes);
+        await performSave(watermarkedBytes);
+      } else if (result == 'purchased') {
+        await performSave(bytes);
       }
+      // If result is null (closed), do nothing (no performSave called)
+    } else {
+      await performSave(bytes);
     }
   }
 
   Future _shareDesign(Uint8List? bytes) async {
     if (bytes == null) return;
 
-    try {
-      final directory = await getTemporaryDirectory();
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final imagePath = '${directory.path}/ai_design_$timestamp.png';
-      final file = File(imagePath);
+    Future<void> performShare(Uint8List finalBytes) async {
+      try {
+        final directory = await getTemporaryDirectory();
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final imagePath = '${directory.path}/ai_design_$timestamp.png';
+        final file = File(imagePath);
 
-      await file.writeAsBytes(bytes);
+        await file.writeAsBytes(finalBytes);
 
-      final xFile = XFile(imagePath);
-      await Share.shareXFiles([xFile]);
+        final xFile = XFile(imagePath);
+        await Share.shareXFiles([xFile]);
 
-      Future.delayed(const Duration(seconds: 10), () async {
-        if (await file.exists()) await file.delete();
-      });
-    } catch (e) {
-      print('Share error: $e');
+        Future.delayed(const Duration(seconds: 10), () async {
+          if (await file.exists()) await file.delete();
+        });
+      } catch (e) {
+        print('Share error: $e');
+      }
+    }
+
+    final isPremium = Provider.of<CreditManager>(context, listen: false).hasPurchased;
+
+    if (!isPremium) {
+      // Auto-watermark for share with no dialog as requested
+      final watermarkedBytes = await ImageUtils.addWatermarkToBytes(bytes);
+      await performShare(watermarkedBytes);
+    } else {
+      await performShare(bytes);
     }
   }
 
@@ -202,12 +233,16 @@ class _ResultScreenState extends State<ResultScreen> {
 
     if (styleLower.contains('exterior')) return 'Exterior';
     if (styleLower.contains('floor design')) return 'Floor Design';
-    if (styleLower.contains('style transfer') || roomLower == 'reference transform') return 'Reference Transform';
+    if (styleLower.contains('style transfer') ||
+        roomLower == 'reference transform')
+      return 'Reference Transform';
     if (styleLower.contains('wall design')) return 'Wall Design';
-    if (styleLower.contains('object replacement') || roomLower == 'replace') return 'Replace';
-    if (styleLower.contains('space filling') || roomLower == 'fill space') return 'Fill Space';
+    if (styleLower.contains('object replacement') || roomLower == 'replace')
+      return 'Replace';
+    if (styleLower.contains('space filling') || roomLower == 'fill space')
+      return 'Fill Space';
     if (roomLower.contains('object removal')) return 'Object Remove';
-    
+
     return 'Interior';
   }
 
@@ -242,9 +277,11 @@ class _ResultScreenState extends State<ResultScreen> {
       body: Column(
         children: [
           Expanded(
-            child: _isLoading 
-              ? _buildLoadingState()
-              : isMultiple ? _buildMultipleVariationsUI() : _buildSingleResultUI(),
+            child: _isLoading
+                ? _buildLoadingState()
+                : isMultiple
+                ? _buildMultipleVariationsUI()
+                : _buildSingleResultUI(),
           ),
           if (!_isLoading) _buildBottomActions(),
         ],
@@ -257,7 +294,10 @@ class _ResultScreenState extends State<ResultScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const CupertinoActivityIndicator(radius: 20, color: AppTheme.primaryColor),
+          const CupertinoActivityIndicator(
+            radius: 20,
+            color: AppTheme.primaryColor,
+          ),
           const SizedBox(height: 20),
           Text(
             'Refining your designs...',
@@ -307,7 +347,9 @@ class _ResultScreenState extends State<ResultScreen> {
     Uint8List? bytes = _imagesBytes.length > index ? _imagesBytes[index] : null;
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: AppTheme.responsivePadding(context)),
+      padding: EdgeInsets.symmetric(
+        horizontal: AppTheme.responsivePadding(context),
+      ),
       child: GestureDetector(
         onTap: () => _openFullScreenImage(bytes),
         child: Container(
@@ -339,9 +381,13 @@ class _ResultScreenState extends State<ResultScreen> {
       physics: const BouncingScrollPhysics(),
       child: Column(
         children: [
-          SizedBox(height: AppTheme.responsiveSize(context, phone: 20, tablet: 30)),
+          SizedBox(
+            height: AppTheme.responsiveSize(context, phone: 20, tablet: 30),
+          ),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: AppTheme.responsivePadding(context)),
+            padding: EdgeInsets.symmetric(
+              horizontal: AppTheme.responsivePadding(context),
+            ),
             child: GestureDetector(
               onTap: () => _openFullScreenImage(bytes),
               child: Container(
@@ -383,14 +429,16 @@ class _ResultScreenState extends State<ResultScreen> {
     if (bytes != null) {
       return Image.memory(bytes, fit: BoxFit.cover, width: double.infinity);
     }
-    
+
     String url = widget.generatedImageUrls[index];
     if (url.startsWith('http')) {
       return Image.network(
         url,
         fit: BoxFit.cover,
         width: double.infinity,
-        loadingBuilder: (_, child, prog) => prog == null ? child : const Center(child: CupertinoActivityIndicator()),
+        loadingBuilder: (_, child, prog) => prog == null
+            ? child
+            : const Center(child: CupertinoActivityIndicator()),
         errorBuilder: (_, __, ___) => _buildPlaceholder(),
       );
     }
@@ -401,7 +449,11 @@ class _ResultScreenState extends State<ResultScreen> {
     return Container(
       color: AppTheme.primaryColor.withOpacity(0.05),
       child: Center(
-        child: Icon(Icons.auto_awesome, size: 50, color: AppTheme.primaryColor.withOpacity(0.3)),
+        child: Icon(
+          Icons.auto_awesome,
+          size: 50,
+          color: AppTheme.primaryColor.withOpacity(0.3),
+        ),
       ),
     );
   }
@@ -417,7 +469,9 @@ class _ResultScreenState extends State<ResultScreen> {
           height: 8,
           width: _currentPage == index ? 24 : 8,
           decoration: BoxDecoration(
-            color: _currentPage == index ? AppTheme.primaryColor : AppTheme.primaryColor.withOpacity(0.2),
+            color: _currentPage == index
+                ? AppTheme.primaryColor
+                : AppTheme.primaryColor.withOpacity(0.2),
             borderRadius: BorderRadius.circular(4),
           ),
         ),
@@ -427,7 +481,9 @@ class _ResultScreenState extends State<ResultScreen> {
 
   Widget _buildDetailsRow() {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: AppTheme.responsivePadding(context)),
+      margin: EdgeInsets.symmetric(
+        horizontal: AppTheme.responsivePadding(context),
+      ),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.primaryColor.withOpacity(0.05),
@@ -438,7 +494,10 @@ class _ResultScreenState extends State<ResultScreen> {
         children: [
           _buildDetailItem('Room', widget.roomType),
           _buildDetailItem('Style', widget.style),
-          _buildDetailItem('Budget', widget.budget == "Not Specified" ? "-" : widget.budget),
+          _buildDetailItem(
+            'Budget',
+            widget.budget == "Not Specified" ? "-" : widget.budget,
+          ),
         ],
       ),
     );
@@ -447,23 +506,47 @@ class _ResultScreenState extends State<ResultScreen> {
   Widget _buildDetailItem(String title, String value) {
     return Column(
       children: [
-        Text(title, style: TextStyle(fontSize: 12, color: AppTheme.primaryColor.withOpacity(0.6))),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 12,
+            color: AppTheme.primaryColor.withOpacity(0.6),
+          ),
+        ),
         const SizedBox(height: 4),
-        Text(value, style: const TextStyle(fontSize: 14, color: AppTheme.primaryColor, fontWeight: FontWeight.bold)),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            color: AppTheme.primaryColor,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }
 
   Widget _buildBottomActions() {
-    Uint8List? currentBytes = _imagesBytes.length > _currentPage ? _imagesBytes[_currentPage] : null;
+    Uint8List? currentBytes = _imagesBytes.length > _currentPage
+        ? _imagesBytes[_currentPage]
+        : null;
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20, 15, 20, 20 + MediaQuery.of(context).padding.bottom),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        15,
+        20,
+        20 + MediaQuery.of(context).padding.bottom,
+      ),
       decoration: BoxDecoration(
         color: AppTheme.secondaryColor,
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
         ],
       ),
       child: Column(
