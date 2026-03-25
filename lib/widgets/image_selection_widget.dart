@@ -149,7 +149,8 @@ import '../utils/theme.dart';
 import 'full_screen_view.dart';
 
 class ImageSelectionWidget extends StatelessWidget {
-  const ImageSelectionWidget({super.key});
+  final Function(File)? onImageSelected;
+  const ImageSelectionWidget({super.key, this.onImageSelected});
 
   @override
   Widget build(BuildContext context) {
@@ -248,6 +249,9 @@ class ImageSelectionWidget extends StatelessWidget {
                             onPressed: () async {
                               try {
                                 await uploadProvider.openCamera();
+                                if (uploadProvider.selectedImage != null && onImageSelected != null) {
+                                  onImageSelected!(uploadProvider.selectedImage!);
+                                }
                               } catch (e) {}
                             },
                             style: ElevatedButton.styleFrom(
@@ -280,6 +284,9 @@ class ImageSelectionWidget extends StatelessWidget {
                             onPressed: () async {
                               try {
                                 await uploadProvider.openGallery();
+                                if (uploadProvider.selectedImage != null && onImageSelected != null) {
+                                  onImageSelected!(uploadProvider.selectedImage!);
+                                }
                               } catch (e) {}
                             },
                             style: ElevatedButton.styleFrom(

@@ -403,8 +403,10 @@ class _ResultScreenState extends State<ResultScreen> {
               ),
             ),
           ),
-          SizedBox(height: 25),
-          _buildDetailsRow(),
+          if (widget.roomType != 'Partial Remodel') ...[
+            SizedBox(height: 25),
+            _buildDetailsRow(),
+          ],
           SizedBox(height: 20),
         ],
       ),
