@@ -220,9 +220,15 @@ class _PartialRemodelScreenState extends State<PartialRemodelScreen> {
                 Expanded(
                   flex: 3,
                   child: up.selectedImage == null
-                      ? Center(
+                      ? Align(
+                          alignment: Alignment.topCenter,
                           child: SingleChildScrollView(
-                            padding: EdgeInsets.all(AppTheme.responsivePadding(context)),
+                            padding: EdgeInsets.only(
+                              top: 40.0,
+                              left: AppTheme.responsivePadding(context),
+                              right: AppTheme.responsivePadding(context),
+                              bottom: AppTheme.responsivePadding(context),
+                            ),
                             child: ImageSelectionWidget(onImageSelected: (img) { _loadImage(img); }),
                           ),
                         )
@@ -295,14 +301,14 @@ class _PartialRemodelScreenState extends State<PartialRemodelScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
                     color: AppTheme.primaryColor.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(25),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: TabBar(
                     labelColor: AppTheme.secondaryColor,
                     unselectedLabelColor: AppTheme.primaryColor.withOpacity(0.6),
                     indicatorSize: TabBarIndicatorSize.tab,
                     indicator: BoxDecoration(
-                      borderRadius: BorderRadius.circular(25),
+                      borderRadius: BorderRadius.circular(8),
                       color: AppTheme.primaryColor,
                     ),
                     tabs: const [

@@ -17,6 +17,7 @@ import 'package:ai_remodeling/provider/ad_provider.dart';
 import 'package:ai_remodeling/screens/replace_screen.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
+import 'package:ai_remodeling/screens/partial_remodel_screen.dart';
 
 class GenerateScreen extends StatefulWidget {
   const GenerateScreen({super.key});
@@ -240,6 +241,25 @@ class _GenerateScreenState extends State<GenerateScreen> {
                         );
                       },
                     ),
+
+                  SizedBox(height: getCardSpacing()),
+
+                  // CARD 8 - Partial Remodel
+                  ComparisonCardWidget(
+                    beforeImage: 'assets/images/exta.jpg',
+                    afterImage: 'assets/images/partial.jpeg',
+                    title: 'Partial Remodel',
+                    subtitle: 'Select and remodel specific areas',
+                    isLiked: false,
+                    categoryIconPath: _getIconPathForTitle('Partial Remodel'),
+                    onLikePressed: () {},
+                    onArrowPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const PartialRemodelScreen()),
+                      );
+                    },
+                  ),
 
                   SizedBox(height: getCardSpacing()),
                 ],
