@@ -12,6 +12,7 @@ import 'login_screen.dart';
 import '../utils/theme.dart';
 import 'faq_screen.dart';
 import 'feedback_screen.dart';
+import 'community_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -242,6 +243,74 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // DIRECT CALL CreditsCard HERE
             CreditsCard(), // YAHI CHANGE HAI - DIRECT CALL
+
+            const SizedBox(height: 25),
+
+            // Community Banner Card
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CommunityScreen()),
+                );
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.tilescolor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppTheme.primaryColor,
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryColor.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(Icons.public, color: AppTheme.primaryColor, size: 28),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Community Feed',
+                            style: TextStyle(
+                              color: AppTheme.primaryColor,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Ethereal Creations & AI Gallery',
+                            style: TextStyle(
+                              color: AppTheme.primaryColor.withOpacity(0.7),
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.arrow_forward_ios, color: AppTheme.primaryColor, size: 16),
+                  ],
+                ),
+              ),
+            ),
 
             const SizedBox(height: 25),
 
