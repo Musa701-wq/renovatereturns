@@ -5,6 +5,9 @@ import 'package:ai_remodeling/utils/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../in_app_purchase/credit_manager.dart';
+import '../in_app_purchase/i_ap_manager.dart';
+import '../widgets/animated_special_offer_banner.dart';
+import 'special_offer_screen.dart';
 import '../provider/image_provider.dart';
 import '../services/google_analytics_services.dart';
 import '../widgets/comparison_card_widget.dart';
@@ -72,6 +75,10 @@ class _GenerateScreenState extends State<GenerateScreen> {
                 children: [
                   SizedBox(height: getTopSpacing()),
 
+                  // Special Offer Banner
+                  const AnimatedSpecialOfferBanner(),
+                  SizedBox(height: getCardSpacing()),
+
                   // CARD 1 - Instant Redesign
                   if (list.isNotEmpty)
                     ComparisonCardWidget(
@@ -92,8 +99,6 @@ class _GenerateScreenState extends State<GenerateScreen> {
                       },
                     ),
 
-                  SizedBox(height: getCardSpacing()),
-
                   // Banner Ad
                   Consumer2<AdProvider, CreditManager>(
                     builder: (context, adProvider, creditManager, child) {
@@ -101,11 +106,16 @@ class _GenerateScreenState extends State<GenerateScreen> {
                         return const SizedBox.shrink(); // Hide ad for paid users
                       }
                       if (adProvider.isBannerAdLoaded && adProvider.bannerAd != null) {
-                        return Container(
-                          alignment: Alignment.center,
-                          width: adProvider.bannerAd!.size.width.toDouble(),
-                          height: adProvider.bannerAd!.size.height.toDouble(),
-                          child: AdWidget(ad: adProvider.bannerAd!),
+                        return Column(
+                          children: [
+                            SizedBox(height: getCardSpacing()),
+                            Container(
+                              alignment: Alignment.center,
+                              width: adProvider.bannerAd!.size.width.toDouble(),
+                              height: adProvider.bannerAd!.size.height.toDouble(),
+                              child: AdWidget(ad: adProvider.bannerAd!),
+                            ),
+                          ],
                         );
                       }
                       return const SizedBox.shrink();

@@ -144,6 +144,16 @@ class CreditManager extends ChangeNotifier {
       _credits += amount;
       if (reason != null && reason.contains('iap')) {
         _hasPurchased = true;
+        
+        // Also update the users collection to set subscription to true
+        try {
+          await _firestore.collection('users').doc(user.uid).set({
+            'subscription': true,
+          }, SetOptions(merge: true));
+          print("✅ [CreditManager] User subscription status updated to true in Firestore");
+        } catch (e) {
+          print("❌ [CreditManager] Error updating user subscription status: $e");
+        }
       }
       print("✅ [CreditManager] Credits added. New balance: $_credits");
       notifyListeners();

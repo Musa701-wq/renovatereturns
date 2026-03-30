@@ -37,6 +37,7 @@ class IAPManager {
     'com.vectorioslabs.renovaeai.basic.pack': 1000,
     'com.vectorioslabs.renovaeai.pro.pack': 2500,
     'com.vectorioslabs.renovaeai.enterprise.pack': 5000,
+    'com.vectorioslabs.renovaeai.special.offer': 100,
   };
 
   static const Set<String> _productIds = {
@@ -44,6 +45,7 @@ class IAPManager {
     'com.vectorioslabs.renovaeai.basic.pack',
     'com.vectorioslabs.renovaeai.pro.pack',
     'com.vectorioslabs.renovaeai.enterprise.pack',
+    'com.vectorioslabs.renovaeai.special.offer',
   };
 
   /// Initialize IAP
