@@ -9,6 +9,7 @@ import '../utils/theme.dart';
 import '../widgets/credit_dialog.dart';
 import '../widgets/image_selection_widget.dart';
 import '../services/api_services.dart';
+import '../services/image_storage_service.dart';
 import '../screens/result_screen.dart';
 import '../services/exception_handler.dart';
 import '../in_app_purchase/credit_manager.dart';
@@ -106,6 +107,11 @@ class _PartialRemodelScreenState extends State<PartialRemodelScreen> {
           : _promptController.text.trim();
 
       final result = await GeminiService.generateImageInpaint(prompt: prompt, imageFile: up.selectedImage!, maskFile: maskFile);
+
+      if (!cm.hasPurchased) {
+        await ImageStorageService.uploadAndStore(result);
+      }
+
       await cm.deductCredits(10, reason: 'partial_remodel');
 
       if (mounted) Navigator.pop(context);

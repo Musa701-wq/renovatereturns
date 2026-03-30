@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -15,18 +16,20 @@ import 'package:provider/provider.dart';
 import '../utils/theme.dart';
 
 class FullScreenImageView extends StatefulWidget {
-  final Uint8List imageData;
+  final Uint8List? imageData;
+  final String? imageUrl;
   final String title;
   final String description;
   final bool showActions;
 
   const FullScreenImageView({
     super.key,
-    required this.imageData,
+    this.imageData,
+    this.imageUrl,
     required this.title,
     required this.description,
     this.showActions = true,
-  });
+  }) : assert(imageData != null || imageUrl != null, 'Must provide either imageData or imageUrl');
 
   @override
   State<FullScreenImageView> createState() => _FullScreenImageViewState();
@@ -35,8 +38,34 @@ class FullScreenImageView extends StatefulWidget {
 class _FullScreenImageViewState extends State<FullScreenImageView> {
   bool _isSaving = false;
   bool _isSharing = false;
+  Uint8List? _cachedNetworkBytes;
+
+  Future<Uint8List?> _getBytes() async {
+    if (widget.imageData != null) return widget.imageData;
+    if (_cachedNetworkBytes != null) return _cachedNetworkBytes;
+    
+    try {
+      final response = await HttpClient().getUrl(Uri.parse(widget.imageUrl!));
+      final res = await response.close();
+      _cachedNetworkBytes = await consolidateHttpClientResponseBytes(res);
+      return _cachedNetworkBytes;
+    } catch (e) {
+      print('Error fetching image bytes: $e');
+      return null;
+    }
+  }
 
   Future<void> _saveImage() async {
+    final bytes = await _getBytes();
+    if (bytes == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load image for saving')),
+        );
+      }
+      return;
+    }
+
     Future<void> performSave(Uint8List finalBytes) async {
       setState(() {
         _isSaving = true;
@@ -80,17 +109,19 @@ class _FullScreenImageViewState extends State<FullScreenImageView> {
     if (!isPremium) {
       final String? result = await WatermarkUpsell.show(context);
       if (result == 'watermark') {
-        final watermarkedBytes = await ImageUtils.addWatermarkToBytes(widget.imageData);
+        final watermarkedBytes = await ImageUtils.addWatermarkToBytes(bytes);
         await performSave(watermarkedBytes);
       } else if (result == 'purchased') {
-        await performSave(widget.imageData);
+        await performSave(bytes);
       }
     } else {
-      await performSave(widget.imageData);
+      await performSave(bytes);
     }
   }
 
   Future<void> _shareImage() async {
+    final bytes = await _getBytes();
+    if (bytes == null) return;
     Future<void> performShare(Uint8List finalBytes) async {
       setState(() {
         _isSharing = true;
@@ -134,10 +165,10 @@ class _FullScreenImageViewState extends State<FullScreenImageView> {
     final isPremium = Provider.of<CreditManager>(context, listen: false).hasPurchased;
 
     if (!isPremium) {
-      final watermarkedBytes = await ImageUtils.addWatermarkToBytes(widget.imageData);
+      final watermarkedBytes = await ImageUtils.addWatermarkToBytes(bytes);
       await performShare(watermarkedBytes);
     } else {
-      await performShare(widget.imageData);
+      await performShare(bytes);
     }
   }
 
@@ -193,7 +224,9 @@ class _FullScreenImageViewState extends State<FullScreenImageView> {
                   panEnabled: true,
                   minScale: 0.5,
                   maxScale: 4.0,
-                  child: Image.memory(widget.imageData, fit: BoxFit.contain),
+                  child: widget.imageData != null 
+                      ? Image.memory(widget.imageData!, fit: BoxFit.contain)
+                      : Image.network(widget.imageUrl!, fit: BoxFit.contain),
                 ),
               ),
             ),

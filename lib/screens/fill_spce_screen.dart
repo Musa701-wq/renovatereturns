@@ -480,6 +480,7 @@ import '../provider/upload_provider.dart';
 import '../services/api_services.dart';
 import '../services/exception_handler.dart';
 import '../services/prompt_v2.dart';
+import '../services/image_storage_service.dart';
 import '../utils/theme.dart';
 import '../widgets/credit_dialog.dart';
 import '../widgets/image_selection_widget.dart';
@@ -881,6 +882,12 @@ class _FillSpaceScreenState extends State<FillSpaceScreen> {
           );
         }
         generatedImageUrls = [url];
+      }
+
+      if (isFreeTier && generatedImageUrls.isNotEmpty) {
+        for (final img in generatedImageUrls) {
+          await ImageStorageService.uploadAndStore(img);
+        }
       }
 
       final deductionSucceeded = await creditManager.deductCredits(

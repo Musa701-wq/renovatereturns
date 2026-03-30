@@ -11,6 +11,7 @@ import '../widgets/image_selection_widget.dart';
 import '../utils/theme.dart';
 import '../services/api_services.dart';
 import '../services/prompt_v2.dart';
+import '../services/image_storage_service.dart';
 
 class UploadScreen extends StatefulWidget {
   const UploadScreen({super.key});
@@ -571,6 +572,12 @@ class _UploadScreenState extends State<UploadScreen> {
           );
         }
         generatedImageUrls = [url];
+      }
+
+      if (isFreeTier && generatedImageUrls.isNotEmpty) {
+        for (final img in generatedImageUrls) {
+          await ImageStorageService.uploadAndStore(img);
+        }
       }
 
       final deductionSucceeded = await creditManager.deductCredits(

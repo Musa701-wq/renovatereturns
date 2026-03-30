@@ -12,6 +12,7 @@ import '../widgets/generate_button.dart';
 import '../widgets/image_selection_widget.dart';
 import '../utils/theme.dart';
 import '../widgets/item_design_card.dart';
+import '../services/image_storage_service.dart';
 import '../widgets/credit_dialog.dart';
 import '../in_app_purchase/i_ap_manager.dart';
 
@@ -520,6 +521,12 @@ class _FloorRedesignState extends State<FloorRedesign> {
           );
         }
         generatedImageUrls = [url];
+      }
+
+      if (isFreeTier && generatedImageUrls.isNotEmpty) {
+        for (final img in generatedImageUrls) {
+          await ImageStorageService.uploadAndStore(img);
+        }
       }
 
       final deductionSucceeded = await creditManager.deductCredits(

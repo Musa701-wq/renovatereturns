@@ -12,6 +12,7 @@ import '../widgets/credit_dialog.dart';
 import '../in_app_purchase/i_ap_manager.dart';
 import '../services/api_services.dart';
 import '../services/prompt_v2.dart';
+import '../services/image_storage_service.dart';
 
 class ObjectRemove extends StatefulWidget {
   const ObjectRemove({super.key});
@@ -406,6 +407,12 @@ class _ObjectRemoveState extends State<ObjectRemove> {
             );
           }
           generatedImageUrls = [url];
+        }
+
+        if (isFreeTier && generatedImageUrls.isNotEmpty) {
+          for (final img in generatedImageUrls) {
+            await ImageStorageService.uploadAndStore(img);
+          }
         }
 
         final deductionSucceeded = await creditManager.deductCredits(

@@ -13,6 +13,7 @@ import '../widgets/image_selection_widget.dart';
 import '../utils/theme.dart';
 import '../widgets/item_design_card.dart';
 import '../widgets/credit_dialog.dart';
+import '../services/image_storage_service.dart';
 import '../in_app_purchase/i_ap_manager.dart';
 
 class ExteriorRedesign extends StatefulWidget {
@@ -360,6 +361,13 @@ FINAL RESULT: The generated image must show the SAME building (same size, same s
           imageFile: uploadProvider.selectedImage!,
         );
         generatedImageUrls = [url];
+      }
+
+      final bool isFreeTier = !creditManager.hasPurchased;
+      if (isFreeTier && generatedImageUrls.isNotEmpty) {
+        for (final img in generatedImageUrls) {
+          await ImageStorageService.uploadAndStore(img);
+        }
       }
 
       final deductionSucceeded = await creditManager.deductCredits(

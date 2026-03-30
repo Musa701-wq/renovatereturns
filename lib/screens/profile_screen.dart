@@ -136,7 +136,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
 
+            // Premium Badge (only for paid users)
+            Consumer<CreditManager>(
+              builder: (context, creditManager, _) {
+                if (!creditManager.hasPurchased) return const SizedBox(height: 6);
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.amber.withOpacity(0.4),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.workspace_premium, color: Colors.white, size: 16),
+                        SizedBox(width: 5),
+                        Text(
+                          'Premium User',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+
             SizedBox(height: AppTheme.responsiveSize(context, phone: 15, tablet: 22)),
+
 
             // Email Container
             Container(
@@ -382,7 +425,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
-                "Powered by Vector Labs FZE LLC",
+                "Powered by Vector Labs Ltd",
                 style: TextStyle(
                   color: AppTheme.primaryColor.withOpacity(0.7),
                   fontSize: 12,

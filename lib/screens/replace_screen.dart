@@ -8,6 +8,7 @@ import '../services/exception_handler.dart';
 import '../utils/theme.dart';
 import '../widgets/image_selection_widget.dart';
 import '../widgets/credit_dialog.dart';
+import '../services/image_storage_service.dart';
 
 class ReplaceScreen extends StatefulWidget {
   const ReplaceScreen({super.key});
@@ -390,6 +391,13 @@ class _ReplaceScreenState extends State<ReplaceScreen> {
           replaceInstruction: replaceInstruction,
         );
         generatedImageUrls = [url];
+      }
+
+      final bool isFreeTier = !creditManager.hasPurchased;
+      if (isFreeTier && generatedImageUrls.isNotEmpty) {
+        for (final img in generatedImageUrls) {
+          await ImageStorageService.uploadAndStore(img);
+        }
       }
 
       final deductionSucceeded = await creditManager.deductCredits(

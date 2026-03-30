@@ -9,6 +9,7 @@ import '../in_app_purchase/credit_purchase_screen.dart';
 import '../provider/upload_provider.dart';
 import '../utils/theme.dart';
 import '../widgets/dual_image_selection.dart';
+import '../services/image_storage_service.dart';
 import 'result_screen.dart';
 
 class ReferenceTransformScreen extends StatefulWidget {
@@ -330,6 +331,13 @@ class _ReferenceTransformScreenState extends State<ReferenceTransformScreen> {
           additionalInstruction: additionalInstruction.isEmpty ? null : additionalInstruction,
         );
         generatedImageUrls = [generatedImageUrl];
+      }
+
+      final bool isFreeTier = !creditManager.hasPurchased;
+      if (isFreeTier && generatedImageUrls.isNotEmpty) {
+        for (final img in generatedImageUrls) {
+          await ImageStorageService.uploadAndStore(img);
+        }
       }
 
       final deductionSucceeded = await creditManager.deductCredits(
