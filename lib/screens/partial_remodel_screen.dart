@@ -14,6 +14,7 @@ import '../screens/result_screen.dart';
 import '../services/exception_handler.dart';
 import '../in_app_purchase/credit_manager.dart';
 import '../in_app_purchase/i_ap_manager.dart';
+import '../widgets/loading_overlay.dart';
 
 enum DrawingTool { none, area, brush, lasso }
 
@@ -79,17 +80,7 @@ class _PartialRemodelScreenState extends State<PartialRemodelScreen> {
     }
 
     try {
-      showDialog(
-        context: context, barrierDismissible: false,
-        builder: (_) => AlertDialog(
-          backgroundColor: AppTheme.secondaryColor,
-          content: Column(mainAxisSize: MainAxisSize.min, children: [
-            CircularProgressIndicator(color: AppTheme.primaryColor),
-            const SizedBox(height: 16),
-            Text('Generating remodel...', style: TextStyle(color: AppTheme.primaryColor)),
-          ]),
-        ),
-      );
+      LoadingOverlay.show(context, message: 'Generating remodel...');
 
       // Build mask at the ORIGINAL image pixel size for correct API alignment
       final maskBytes = await _buildMaskAtImageSize();
@@ -108,7 +99,7 @@ class _PartialRemodelScreenState extends State<PartialRemodelScreen> {
 
       final result = await GeminiService.generateImageInpaint(prompt: prompt, imageFile: up.selectedImage!, maskFile: maskFile);
 
-      if (!cm.hasPurchased) {
+      if (result != null) {
         await ImageStorageService.uploadAndStore(result);
       }
 

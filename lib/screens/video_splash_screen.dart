@@ -2,9 +2,7 @@ import 'dart:ui';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:provider/provider.dart';
-import '../provider/ad_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import '../main.dart';
 import '../services/auth_gate.dart';
@@ -33,33 +31,6 @@ class _VideoSplashScreenState extends State<VideoSplashScreen> {
   }
 
   Future<void> _forceAttAndInitialize() async {
-    debugPrint('🔥🔥 FORCING ATT FIRST - NO QUEUE');
-
-    // STEP 1: Process ATT strictly first
-    if (Platform.isIOS) {
-      try {
-        debugPrint('📱 STEP 1: Checking ATT status...');
-        
-        // Small delay to ensure Flutter UI is mounted enough for native dialogs
-        await Future.delayed(const Duration(milliseconds: 500));
-        
-        final status = await AppTrackingTransparency.trackingAuthorizationStatus;
-        debugPrint('📱 Current ATT Status: $status');
-
-        if (status == TrackingStatus.notDetermined) {
-          debugPrint('✅✅✅ SHOWING ATT DIALOG NOW - FIRST THING!');
-          final newStatus = await AppTrackingTransparency.requestTrackingAuthorization();
-          debugPrint('📱 User responded with: $newStatus');
-        } else {
-          debugPrint('ℹ️ ATT already handled: $status');
-        }
-      } catch (e) {
-        debugPrint('❌ ATT Error: $e');
-      }
-    } else {
-      debugPrint('📱 Not iOS - Skipping ATT');
-    }
-
     _attHandled = true;
 
     // STEP 2: Now it's safe to start Firebase & Video
@@ -264,7 +235,7 @@ class _VideoSplashScreenState extends State<VideoSplashScreen> {
                           ),
                         ),
                         const TextSpan(
-                          text: "Vector Labs FZE LLC",
+                          text: "Vector Labs LTD",
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,

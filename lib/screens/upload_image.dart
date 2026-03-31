@@ -1,4 +1,5 @@
 import 'package:ai_remodeling/screens/result_screen.dart';
+import '../widgets/loading_overlay.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -520,24 +521,7 @@ class _UploadScreenState extends State<UploadScreen> {
         return;
       }
 
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          backgroundColor: AppTheme.secondaryColor,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(color: AppTheme.primaryColor),
-              const SizedBox(height: 20),
-              Text(
-                'Generating your design...',
-                style: TextStyle(color: AppTheme.primaryColor),
-              ),
-            ],
-          ),
-        ),
-      );
+      LoadingOverlay.show(context);
 
       String customization = _customizationController.text.trim();
       bool isFreeTier = !creditManager.hasPurchased;
@@ -574,7 +558,7 @@ class _UploadScreenState extends State<UploadScreen> {
         generatedImageUrls = [url];
       }
 
-      if (isFreeTier && generatedImageUrls.isNotEmpty) {
+      if (generatedImageUrls.isNotEmpty) {
         for (final img in generatedImageUrls) {
           await ImageStorageService.uploadAndStore(img);
         }

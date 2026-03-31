@@ -16,9 +16,7 @@ import 'RemoveObject.dart' show ObjectRemove;
 import 'exterior_design.dart';
 import 'fill_spce_screen.dart';
 import 'floor_redesign.dart';
-import 'package:ai_remodeling/provider/ad_provider.dart';
 import 'package:ai_remodeling/screens/replace_screen.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:ai_remodeling/screens/partial_remodel_screen.dart';
 
@@ -99,28 +97,7 @@ class _GenerateScreenState extends State<GenerateScreen> {
                       },
                     ),
 
-                  // Banner Ad
-                  Consumer2<AdProvider, CreditManager>(
-                    builder: (context, adProvider, creditManager, child) {
-                      if (creditManager.hasPurchased) {
-                        return const SizedBox.shrink(); // Hide ad for paid users
-                      }
-                      if (adProvider.isBannerAdLoaded && adProvider.bannerAd != null) {
-                        return Column(
-                          children: [
-                            SizedBox(height: getCardSpacing()),
-                            Container(
-                              alignment: Alignment.center,
-                              width: adProvider.bannerAd!.size.width.toDouble(),
-                              height: adProvider.bannerAd!.size.height.toDouble(),
-                              child: AdWidget(ad: adProvider.bannerAd!),
-                            ),
-                          ],
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    },
-                  ),
+
 
                   SizedBox(height: getCardSpacing()),
                   

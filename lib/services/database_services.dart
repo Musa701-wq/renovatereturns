@@ -23,7 +23,7 @@ class DatabaseHelper {
     String path = join(documentDirectory.path, "history_database.db");
     return openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -37,19 +37,24 @@ class DatabaseHelper {
       description TEXT,
       image_data BLOB,
       category TEXT,
-      created_at TEXT
+      created_at TEXT,
+      is_public INTEGER DEFAULT 0
     )
     ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      // Add category column to existing table
       try {
         await db.execute('ALTER TABLE $_tableName ADD COLUMN category TEXT');
-        print('✅ Database upgraded: category column added');
+      } catch (_) {}
+    }
+    if (oldVersion < 3) {
+      try {
+        await db.execute('ALTER TABLE $_tableName ADD COLUMN is_public INTEGER DEFAULT 0');
+        print('✅ Database upgraded: is_public column added');
       } catch (e) {
-        print('⚠️ Category column might already exist: $e');
+        print('⚠️ is_public column might already exist: $e');
       }
     }
   }
@@ -59,6 +64,7 @@ class DatabaseHelper {
     required Uint8List imageData,
     String? description,
     String? category,
+    bool isPublic = false,
   }) async {
     Database db = await database;
     Map<String, dynamic> row = {
@@ -66,6 +72,7 @@ class DatabaseHelper {
       'image_data': imageData,
       'description': description ?? '',
       'category': category ?? '',
+      'is_public': isPublic ? 1 : 0,
       'created_at': DateTime.now().toIso8601String(),
     };
     return await db.insert(_tableName, row);
@@ -100,6 +107,16 @@ class DatabaseHelper {
     return await db.update(
       _tableName,
       updates,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<int> updateImagePublicStatus(int id, bool isPublic) async {
+    Database db = await database;
+    return await db.update(
+      _tableName,
+      {'is_public': isPublic ? 1 : 0},
       where: 'id = ?',
       whereArgs: [id],
     );

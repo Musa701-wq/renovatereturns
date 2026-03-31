@@ -8,6 +8,7 @@ class HistoryCardWidget extends StatelessWidget {
   final String date;
   final VoidCallback onTap;
   final VoidCallback onDelete;
+  final VoidCallback? onShare;
   final bool isSelected;
 
   const HistoryCardWidget({
@@ -17,6 +18,7 @@ class HistoryCardWidget extends StatelessWidget {
     required this.date,
     required this.onTap,
     required this.onDelete,
+    this.onShare,
     this.isSelected = false,
   });
 
@@ -125,24 +127,52 @@ class HistoryCardWidget extends StatelessWidget {
             ),
           ),
 
-          // DELETE BUTTON
+          // ACTION BUTTON (Three Dots)
           Positioned(
             top: AppTheme.responsiveSize(context, phone: 8, tablet: 12),
             right: AppTheme.responsiveSize(context, phone: 8, tablet: 12),
-            child: GestureDetector(
-              onTap: onDelete,
-              child: Container(
+            child: PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'share') {
+                  onShare?.call();
+                } else if (value == 'delete') {
+                  onDelete();
+                }
+              },
+              icon: Container(
                 padding: EdgeInsets.all(AppTheme.responsiveSize(context, phone: 4, tablet: 6)),
                 decoration: BoxDecoration(
                   color: Colors.black.withOpacity(0.6),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.delete_outline,
+                  Icons.more_vert,
                   color: Colors.white,
                   size: AppTheme.responsiveSize(context, phone: 18, tablet: 22),
                 ),
               ),
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'share',
+                  child: Row(
+                    children: [
+                      Icon(Icons.share, size: 20),
+                      SizedBox(width: 8),
+                      Text('Share to Community'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                      SizedBox(width: 8),
+                      Text('Delete', style: TextStyle(color: Colors.red)),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],

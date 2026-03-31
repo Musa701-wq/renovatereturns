@@ -1,5 +1,6 @@
 /*
 import 'package:ai_remodeling/screens/result_screen.dart';
+import '../widgets/loading_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
@@ -332,24 +333,7 @@ class _FillSpaceScreenState extends State<FillSpaceScreen> {
         return;
       }
 
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          backgroundColor: AppTheme.secondaryColor,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(color: AppTheme.primaryColor),
-              const SizedBox(height: 20),
-              Text(
-                'Filling space...',
-                style: TextStyle(color: AppTheme.primaryColor),
-              ),
-            ],
-          ),
-        ),
-      );
+      LoadingOverlay.show(context);
 
       // USING PROVIDER METHOD FOR FILL SPACE
       String fillInstruction = _fillInstructionController.text.trim();
@@ -484,6 +468,7 @@ import '../services/image_storage_service.dart';
 import '../utils/theme.dart';
 import '../widgets/credit_dialog.dart';
 import '../widgets/image_selection_widget.dart';
+import '../widgets/loading_overlay.dart';
 
 class FillSpaceScreen extends StatefulWidget {
   const FillSpaceScreen({super.key});
@@ -832,24 +817,7 @@ class _FillSpaceScreenState extends State<FillSpaceScreen> {
         return;
       }
 
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          backgroundColor: AppTheme.secondaryColor,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(color: AppTheme.primaryColor),
-              const SizedBox(height: 20),
-              Text(
-                'Filling space...',
-                style: TextStyle(color: AppTheme.primaryColor),
-              ),
-            ],
-          ),
-        ),
-      );
+      LoadingOverlay.show(context);
 
       String fillInstruction = _fillInstructionController.text.trim();
       bool isFreeTier = !creditManager.hasPurchased;
@@ -884,7 +852,7 @@ class _FillSpaceScreenState extends State<FillSpaceScreen> {
         generatedImageUrls = [url];
       }
 
-      if (isFreeTier && generatedImageUrls.isNotEmpty) {
+      if (generatedImageUrls.isNotEmpty) {
         for (final img in generatedImageUrls) {
           await ImageStorageService.uploadAndStore(img);
         }

@@ -20,6 +20,7 @@ import '../widgets/save_button.dart';
 import '../widgets/share_button.dart';
 import '../widgets/full_screen_view.dart';
 import '../widgets/before_after_slider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ResultScreen extends StatefulWidget {
   final List<String> generatedImageUrls;
@@ -103,6 +104,9 @@ class _ResultScreenState extends State<ResultScreen> {
       if (_isAutoSaved || _imagesBytes.isEmpty) return;
 
       String category = _determineCategory();
+      
+      final prefs = await SharedPreferences.getInstance();
+      final bool isPublic = prefs.getBool('share_to_community') ?? true;
 
       for (int i = 0; i < _imagesBytes.length; i++) {
         if (_imagesBytes[i] == null) continue;
@@ -113,6 +117,7 @@ class _ResultScreenState extends State<ResultScreen> {
           imageData: _imagesBytes[i]!,
           description: 'Budget: ${widget.budget}\nPrompt: ${widget.prompt}',
           category: category,
+          isPublic: isPublic,
         );
       }
       _isAutoSaved = true;

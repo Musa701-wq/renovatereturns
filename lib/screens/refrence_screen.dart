@@ -11,6 +11,7 @@ import '../utils/theme.dart';
 import '../widgets/dual_image_selection.dart';
 import '../services/image_storage_service.dart';
 import 'result_screen.dart';
+import '../widgets/loading_overlay.dart';
 
 class ReferenceTransformScreen extends StatefulWidget {
   const ReferenceTransformScreen({super.key});
@@ -295,25 +296,7 @@ class _ReferenceTransformScreenState extends State<ReferenceTransformScreen> {
         return;
       }
 
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          backgroundColor: AppTheme.secondaryColor,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(color: AppTheme.primaryColor),
-              const SizedBox(height: 20),
-              Text(
-                'Transforming image with reference...',
-                style: TextStyle(color: AppTheme.primaryColor),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      );
+      LoadingOverlay.show(context, message: 'Transforming image with reference...');
 
       String additionalInstruction = _instructionController.text.trim();
       String transformPrompt = uploadProvider.generateReferenceTransformAIPrompt(
@@ -334,7 +317,7 @@ class _ReferenceTransformScreenState extends State<ReferenceTransformScreen> {
       }
 
       final bool isFreeTier = !creditManager.hasPurchased;
-      if (isFreeTier && generatedImageUrls.isNotEmpty) {
+      if (generatedImageUrls.isNotEmpty) {
         for (final img in generatedImageUrls) {
           await ImageStorageService.uploadAndStore(img);
         }

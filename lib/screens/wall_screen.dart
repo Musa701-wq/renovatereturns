@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/loading_overlay.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import '../in_app_purchase/credit_manager.dart';
@@ -504,24 +505,7 @@ class _WaalRedesignState extends State<WaalRedesign> {
         return;
       }
 
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          backgroundColor: AppTheme.secondaryColor,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(color: AppTheme.primaryColor),
-              const SizedBox(height: 20),
-              Text(
-                'Generating your wall design...',
-                style: TextStyle(color: AppTheme.primaryColor),
-              ),
-            ],
-          ),
-        ),
-      );
+      LoadingOverlay.show(context);
 
       String customDescription = _descriptionController.text.trim();
       bool isFreeTier = !creditManager.hasPurchased;
@@ -559,7 +543,7 @@ class _WaalRedesignState extends State<WaalRedesign> {
         generatedImageUrls = [url];
       }
 
-      if (isFreeTier && generatedImageUrls.isNotEmpty) {
+      if (generatedImageUrls.isNotEmpty) {
         for (final img in generatedImageUrls) {
           await ImageStorageService.uploadAndStore(img);
         }

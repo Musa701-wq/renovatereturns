@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ImageStorageService {
   static String get _apiUrl => dotenv.env['S3_UPLOAD_URL'] ?? 'https://s3-upload.mirdemy.com/upload';
@@ -12,12 +13,14 @@ class ImageStorageService {
 
   /// Uploads a base64 image to the external S3 API and stores the resulting URL
   /// in the Firestore `images` collection under the current user's uid.
-  static Future<void> uploadAndStore(String base64Image) async {
+  /// Returns [true] if the image was shared to the community, [false] otherwise.
+  static Future<bool> uploadAndStore(String base64Image, {String type = 'generated'}) async {
+    bool wasShared = false;
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         debugPrint('❌ [ImageStorage] No logged-in user.');
-        return;
+        return false;
       }
 
       // Strip data URL prefix if present
@@ -56,14 +59,45 @@ class ImageStorageService {
 
 
         if (uploadedUrl != null && uploadedUrl.isNotEmpty) {
-          await FirebaseFirestore.instance.collection('images').add({
+          
+          // Securely check actual tier from database
+          bool isPremium = false;
+          try {
+            final creditDoc = await FirebaseFirestore.instance.collection('user_credits').doc(user.uid).get();
+            if (creditDoc.exists) {
+              final data = creditDoc.data()!;
+              final transactions = data['transactions'] as List<dynamic>? ?? [];
+              isPremium = transactions.any((t) => t['type'] == 'credit' && (t['reason']?.toString().contains('iap') ?? false));
+            }
+          } catch(e) {
+            debugPrint("Failed to check user tier: $e");
+          }
+          
+          final String actualTier = isPremium ? 'premium' : 'free';
+          
+          final prefs = await SharedPreferences.getInstance();
+          // Default to true if not set, but respect the toggle
+          final bool shouldShareToCommunity = prefs.getBool('share_to_community') ?? true;
+
+          // Prepare Firestore record
+          final Map<String, dynamic> imageRecord = {
             'uid': user.uid,
             'url': uploadedUrl,
             'createdAt': FieldValue.serverTimestamp(),
-            'tier': 'free',
-            'type': 'generated',
-          });
-          debugPrint('✅ [ImageStorage] Stored URL in Firestore: $uploadedUrl');
+            'tier': actualTier,
+            'type': 'generation', // Standardized type for My Creations
+            'isPublic': shouldShareToCommunity, // Set based on user preference
+            'favBy': [],
+            'userName': user.displayName ?? 'AI Designer',
+            'userPhoto': user.photoURL,
+          };
+
+          // ALWAYS save to Firestore so it shows in "My Creations"
+          // ONLY shows in Community if isPublic is true
+          await FirebaseFirestore.instance.collection('images').add(imageRecord);
+          
+          wasShared = shouldShareToCommunity;
+          debugPrint('✅ [ImageStorage] Stored in Firestore (isPublic: $shouldShareToCommunity): $uploadedUrl');
         } else {
           debugPrint('❌ [ImageStorage] No url in API response.');
         }
@@ -73,5 +107,6 @@ class ImageStorageService {
     } catch (e) {
       debugPrint('❌ [ImageStorage] Error: $e');
     }
+    return wasShared;
   }
 }
