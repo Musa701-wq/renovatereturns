@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:ai_remodeling/in_app_purchase/credit_manager.dart';
-import 'package:ai_remodeling/provider/ad_provider.dart';
 import 'package:ai_remodeling/provider/auth_provider.dart';
 import 'package:ai_remodeling/provider/image_provider.dart';
 import 'package:ai_remodeling/provider/navbar_provider.dart';
@@ -12,7 +11,6 @@ import 'package:ai_remodeling/services/auth_gate.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -54,13 +52,6 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UploadProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => CreditManager()),
-        ChangeNotifierProxyProvider<CreditManager, AdProvider>(
-          create: (context) => AdProvider(
-            creditManager: Provider.of<CreditManager>(context, listen: false),
-          )..initialize(),
-          update: (context, creditManager, previous) =>
-              previous ?? AdProvider(creditManager: creditManager)..initialize(),
-        ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

@@ -7,6 +7,7 @@ import '../provider/auth_provider.dart';
 import '../provider/navbar_provider.dart';
 import '../widgets/nav_bar.dart';
 import 'generate_screen.dart' show GenerateScreen;
+import 'community_screen.dart';
 import 'history_screen.dart';
 import '../in_app_purchase/credit_purchase_screen.dart';
 import '../in_app_purchase/i_ap_manager.dart';
@@ -57,6 +58,7 @@ if (currentUser == null) {
       builder: (context, navbarProvider, child) {
         final List<Widget> _screens = [
           GenerateScreen(),
+          CommunityScreen(),
           HistoryScreen(showBackButton: false),
           CreditsPurchaseScreen(showBackButton: false),
           ProfileScreen(),

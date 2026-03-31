@@ -1,17 +1,24 @@
-
 import 'package:ai_remodeling/screens/history_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
-import '../in_app_purchase/credit.dart' show CreditsCard; // KEEP THIS IMPORT
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../in_app_purchase/credit.dart' show CreditsCard;
 import '../in_app_purchase/credit_manager.dart';
 import '../provider/auth_provider.dart';
+import '../widgets/full_screen_view.dart';
 import 'edit_screen.dart';
 import 'login_screen.dart';
 import '../utils/theme.dart';
 import 'faq_screen.dart';
 import 'feedback_screen.dart';
+import 'community_screen.dart';
+import 'my_creations_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'other_user_profile_screen.dart'; // To use FullScreenImageView
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -21,14 +28,25 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  bool _isCommunityShareEnabled = true;
+
   @override
   void initState() {
     super.initState();
+    _loadPreferences();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refreshUserData();
-      _refreshCredits(); // ✅ Add this
+      _refreshCredits();
     });
   }
+
+  Future<void> _loadPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isCommunityShareEnabled = prefs.getBool('share_to_community') ?? true;
+    });
+  }
+
   void _refreshUserData() {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final user = auth.getFirebaseUser();
@@ -37,16 +55,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-// ✅ Add this new method
   void _refreshCredits() {
     final creditManager = Provider.of<CreditManager>(context, listen: false);
     creditManager.refreshCredits();
   }
+
+  Future<void> _deleteImage(String docId) async {
+    try {
+      await FirebaseFirestore.instance.collection('images').doc(docId).delete();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Image deleted successfully.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error deleting image: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
     final user = auth.currentUser;
     String? photoData = user?.photoUrl;
+    final uid = auth.getFirebaseUser()?.uid;
 
     return Scaffold(
       backgroundColor: AppTheme.secondaryColor,
@@ -54,417 +90,245 @@ class _ProfileScreenState extends State<ProfileScreen> {
         toolbarHeight: AppTheme.appBarHeight(context),
         foregroundColor: AppTheme.primaryColor,
         backgroundColor: AppTheme.secondaryColor,
+        elevation: 0,
+        centerTitle: true,
         iconTheme: AppTheme.appBarIconTheme(context),
         title: Text(
           "Profile",
           style: AppTheme.appBarTitleStyle(context),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(AppTheme.responsivePadding(context)),
-        child: Column(
-          children: [
-            SizedBox(height: AppTheme.responsiveSize(context, phone: 10, tablet: 20)),
-
-            // Profile Image with Edit Icon
-            Stack(
-              children: [
-                Container(
-                  width: AppTheme.responsiveSize(context, phone: 120, tablet: 150),
-                  height: AppTheme.responsiveSize(context, phone: 120, tablet: 150),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppTheme.primaryColor,
-                      width: AppTheme.responsiveSize(context, phone: 3, tablet: 4),
-                    ),
-                  ),
-                  child: _buildProfileImage(photoData),
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const EditProfileScreen(),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: EdgeInsets.all(AppTheme.responsiveSize(context, phone: 6, tablet: 8)),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryColor,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white,
-                          width: AppTheme.responsiveSize(context, phone: 2, tablet: 3),
-                        ),
-                      ),
-                      child: Icon(
-                        Icons.edit,
-                        color: Colors.white,
-                        size: AppTheme.responsiveSize(context, phone: 16, tablet: 20),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            SizedBox(height: AppTheme.responsiveSize(context, phone: 20, tablet: 28)),
-
-            // User Name - Primary Color
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const EditProfileScreen(),
-                  ),
-                );
-              },
-              child: Text(
-                user?.name ?? 'User',
-                style: TextStyle(
-                  color: AppTheme.primaryColor,
-                  fontSize: AppTheme.responsiveFont(context, phone: 24, tablet: 28),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-
-            SizedBox(height: AppTheme.responsiveSize(context, phone: 15, tablet: 22)),
-
-            // Email Container
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(
-                horizontal: AppTheme.responsiveSize(context, phone: 20, tablet: 28),
-                vertical: AppTheme.responsiveSize(context, phone: 12, tablet: 16),
-              ),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    AppTheme.secondaryColor,
-                    AppTheme.secondaryColor1,
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(AppTheme.responsiveSize(context, phone: 12, tablet: 16)),
-                border: Border.all(
-                  color: AppTheme.primaryColor,
-                  width: 1.5,
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.email,
-                    color: AppTheme.primaryColor, // Primary color icon
-                  size: AppTheme.responsiveSize(context, phone: 18, tablet: 22),
-                  ),
-                SizedBox(width: AppTheme.responsiveSize(context, phone: 10, tablet: 14)),
-                  Expanded(
-                    child: Text(
-                      user?.email ?? 'No email',
-                      style: TextStyle(
-                        color: AppTheme.primaryColor, // Primary color text
-                      fontSize: AppTheme.responsiveFont(context, phone: 16, tablet: 18),
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: AppTheme.responsiveSize(context, phone: 20, tablet: 28)),
-
-            // Divider below email
-            Divider(
-              color: AppTheme.primaryColor.withOpacity(0.2),
-              thickness: 1,
-            ),
-
-            SizedBox(height: AppTheme.responsiveSize(context, phone: 20, tablet: 28)),
-
-
-
-            // DIRECT CALL CreditsCard HERE
-            CreditsCard(), // YAHI CHANGE HAI - DIRECT CALL
-
-            const SizedBox(height: 25),
-
-            // Tiles Section (Credits tile REMOVED)
-            _buildProfileTile(
-              context,
-              Icons.person_outline,
-              'Edit Profile',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const EditProfileScreen()),
-                );
-              },
-            ),
-
-            const SizedBox(height: 12),
-
-            _buildProfileTile(
-              context,
-              Icons.history,
-              'History',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HistoryScreen()),
-                );
-              },
-            ),
-
-            const SizedBox(height: 12),
-
-            _buildProfileTile(
-              context,
-              Icons.feedback_outlined,
-              'Feedback',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const FeedbackScreen()),
-                );
-              },
-            ),
-
-            const SizedBox(height: 12),
-
-            _buildProfileTile(
-              context,
-              Icons.help_outline,
-              'FAQ',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const FAQScreen()),
-                );
-              },
-            ),
-            const SizedBox(height: 12),
-
-            _buildProfileTile(
-              context,
-              Icons.remove_red_eye,
-              'Privacy Policy',
-              onTap: () =>
-                  _launchExternalLink('https://vectorlabzlimited.com/privacy-policy/'),
-            ),
-            const SizedBox(height: 12),
-
-            _buildProfileTile(
-              context,
-              Icons.gavel,
-              'Terms of Use',
-              onTap: () =>
-                  _launchExternalLink('https://vectorlabzlimited.com/terms-of-use/'),
-            ),
-
-            const SizedBox(height: 25),
-
-            // Delete and Logout Combined Button
-            Container(
-              height: 55,
-              decoration: BoxDecoration(
-                color: AppTheme.secondaryColor,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppTheme.primaryColor,
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => _showDeleteConfirmation(context),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withOpacity(0.2),
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(10),
-                            bottomLeft: Radius.circular(10),
-                          ),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppTheme.secondaryColor,
+              Colors.white,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 30),
+                      // User Header (Centered)
+                      Center(
+                        child: Column(
                           children: [
-                            Icon(
-                              Icons.delete,
-                              color: AppTheme.primaryColor,
-                              size: 20,
+                            Stack(
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppTheme.primaryColor.withOpacity(0.2),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 10),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: AppTheme.primaryColor,
+                                        width: AppTheme.responsiveSize(context, phone: 3, tablet: 4),
+                                      ),
+                                    ),
+                                    child: CircleAvatar(
+                                      radius: AppTheme.responsiveSize(context, phone: 50, tablet: 70),
+                                      child: ClipOval(child: _buildProfileImage(photoData)),
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: GestureDetector(
+                                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen())),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.primaryColor,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(color: Colors.white, width: 2),
+                                      ),
+                                      child: const Icon(Icons.edit, color: Colors.white, size: 18),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(height: 16),
                             Text(
-                              'Delete',
+                              user?.name ?? 'User',
                               style: TextStyle(
                                 color: AppTheme.primaryColor,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
+                                fontSize: AppTheme.responsiveFont(context, phone: 24, tablet: 32),
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  Container(
-                    width: 1,
-                    height: 55,
-                    color: AppTheme.secondaryColor,
-                  ),
-
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => _showLogoutConfirmation(context),
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          color: AppTheme.primaryColor,
-                          borderRadius: BorderRadius.only(
-                            topRight: Radius.circular(10),
-                            bottomRight: Radius.circular(10),
-                          ),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.logout,
-                              color: AppTheme.secondaryColor,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
+                            const SizedBox(height: 4),
                             Text(
-                              'Logout',
+                              'AI Space Designer',
                               style: TextStyle(
-                                color: AppTheme.secondaryColor,
-                                fontSize: 16,
+                                color: AppTheme.primaryColor.withOpacity(0.5),
+                                fontSize: AppTheme.responsiveFont(context, phone: 14, tablet: 18),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ),
+
+                      const SizedBox(height: 30),
+                      
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          children: [
+                            CreditsCard(),
+                            const SizedBox(height: 20),
+                            // Compact Settings Toggle
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppTheme.tilescolor,
+                                borderRadius: BorderRadius.circular(15),
+                                border: Border.all(color: AppTheme.stokecolor, width: 1.5),
+                              ),
+                              child: SwitchListTile(
+                                contentPadding: EdgeInsets.zero,
+                                activeColor: AppTheme.primaryColor,
+                                title: const Text('Share to Community', 
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                value: _isCommunityShareEnabled,
+                                onChanged: (val) async {
+                                  setState(() => _isCommunityShareEnabled = val);
+                                  final prefs = await SharedPreferences.getInstance();
+                                  await prefs.setBool('share_to_community', val);
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 40),
+                      
+                      // Account Settings Items
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          children: [
+                            _buildProfileTile(context, Icons.auto_awesome_outlined, 'My Creations', 
+                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyCreationsScreen()))),
+                            const SizedBox(height: 12),
+                            _buildProfileTile(context, Icons.history, 'History', 
+                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoryScreen()))),
+                            const SizedBox(height: 12),
+                            _buildProfileTile(context, Icons.feedback_outlined, 'Feedback', 
+                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeedbackScreen()))),
+                            const SizedBox(height: 12),
+                            _buildProfileTile(context, Icons.help_outline, 'FAQ', 
+                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FAQScreen()))),
+                            const SizedBox(height: 30),
+                            
+                            _buildLogoutDeleteRow(context),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                      Text("Powered by Vector Labs Ltd", 
+                        style: TextStyle(color: AppTheme.primaryColor.withOpacity(0.5), fontSize: 12)),
+                      const SizedBox(height: 30),
+                    ],
                   ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 25),
-
-            // Footer
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                "Powered by Vector Labs FZE LLC",
-                style: TextStyle(
-                  color: AppTheme.primaryColor.withOpacity(0.7),
-                  fontSize: 12,
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
+  // Removed _buildImageGrid and related deletion logic as it moved to MyCreationsScreen.
+
   Widget _buildProfileImage(String? photoData) {
     if (photoData == null || photoData.isEmpty) {
-      return CircleAvatar(
-        backgroundColor: AppTheme.primaryColor.withOpacity(0.3),
-        child: Icon(Icons.person, size: 50, color: AppTheme.primaryColor),
-      );
+      return Icon(Icons.person, size: 50, color: AppTheme.primaryColor);
     }
-
     try {
-      bool isBase64 = photoData.startsWith('/9j/') ||
-          photoData.startsWith('iVBORw0KGgo') ||
-          photoData.length > 1000;
-
-      if (isBase64) {
-        return CircleAvatar(
-          backgroundImage: MemoryImage(base64Decode(photoData)),
-        );
+      if (photoData.startsWith('http')) {
+        return Image.network(photoData, fit: BoxFit.cover);
       } else {
-        return CircleAvatar(
-          backgroundImage: NetworkImage(photoData),
-        );
+        return Image.memory(base64Decode(photoData), fit: BoxFit.cover);
       }
-    } catch (e) {
-      return CircleAvatar(
-        backgroundColor: AppTheme.primaryColor.withOpacity(0.3),
-        child: Icon(Icons.person, size: 50, color: AppTheme.primaryColor),
-      );
+    } catch (_) {
+      return Icon(Icons.person, size: 50, color: AppTheme.primaryColor);
     }
   }
 
-  Widget _buildProfileTile(
-      BuildContext context,
-      IconData icon,
-      String title, {
-        required VoidCallback onTap,
-      }) {
+  Widget _buildProfileTile(BuildContext context, IconData icon, String title, {required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
           color: AppTheme.tilescolor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppTheme.stokecolor,
-            width: 1.5,
-          ),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: AppTheme.stokecolor, width: 1.5),
         ),
         child: Row(
           children: [
-            Icon(
-              icon,
-              color: AppTheme.primaryColor,
-              size: 24,
-            ),
+            Icon(icon, color: AppTheme.primaryColor, size: 24),
             const SizedBox(width: 15),
+            Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold))),
+            const Icon(Icons.arrow_forward_ios, size: 14),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogoutDeleteRow(BuildContext context) {
+    return Container(
+      height: 55,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: AppTheme.primaryColor, width: 1.5),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: Row(
+          children: [
             Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  color: AppTheme.primaryColor,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+              child: GestureDetector(
+                onTap: () => _showDeleteConfirmation(context),
+                child: Container(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  child: Center(child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.delete, color: AppTheme.primaryColor, size: 20), const SizedBox(width: 8), const Text('Delete Account')])),
                 ),
               ),
             ),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: AppTheme.primaryColor,
-              size: 16,
+            Container(width: 1, color: AppTheme.primaryColor),
+            Expanded(
+              child: GestureDetector(
+                onTap: () => _showLogoutConfirmation(context),
+                child: Container(
+                  color: AppTheme.primaryColor,
+                  child: Center(child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.logout, color: Colors.white, size: 20), const SizedBox(width: 8), const Text('Logout', style: TextStyle(color: Colors.white))])),
+                ),
+              ),
             ),
           ],
         ),
@@ -476,41 +340,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.secondaryColor,
-        title: Text(
-          'Delete Account',
-          style: TextStyle(color: AppTheme.primaryColor),
-        ),
-        content: Text(
-          'Are you sure you want to delete your account? This action cannot be undone.',
-          style: TextStyle(color: AppTheme.primaryColor.withOpacity(0.7)),
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(
-            AppTheme.responsiveSize(context, phone: 16, tablet: 20),
-          ),
-        ),
+        title: const Text('Delete Account'),
+        content: const Text('Are you sure? This cannot be undone.'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: AppTheme.primaryColor),
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
-            ),
-            onPressed: () {
-              Navigator.pop(context);
-              _signOutAndRedirect(context);
-            },
-            child: const Text(
-              'Delete',
-              style: TextStyle(color: AppTheme.secondaryColor),
-            ),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => _signOutAndRedirect(context), child: const Text('Delete', style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+  }
+
+  void _showLogoutConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Logout'),
+        content: const Text('Are you sure you want to sign out?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => _signOutAndRedirect(context), child: const Text('Logout')),
         ],
       ),
     );
@@ -519,72 +367,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _signOutAndRedirect(BuildContext context) async {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     await auth.signOut();
-
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => LoginScreen()),
-          (route) => false,
-    );
-  }
-
-  void _showLogoutConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppTheme.secondaryColor,
-        title: Text(
-          'Confirm Logout',
-          style: TextStyle(color: AppTheme.primaryColor),
-        ),
-        content: Text(
-          'Are you sure you want to logout? You will need to sign in again to continue.',
-          style: TextStyle(color: AppTheme.primaryColor.withOpacity(0.7)),
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(
-            AppTheme.responsiveSize(context, phone: 16, tablet: 20),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: AppTheme.primaryColor),
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
-            ),
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              _signOutAndRedirect(context);
-            },
-            child: const Text(
-              'Logout',
-              style: TextStyle(color: AppTheme.secondaryColor),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _launchExternalLink(String url) async {
-    final uri = Uri.parse(url);
-    if (!await canLaunchUrl(uri)) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Unable to open link. Please try again later.')),
-        );
-      }
-      return;
-    }
-
-    await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    );
+    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => LoginScreen()), (route) => false);
   }
 }

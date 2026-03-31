@@ -757,11 +757,7 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
         ) : null,
         title: Text(
           'Get Credits',
-          style: TextStyle(
-            color: AppTheme.primaryColor,
-            fontWeight: FontWeight.bold,
-            fontSize: AppTheme.responsiveFont(context, phone: 20, tablet: 24),
-          ),
+          style: AppTheme.appBarTitleStyle(context),
         ),
         centerTitle: true,
         actions: [

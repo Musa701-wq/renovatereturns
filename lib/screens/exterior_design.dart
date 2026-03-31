@@ -1,4 +1,5 @@
 import 'package:ai_remodeling/screens/result_screen.dart';
+import '../widgets/loading_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
@@ -13,6 +14,7 @@ import '../widgets/image_selection_widget.dart';
 import '../utils/theme.dart';
 import '../widgets/item_design_card.dart';
 import '../widgets/credit_dialog.dart';
+import '../services/image_storage_service.dart';
 import '../in_app_purchase/i_ap_manager.dart';
 
 class ExteriorRedesign extends StatefulWidget {
@@ -283,24 +285,7 @@ class _ExteriorRedesignState extends State<ExteriorRedesign> {
       }
 
       if (!mounted) return;
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          backgroundColor: AppTheme.secondaryColor,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(color: AppTheme.primaryColor),
-              const SizedBox(height: 20),
-              Text(
-                'Generating your exterior design...',
-                style: TextStyle(color: AppTheme.primaryColor),
-              ),
-            ],
-          ),
-        ),
-      );
+      LoadingOverlay.show(context);
 
       String selectedStyle = uploadProvider.selectedRoomType ?? 'Modern';
       String designRequirements = ExteriorPromptGenerator.exteriorDesignRequirements[selectedStyle] ??
@@ -360,6 +345,13 @@ FINAL RESULT: The generated image must show the SAME building (same size, same s
           imageFile: uploadProvider.selectedImage!,
         );
         generatedImageUrls = [url];
+      }
+
+      final bool isFreeTier = !creditManager.hasPurchased;
+      if (generatedImageUrls.isNotEmpty) {
+        for (final img in generatedImageUrls) {
+          await ImageStorageService.uploadAndStore(img);
+        }
       }
 
       final deductionSucceeded = await creditManager.deductCredits(

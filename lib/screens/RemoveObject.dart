@@ -1,4 +1,5 @@
 import 'package:ai_remodeling/screens/result_screen.dart';
+import '../widgets/loading_overlay.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +13,7 @@ import '../widgets/credit_dialog.dart';
 import '../in_app_purchase/i_ap_manager.dart';
 import '../services/api_services.dart';
 import '../services/prompt_v2.dart';
+import '../services/image_storage_service.dart';
 
 class ObjectRemove extends StatefulWidget {
   const ObjectRemove({super.key});
@@ -357,24 +359,7 @@ class _ObjectRemoveState extends State<ObjectRemove> {
         return;
       }
 
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          backgroundColor: AppTheme.secondaryColor,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(color: AppTheme.primaryColor),
-              const SizedBox(height: 20),
-              Text(
-                'Removing object...',
-                style: TextStyle(color: AppTheme.primaryColor),
-              ),
-            ],
-          ),
-        ),
-      );
+      LoadingOverlay.show(context);
 
       if (context.mounted) {
         bool isFreeTier = !creditManager.hasPurchased;
@@ -406,6 +391,12 @@ class _ObjectRemoveState extends State<ObjectRemove> {
             );
           }
           generatedImageUrls = [url];
+        }
+
+        if (generatedImageUrls.isNotEmpty) {
+          for (final img in generatedImageUrls) {
+            await ImageStorageService.uploadAndStore(img);
+          }
         }
 
         final deductionSucceeded = await creditManager.deductCredits(

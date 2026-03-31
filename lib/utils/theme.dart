@@ -38,7 +38,7 @@ class AppTheme {
       responsiveSize(context, phone: kToolbarHeight, tablet: 72);
 
   static TextStyle appBarTitleStyle(BuildContext context) => TextStyle(
-        fontSize: responsiveFont(context, phone: 20, tablet: 18),
+        fontSize: responsiveFont(context, phone: 18, tablet: 20),
         fontWeight: FontWeight.w600,
         color: primaryColor,
       );

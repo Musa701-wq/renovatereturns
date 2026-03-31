@@ -9,7 +9,7 @@ import '../services/database_services.dart';
 import '../in_app_purchase/credit_manager.dart';
 
 class AuthProvider extends ChangeNotifier {
-  bool _isLoading = false;
+  bool _isLoading = true;
   UserModel? _currentUser;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -24,6 +24,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> _loadUserFromPrefs() async {
     _currentUser = await UserModel.getFromPrefs();
+    _isLoading = false;
     notifyListeners();
   }
 

@@ -21,7 +21,9 @@ class CreditManager extends ChangeNotifier {
 
   int get credits => _credits;
   bool get isLoading => _isLoading;
-  bool get hasPurchased => _hasPurchased;
+  //bool get hasPurchased => _hasPurchased;
+
+  bool get hasPurchased => false;
 
   CreditManager() {
     _authSubscription = _auth.authStateChanges().listen((user) {
@@ -81,7 +83,13 @@ class CreditManager extends ChangeNotifier {
         final List<dynamic> transactions = data['transactions'] ?? [];
         _hasPurchased = transactions.any((t) => t['type'] == 'credit' && (t['reason']?.toString().contains('iap') ?? false));
         
-        debugPrint("💰 [CreditManager] Loaded credits: $_credits, Has Purchased: $_hasPurchased");
+        debugPrint("💰 [CreditManager] Loaded credits: $_credits");
+        if (_hasPurchased) {
+          debugPrint("💎 [CreditManager] PAID TIER — user has purchased.");
+        } else {
+          debugPrint("🆓 [CreditManager] FREE TIER — no purchase found.");
+        }
+
       }
     } catch (e) {
       debugPrint("❌ [CreditManager] Init error: $e");
