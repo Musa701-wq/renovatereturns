@@ -25,6 +25,9 @@ class CreditManager extends ChangeNotifier {
 
   bool get hasPurchased => false;
 
+  // ✅ BYPASS CREDITS FOR TESTING (Set to true to allow free generation)
+  static const bool _isBypassEnabled = true;
+
   CreditManager() {
     _authSubscription = _auth.authStateChanges().listen((user) {
       if (user != null) {
@@ -174,6 +177,12 @@ class CreditManager extends ChangeNotifier {
 
   /// Deduct credits from Firestore
   Future<bool> deductCredits(int amount, {String reason = 'usage'}) async {
+    // ✅ BYPASS DEDUCTION FOR TESTING
+    if (_isBypassEnabled) {
+      debugPrint("🚀 [CreditManager] Bypass mode active - skipping deduction");
+      return true;
+    }
+
     try {
       final user = _auth.currentUser;
       if (user == null) {
@@ -236,6 +245,7 @@ class CreditManager extends ChangeNotifier {
 
   /// Check if user has enough credits
   bool hasEnoughCredits(int required) {
+    if (_isBypassEnabled) return true; // ✅ BYPASS CHECK FOR TESTING
     return _credits >= required;
   }
 

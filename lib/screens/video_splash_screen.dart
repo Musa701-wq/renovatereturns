@@ -183,7 +183,7 @@ class _VideoSplashScreenState extends State<VideoSplashScreen> {
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: Image.asset(
-                      "assets/images/logo.png",
+                      "assets/images/logo.jpeg",
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Icon(
                         Icons.auto_awesome,

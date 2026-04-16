@@ -19,6 +19,7 @@ import 'community_screen.dart';
 import 'my_creations_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'other_user_profile_screen.dart'; // To use FullScreenImageView
+import 'other_products_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -240,6 +241,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             const SizedBox(height: 12),
                             _buildProfileTile(context, Icons.help_outline, 'FAQ', 
                               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FAQScreen()))),
+                            const SizedBox(height: 12),
+                            _buildProfileTile(context, Icons.apps_outlined, 'Other Products', 
+                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OtherProductsScreen()))),
                             const SizedBox(height: 30),
                             
                             _buildLogoutDeleteRow(context),

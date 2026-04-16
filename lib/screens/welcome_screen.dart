@@ -141,7 +141,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: Image.asset(
-                      "assets/images/logo.png",
+                      "assets/images/logo.jpeg",
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(

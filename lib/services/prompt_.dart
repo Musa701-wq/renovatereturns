@@ -128,10 +128,10 @@ $customizationSection
 
 TASK: INTERIOR REDESIGN ONLY (NOT RECONSTRUCTION)
 
-Reference Image: $imageSource
-Target Room Type: $roomType
-Design Style: $style
-Budget Level: $budget
+Reference Image: \$imageSource
+Target Room Type: \$roomType
+Design Style: \$style
+Budget Level: \$budget
 
 WHAT YOU CAN CHANGE (Interior Design Elements Only):
 ✓ Furniture - placement, style, color, type
@@ -145,10 +145,10 @@ WHAT YOU CAN CHANGE (Interior Design Elements Only):
 ✓ Color schemes and material finishes
 
 DESIGN PARAMETERS:
-• Room Function: $roomType
-• Requirements: $roomRequirements
-• Design Intensity: ${_interventionLevel[style]}
-• Budget Quality: ${_budgetQuality[budget]}
+• Room Function: \$roomType
+• Requirements: \$roomRequirements
+• Design Intensity: \${_interventionLevel[style]}
+• Budget Quality: \${_budgetQuality[budget]}
 
 TRANSFORMATION APPROACH:
 1. First STUDY the reference image carefully
@@ -156,11 +156,11 @@ TRANSFORMATION APPROACH:
 3. IDENTIFY all structural elements (walls, doors, windows)
 4. LOCK those structural elements in your mind
 5. UNDERSTAND the space limitations - work within them
-6. ${customRequirements != null && customRequirements.trim().isNotEmpty ? 'REVIEW user\'s custom requirements' : 'Now REDESIGN only the interior elements'}
+6. \${customRequirements != null && customRequirements.trim().isNotEmpty ? 'REVIEW user\'s custom requirements' : 'Now REDESIGN only the interior elements'}
 7. Choose furniture that FITS the actual room size
-8. ${customRequirements != null && customRequirements.trim().isNotEmpty ? 'INCORPORATE custom requirements appropriately' : 'Arrange furniture appropriate for $roomType within available space'}
-9. Apply colors and materials matching $budget level
-10. Add decorations and finishes per ${_interventionLevel[style]}
+8. \${customRequirements != null && customRequirements.trim().isNotEmpty ? 'INCORPORATE custom requirements appropriately' : 'Arrange furniture appropriate for \$roomType within available space'}
+9. Apply colors and materials matching \$budget level
+10. Add decorations and finishes per \${_interventionLevel[style]}
 11. Keep everything proportional to the REAL room size
 
 ⚠️ CRITICAL FOR PREMIUM/HIGH BUDGET:
@@ -178,16 +178,16 @@ You CAN only:
 - Add elegant details within space constraints
 
 ATMOSPHERE TO CREATE:
-${getRoomAtmosphere(roomType)}
+\${getRoomAtmosphere(roomType)}
 
 FINAL OUTPUT REQUIREMENTS:
 • Same room structure - different interior design
 • Photorealistic quality matching reference image
-• Professional $roomType design
-• Respects $budget constraints
-• Achieves ${_interventionLevel[style]} transformation
+• Professional \$roomType design
+• Respects \$budget constraints
+• Achieves \${_interventionLevel[style]} transformation
 • Maintains exact spatial layout from reference
-${customRequirements != null && customRequirements.trim().isNotEmpty ? '• Incorporates user\'s custom requirements appropriately' : ''}
+\${customRequirements != null && customRequirements.trim().isNotEmpty ? '• Incorporates user\'s custom requirements appropriately' : ''}
 
 REMEMBER: You are an INTERIOR DESIGNER, not an ARCHITECT. 
 Work WITHIN the existing structure, do NOT modify the structure itself.
@@ -198,7 +198,7 @@ Work WITHIN the existing structure, do NOT modify the structure itself.
 - Premium budget = Better materials, NOT bigger space
 - Luxury = Quality of items, NOT quantity of space
 
-The result should look like: "The SAME room (same size), beautifully redesigned as a $roomType${customRequirements != null && customRequirements.trim().isNotEmpty ? ' with user\'s custom touches' : ''}"
+The result should look like: "The SAME room (same size), beautifully redesigned as a \$roomType\${customRequirements != null && customRequirements.trim().isNotEmpty ? ' with user\'s custom touches' : ''}"
 NOT: "A different room" or "A reconstructed space" or "A bigger, grander version"
 """;
   }
@@ -256,10 +256,10 @@ ABSOLUTE LAYOUT LOCK REQUIREMENTS:
 
 TASK: INTERIOR REDESIGN ONLY (NOT RECONSTRUCTION)
 
-Reference Image: $imageSource
-Target Room Type: $roomType
-Design Style: $style
-Budget Level: $budget
+Reference Image: \$imageSource
+Target Room Type: \$roomType
+Design Style: \$style
+Budget Level: \$budget
 
 WHAT YOU CAN CHANGE (Interior Design Elements Only):
 ✓ Furniture - placement, style, color, type
@@ -273,10 +273,10 @@ WHAT YOU CAN CHANGE (Interior Design Elements Only):
 ✓ Color schemes and material finishes
 
 DESIGN PARAMETERS:
-• Room Function: $roomType
-• Requirements: $roomRequirements
-• Design Intensity: ${_interventionLevel[style]}
-• Budget Quality: ${_budgetQuality[budget]}
+• Room Function: \$roomType
+• Requirements: \$roomRequirements
+• Design Intensity: \${_interventionLevel[style]}
+• Budget Quality: \${_budgetQuality[budget]}
 
 TRANSFORMATION APPROACH:
 1. First STUDY the reference image carefully
@@ -286,9 +286,9 @@ TRANSFORMATION APPROACH:
 5. UNDERSTAND the space limitations - work within them
 6. Now REDESIGN only the interior elements
 7. Choose furniture that FITS the actual room size
-8. Arrange furniture appropriate for $roomType within available space
-9. Apply colors and materials matching $budget level
-10. Add decorations and finishes per ${_interventionLevel[style]}
+8. Arrange furniture appropriate for \$roomType within available space
+9. Apply colors and materials matching \$budget level
+10. Add decorations and finishes per \${_interventionLevel[style]}
 11. Keep everything proportional to the REAL room size
 
 ⚠️ CRITICAL FOR PREMIUM/HIGH BUDGET:
@@ -306,14 +306,14 @@ You CAN only:
 - Add elegant details within space constraints
 
 ATMOSPHERE TO CREATE:
-${getRoomAtmosphere(roomType)}
+\${getRoomAtmosphere(roomType)}
 
 FINAL OUTPUT REQUIREMENTS:
 • Same room structure - different interior design
 • Photorealistic quality matching reference image
-• Professional $roomType design
-• Respects $budget constraints
-• Achieves ${_interventionLevel[style]} transformation
+• Professional \$roomType design
+• Respects \$budget constraints
+• Achieves \${_interventionLevel[style]} transformation
 • Maintains exact spatial layout from reference
 
 REMEMBER: You are an INTERIOR DESIGNER, not an ARCHITECT. 
@@ -325,7 +325,7 @@ Work WITHIN the existing structure, do NOT modify the structure itself.
 - Premium budget = Better materials, NOT bigger space
 - Luxury = Quality of items, NOT quantity of space
 
-The result should look like: "The SAME room (same size), beautifully redesigned as a $roomType"
+The result should look like: "The SAME room (same size), beautifully redesigned as a \$roomType"
 NOT: "A different room" or "A reconstructed space" or "A bigger, grander version"
 """;
   }
@@ -378,14 +378,14 @@ class ReplacePromptGenerator {
 OBJECT REPLACEMENT TRANSFORMATION - CRITICAL AI REPLACEMENT PROMPT
 
 REFERENCE IMAGE ANALYSIS:
-- Analyze the provided image completely and carefully ($imageSource)
+- Analyze the provided image completely and carefully (\$imageSource)
 - Study the entire scene composition, perspective, and layout
 - Identify all objects, their positions, sizes, and relationships
 - Understand the lighting conditions, shadows, and ambiance
 - Note the background, foreground, and overall context
 
 REPLACEMENT INSTRUCTION FROM USER:
-"$replaceInstruction"
+"\$replaceInstruction"
 
 MANDATORY PRESERVATION REQUIREMENTS:
 - MAINTAIN the EXACT SAME image composition and perspective
@@ -473,12 +473,12 @@ Parse the user instruction carefully:
 - Understand any positioning requirements
 - Follow any additional specifications given
 
-FINAL RESULT: Generate a photorealistic image where ONLY the specified replacement has been made according to the instruction "$replaceInstruction", while everything else remains identical to the reference image.
+FINAL RESULT: Generate a photorealistic image where ONLY the specified replacement has been made according to the instruction "\$replaceInstruction", while everything else remains identical to the reference image.
 """;
   }
 
   static String getReplaceDescription(String replaceInstruction) {
-    return "Replace as instructed: $replaceInstruction";
+    return "Replace as instructed: \$replaceInstruction";
   }
 }
 class ExteriorPromptGenerator {
@@ -509,7 +509,7 @@ class ExteriorPromptGenerator {
 ARCHITECTURAL EXTERIOR REDESIGN - CRITICAL TRANSFORMATION PROMPT
 
 REFERENCE IMAGE ANALYSIS:
-- Analyze the provided building image carefully ($imageSource)
+- Analyze the provided building image carefully (\$imageSource)
 - Note the exact building structure, shape, and proportions
 - Identify current roof type, window positions, door locations
 - Understand the existing architectural layout and scale
@@ -522,14 +522,14 @@ MANDATORY PRESERVATION REQUIREMENTS:
 - DO NOT alter the fundamental building layout or shape
 
 DESIGN TRANSFORMATION REQUEST:
-Apply $designStyle architectural style to this exact building while preserving all structural elements.
+Apply \$designStyle architectural style to this exact building while preserving all structural elements.
 
-$designStyle ARCHITECTURAL FEATURES:
-$designRequirements
+\$designStyle ARCHITECTURAL FEATURES:
+\$designRequirements
 
 DESIGN ELEMENTS TO TRANSFORM:
 - EXTERIOR MATERIALS: Update wall finishes, siding, or cladding
-- COLOR SCHEME: Apply $designStyle appropriate colors and tones
+- COLOR SCHEME: Apply \$designStyle appropriate colors and tones
 - WINDOW STYLES: Change window designs while keeping same positions
 - DOOR DESIGNS: Update door styles within existing openings
 - ROOFING: Modify roof materials and details
@@ -542,16 +542,16 @@ STRICT TRANSFORMATION RULES:
 - KEEP all structural elements in their exact positions
 - WORK within the existing building footprint and boundaries
 - ENHANCE aesthetics while respecting original architecture
-- CREATE a cohesive $designStyle architectural appearance
+- CREATE a cohesive \$designStyle architectural appearance
 
 OUTPUT REQUIREMENTS:
 - Generate a photorealistic transformation of the reference building
 - Maintain identical building structure and layout
-- Apply $designStyle architectural features appropriately
+- Apply \$designStyle architectural features appropriately
 - Ensure the output looks like the SAME building but redesigned
 - Produce professional-quality architectural visualization
 
-FINAL RESULT: The generated image must clearly show the original building beautifully transformed into $designStyle architecture, not a different building.
+FINAL RESULT: The generated image must show the original building beautifully transformed into \$designStyle architecture, not a different building.
 """;
   }
 
@@ -602,7 +602,7 @@ class FloorPromptGenerator {
 COMPLETE FLOOR TRANSFORMATION - FULL COVERAGE REQUIRED
 
 REFERENCE IMAGE ANALYSIS:
-- Analyze the ENTIRE room image completely ($imageSource)
+- Analyze the ENTIRE room image completely (\$imageSource)
 - Study EVERY visible floor area including corners, edges, and under furniture
 - Identify ALL floor surfaces in the image without any exceptions
 - Note the complete room perspective and ALL visible floor sections
@@ -624,22 +624,22 @@ MANDATORY PRESERVATION REQUIREMENTS:
 - DO NOT alter any architectural elements or room proportions
 
 FLOOR TRANSFORMATION REQUEST:
-COMPLETELY transform ALL visible floor areas to $floorType flooring. Replace EVERY part of the existing floor.
+COMPLETELY transform ALL visible floor areas to \$floorType flooring. Replace EVERY part of the existing floor.
 
 AI INTERVENTION LEVEL: HIGH - Complete floor material replacement with full coverage
 
-$floorType FLOORING CHARACTERISTICS:
-$floorRequirements
+\$floorType FLOORING CHARACTERISTICS:
+\$floorRequirements
 
 INSTALLATION PATTERN:
-$floorPattern
+\$floorPattern
 
 FLOOR-SPECIFIC TRANSFORMATION DETAILS:
 - FULL COVERAGE: Transform 100% of visible floor area
-- MATERIAL APPLICATION: Apply $floorType material to ENTIRE floor
+- MATERIAL APPLICATION: Apply \$floorType material to ENTIRE floor
 - TEXTURE AND FINISH: Create consistent surface texture across ALL areas
-- COLOR AND TONE: Use authentic $floorType colors throughout
-- PATTERN LAYOUT: Implement $floorPattern installation across complete floor
+- COLOR AND TONE: Use authentic \$floorType colors throughout
+- PATTERN LAYOUT: Implement \$floorPattern installation across complete floor
 - EDGE-TO-EDGE: Ensure floor covers from wall to wall in ALL directions
 - UNDER FURNITURE: Include floor transformation beneath ALL objects
 
@@ -663,11 +663,11 @@ OUTPUT REQUIREMENTS:
 - Generate photorealistic transformation with COMPLETE floor coverage
 - Transform 100% of visible floor surfaces
 - Maintain perfect room perspective and layout
-- Create realistic $floorType material across entire floor
+- Create realistic \$floorType material across entire floor
 - Ensure NO original floor areas remain
 - Show professional installation with full coverage
 
-FINAL RESULT: The generated image must show the IDENTICAL room with COMPLETE floor transformation - EVERY visible floor area must be changed to $floorType flooring with zero exceptions.
+FINAL RESULT: The generated image must show the IDENTICAL room with COMPLETE floor transformation - EVERY visible floor area must be changed to \$floorType flooring with zero exceptions.
 """;
   }
 
@@ -691,8 +691,8 @@ class ObjectRemovePromptGenerator {
 OBJECT REMOVAL TRANSFORMATION - CRITICAL PROMPT
 
 REFERENCE IMAGE ANALYSIS:
-- Analyze the provided image carefully ($imageSource)
-- Identify the exact object to remove: "$objectToRemove"
+- Analyze the provided image carefully (\$imageSource)
+- Identify the exact object to remove: "\$objectToRemove"
 - Study the object's position, size, and surroundings
 - Understand the background and context around the object
 - Note the lighting, shadows, and perspective
@@ -705,23 +705,23 @@ MANDATORY PRESERVATION REQUIREMENTS:
 - DO NOT alter any other parts of the image
 
 OBJECT REMOVAL REQUEST:
-Remove ONLY the specified object "$objectToRemove" from the image while preserving everything else exactly as shown.
+Remove ONLY the specified object "\$objectToRemove" from the image while preserving everything else exactly as shown.
 
 REMOVAL SPECIFICATIONS:
-- TARGET OBJECT: "$objectToRemove"
+- TARGET OBJECT: "\$objectToRemove"
 - REMOVAL TYPE: Complete and seamless removal
 - BACKGROUND RECONSTRUCTION: Natural and realistic
 - CONTEXT PRESERVATION: Maintain surrounding environment
 
 REMOVAL PROCESS:
-1. IDENTIFY the exact object "$objectToRemove" in the image
+1. IDENTIFY the exact object "\$objectToRemove" in the image
 2. REMOVE the object completely without any traces
 3. RECONSTRUCT the background where the object was located
 4. BLEND the reconstructed area seamlessly with surroundings
 5. MAINTAIN realistic lighting and shadows in the removed area
 
 STRICT TRANSFORMATION RULES:
-- ONLY remove the specified object "$objectToRemove"
+- ONLY remove the specified object "\$objectToRemove"
 - KEEP all other objects, people, and elements completely unchanged
 - PRESERVE exact image composition and layout
 - MAINTAIN identical lighting conditions and colors
@@ -749,12 +749,12 @@ OUTPUT SPECIFICATION:
 - Create seamless background reconstruction
 - Ensure the result looks like the original image without the object
 
-FINAL RESULT: The generated image must show the IDENTICAL image with ONLY the object "$objectToRemove" completely removed - everything else must remain perfectly unchanged with natural background reconstruction.
+FINAL RESULT: The generated image must show the IDENTICAL image with ONLY the object "\$objectToRemove" completely removed - everything else must remain perfectly unchanged with natural background reconstruction.
 """;
   }
 
   static String getObjectRemoveDescription(String objectToRemove) {
-    return "Remove $objectToRemove from the image with seamless background reconstruction";
+    return "Remove \$objectToRemove from the image with seamless background reconstruction";
   }
 }
 // models/wall_prompt_generator.dart
@@ -821,7 +821,7 @@ class WallPromptGenerator {
 COMPLETE WALL TRANSFORMATION - FULL COVERAGE REQUIRED
 
 REFERENCE IMAGE ANALYSIS:
-- Analyze the ENTIRE room image completely ($imageSource)
+- Analyze the ENTIRE room image completely (\$imageSource)
 - Study EVERY visible wall area including all walls, corners, and edges
 - Identify ALL wall surfaces in the image without any exceptions
 - Note the complete room perspective and ALL visible wall sections
@@ -844,22 +844,22 @@ MANDATORY PRESERVATION REQUIREMENTS:
 - KEEP all windows and doors exactly as they are
 
 WALL TRANSFORMATION REQUEST:
-COMPLETELY transform ALL visible wall areas to $wallType wall covering. Replace EVERY part of the existing walls.
+COMPLETELY transform ALL visible wall areas to \$wallType wall covering. Replace EVERY part of the existing walls.
 
 AI INTERVENTION LEVEL: HIGH - Complete wall material replacement with full coverage
 
-$wallType WALL CHARACTERISTICS:
-$wallRequirements
+\$wallType WALL CHARACTERISTICS:
+\$wallRequirements
 
 INSTALLATION PATTERN:
-$wallPattern
+\$wallPattern
 
 WALL-SPECIFIC TRANSFORMATION DETAILS:
 - FULL COVERAGE: Transform 100% of visible wall area
-- MATERIAL APPLICATION: Apply $wallType material to ENTIRE walls
+- MATERIAL APPLICATION: Apply \$wallType material to ENTIRE walls
 - TEXTURE AND FINISH: Create consistent surface texture across ALL walls
-- COLOR AND TONE: Use authentic $wallType colors throughout
-- PATTERN LAYOUT: Implement $wallPattern installation across complete walls
+- COLOR AND TONE: Use authentic \$wallType colors throughout
+- PATTERN LAYOUT: Implement \$wallPattern installation across complete walls
 - FLOOR-TO-CEILING: Ensure wall covers from floor to ceiling in ALL directions
 - AROUND OBJECTS: Include wall transformation behind ALL furniture and objects
 
@@ -885,12 +885,12 @@ OUTPUT REQUIREMENTS:
 - Generate photorealistic transformation with COMPLETE wall coverage
 - Transform 100% of visible wall surfaces
 - Maintain perfect room perspective and layout
-- Create realistic $wallType material across entire walls
+- Create realistic \$wallType material across entire walls
 - Ensure NO original wall areas remain
 - Show professional installation with full coverage
 - Preserve all windows and doors exactly as shown
 
-FINAL RESULT: The generated image must show the IDENTICAL room with COMPLETE wall transformation - EVERY visible wall area must be changed to $wallType wall covering with zero exceptions.
+FINAL RESULT: The generated image must show the IDENTICAL room with COMPLETE wall transformation - EVERY visible wall area must be changed to \$wallType wall covering with zero exceptions.
 """;
   }
 
@@ -914,7 +914,7 @@ class FillSpacePromptGenerator {
 INTELLIGENT SPACE FILLING TRANSFORMATION - CRITICAL AI PROMPT
 
 REFERENCE IMAGE ANALYSIS:
-- Analyze the provided image completely and carefully ($imageSource)
+- Analyze the provided image completely and carefully (\$imageSource)
 - Study the entire scene composition, perspective, and layout
 - Identify ALL empty spaces, blank areas, and gaps
 - Understand the room's style, color scheme, and existing furniture
@@ -922,7 +922,7 @@ REFERENCE IMAGE ANALYSIS:
 - Recognize the architectural elements and spatial boundaries
 
 FILL INSTRUCTION FROM USER:
-"$fillInstruction"
+"\$fillInstruction"
 
 MANDATORY PRESERVATION REQUIREMENTS:
 - MAINTAIN the EXACT SAME image composition and perspective
@@ -1024,12 +1024,12 @@ Parse the user instruction carefully:
 - Understand any positioning requirements
 - Follow any additional specifications given
 
-FINAL RESULT: Generate a photorealistic image where ONLY the empty spaces have been filled according to the instruction "$fillInstruction", while everything else remains identical to the reference image. The new additions should look like they were always part of the original design.
+FINAL RESULT: Generate a photorealistic image where ONLY the empty spaces have been filled according to the instruction "\$fillInstruction", while everything else remains identical to the reference image. The new additions should look like they were always part of the original design.
 """;
   }
 
   static String getFillSpaceDescription(String fillInstruction) {
-    return "Fill space as instructed: $fillInstruction";
+    return "Fill space as instructed: \$fillInstruction";
   }
 }
 // ========================================
@@ -1048,7 +1048,7 @@ class ReferenceTransformPromptGenerator {
       additionalText = '''
 
 ADDITIONAL USER INSTRUCTIONS:
-"$additionalInstruction"
+"\$additionalInstruction"
 
 CRITICAL: Follow these additional instructions while performing the style transfer.
 ''';
@@ -1059,8 +1059,8 @@ REFERENCE-BASED IMAGE TRANSFORMATION - DUAL IMAGE STYLE TRANSFER
 
 TASK OVERVIEW:
 You are performing STYLE TRANSFER using TWO images:
-- IMAGE A (Reference): Source of style/aesthetic ($referenceImageSource)
-- IMAGE B (Target): Image to be transformed ($targetImageSource)
+- IMAGE A (Reference): Source of style/aesthetic (\$referenceImageSource)
+- IMAGE B (Target): Image to be transformed (\$targetImageSource)
 
 YOUR TASK: Apply visual style, aesthetic, color palette, and mood from IMAGE A to IMAGE B while preserving IMAGE B's content and structure.
 
@@ -1108,7 +1108,7 @@ PRESERVE IN B:
 ❌ Do NOT add/remove objects
 ❌ Do NOT change layout
 ❌ Do NOT alter perspective
-$additionalText
+\$additionalText
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FINAL RESULT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1120,6 +1120,283 @@ Generate photorealistic image showing:
 - Natural, believable result
 
 Result should look like: "Image B shot/edited in the same style as Image A"
+""";
+  }
+}
+
+class KitchenPromptGenerator {
+  static final Map<String, Map<String, String>> _kitchenStyles = {
+    'Modern': {
+      'cabinet_style': 'flat-panel, handleless cabinetry with matte finish',
+      'colors': 'monochromatic tones (charcoal, slate, or soft white)',
+      'materials': 'quartz, stainless steel, and brushed metal',
+      'lighting': 'integrated LED strips and minimalist pendant lights',
+      'countertop': 'waterfall-edge quartz or polished concrete',
+      'flooring': 'large-format porcelain tiles or polished cement',
+      'overall_look': 'clean, uncluttered, and highly functional'
+    },
+    'Luxury': {
+      'cabinet_style': 'bespoke floor-to-ceiling cabinets with gold trim',
+      'colors': 'emerald green, royal black, champagne gold',
+      'materials': 'exotic marble, polished brass, walnut burl',
+      'lighting': 'custom crystal chandeliers and cove lighting',
+      'countertop': 'thick-edge book-matched Nero Marquina marble',
+      'flooring': 'premium polished marble with mosaic inlays',
+      'overall_look': 'opulent, high-end designer, majestic'
+    },
+    'Industrial': {
+      'cabinet_style': 'blackened steel frame cabinets with mesh inserts',
+      'colors': 'charcoal gray, brick red, aged metal',
+      'materials': 'exposed brick, brushed steel, wire glass',
+      'lighting': 'Edison bulb tracks and copper pipe fixtures',
+      'countertop': 'cast-in-place polished concrete',
+      'flooring': 'sealed industrial cement or dark weathered wood',
+      'overall_look': 'raw, urban-loft, edgy character'
+    },
+    'Classic': {
+      'cabinet_style': 'raised-panel cherry wood cabinets with molding',
+      'colors': 'cream, mahogany, rich walnut',
+      'materials': 'solid hardwood, polished granite, brass',
+      'lighting': 'classic crystal semi-flush mounts',
+      'countertop': 'Giallo Ornamental granite with bullnose edge',
+      'flooring': 'herringbone patterned oak or travertine',
+      'overall_look': 'timeless, regal, traditional elegance'
+    },
+    'Mediterranean': {
+      'cabinet_style': 'heavy distressed wood with iron scrollwork',
+      'colors': 'cobalt blue, terracotta, sun-baked yellow',
+      'materials': 'stucco walls, wrought iron, exposed beams',
+      'lighting': 'heavy iron lanterns and candle-style bulbs',
+      'countertop': 'hand-painted Talavera tiles or limestone',
+      'flooring': 'hexagonal terracotta saltillo tiles',
+      'overall_look': 'rustic-luxury, sun-drenched, coastal villa'
+    },
+    'Coastal': {
+      'cabinet_style': 'white beadboard or louvered door cabinets',
+      'colors': 'seafoam blue, sandy beige, crisp white',
+      'materials': 'driftwood, seagrass, pearlescent shells',
+      'lighting': 'glass-float pendants and nautical lanterns',
+      'countertop': 'sparkling white quartz or sea-glass tile',
+      'flooring': 'weathered gray "whitewash" wood planks',
+      'overall_look': 'breezy, relaxed, high-end beach-house'
+    },
+  };
+
+  static String generateKitchenPrompt({
+    required String style,
+    required String imageSource,
+    String? customRequirements,
+  }) {
+    final styleData = _kitchenStyles[style] ?? _kitchenStyles['Modern']!;
+
+    String customSection = '';
+    if (customRequirements != null && customRequirements.trim().isNotEmpty) {
+      customSection = '''
+USER CUSTOM REQUIREMENTS:
+"\$customRequirements"
+
+Integrate these carefully while preserving the original image structure.
+''';
+    }
+
+    return """
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CRITICAL: NEGATIVE CONSTRAINTS (HIGHEST PRIORITY)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ABSOLUTELY FORBIDDEN — DO NOT UNDER ANY CIRCUMSTANCES:
+❌ DO NOT ADD A ROOF (No rooftop generation)
+❌ DO NOT ADD A CEILING (If no ceiling is in the original image, keep it empty/missing)
+❌ DO NOT EXPAND THE IMAGE (Maintain exact original boundaries)
+❌ DO NOT CHANGE THE LAYOUT (No wall, window, or door movements)
+❌ DO NOT INVENT UNSEEN AREAS (Do not show hidden corners or extra room)
+❌ DO NOT CHANGE CAMERA ANGLE OR PERSPECTIVE 
+
+FAILURE CONDITION:
+If the output contains a ceiling/roof that was NOT present in the original \$imageSource, the generation is a FAILURE.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DRAMATIC STYLE OVERHAUL MODE (EYE-CATCHING)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+REFERENCE IMAGE: \$imageSource
+
+INSTRUCTION:
+Transform the original image with BOLD and STUNNING visual upgrades. Every surface must be reimagined with high-end, premium materials while strictly respecting the existing pixel geometry.
+
+IMAGE LOCK MODE:
+Treat the uploaded image as a LOCKED TEMPLATE. 
+Original geometry (where walls, cabinets, and appliances are) MUST stay identical.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STYLE SPECIFICATIONS: \${style.toUpperCase()}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Apply these high-impact materials to existing surfaces:
+
+Cabinets:
+\${styleData['cabinet_style']} in \${styleData['colors']}
+
+Surface Materials:
+\${styleData['materials']} with realistic PBR textures
+
+Countertops & Backsplash:
+\${styleData['countertop']} with dramatic veining and reflections
+
+Lighting & Mood:
+\${styleData['lighting']}, \${styleData['overall_look']}
+
+Flooring:
+\${styleData['flooring']}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VISUAL QUALITY DIRECTIVES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. TEXTURES: Use pronounced, high-resolution textures (marble grains, wood pores, metal brushing).
+2. LIGHTING: Create dramatic lighting with sharp reflections and deep, accurate shadows for a "Wow" factor.
+3. CONTRAST: Use professional color grading to make the style pop and look "eye-catching".
+4. PHOTOREALISM: Output must look like a professional architectural cover photo.
+
+GOAL:
+"The EXACT SAME uploaded photo, professionally renovated with DRAMATIC and STUNNING \$style aesthetics. The layout is pixel-identical, but the design is a total premium transformation."
+""";
+  }
+}
+
+class GardenPromptGenerator {
+  static final Map<String, String> _gardenStyles = {
+    'Modern': 'Sleek geometric lines, minimalist planting, structured hardscaping, neutral color palette, architectural lighting.',
+    'Japanese': 'Zen atmosphere, rock gardens, symbolic water features, manicured maples, stone lanterns, gravel paths, moss.',
+    'Tropical': 'Lush bold foliage, oversized leaves, exotic flowers, vibrant colors, dense planting, thatched textures.',
+    'English Garden': 'Romantic overflowing borders, wildflower meadows, wooden benches, climbing roses, brick paths, soft pastel colors.',
+    'Minimalist': 'Negative space, limited plant variety, monolithic concrete forms, sharp edges, calm and uncluttered aesthetic.',
+    'Desert': 'Xeriscaping, succulents and cacti, gravel mulch, warm earthy tones, drought-resistant plants, stone accents.',
+    'Mediterranean': 'Terracotta pots, lavender, olive trees, gravel paths, sun-bleached stone, wrought iron details.',
+  };
+
+  static String generateGardenPrompt({
+    required String gardenTemplate,
+    required String imageSource,
+    String? customInstructions,
+    Map<String, int>? customItems,
+  }) {
+    String styleDetails = _gardenStyles[gardenTemplate] ?? _gardenStyles['Modern']!;
+
+    String customSection = '';
+    
+    // Process specific items
+    String itemsDescription = '';
+    if (customItems != null && customItems.isNotEmpty) {
+      List<String> itemsList = [];
+      customItems.forEach((name, count) {
+        if (count > 0) {
+          itemsList.add('$count $name${count > 1 ? 's' : ''}');
+        }
+      });
+      if (itemsList.isNotEmpty) {
+        itemsDescription = 'SPECIFIC ADDITIONS: ${itemsList.join(', ')}.';
+      }
+    }
+
+    if ((customInstructions != null && customInstructions.trim().isNotEmpty) || itemsDescription.isNotEmpty) {
+      customSection = '''
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CUSTOM ELEMENT ADDITION RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${itemsDescription.isNotEmpty ? 'REQUIRED ITEMS TO ADD:\n$itemsDescription\n' : ''}
+${customInstructions != null && customInstructions.trim().isNotEmpty ? 'USER CUSTOM REQUESTS:\n"$customInstructions"\n' : ''}
+
+INTEGRATION RULES:
+- Add requested elements ONLY in available empty ground space.
+- Keep realistic scale and natural placement.
+- Do not overcrowd; maintain design balance.
+''';
+    }
+
+    return """
+ULTRA STRICT GARDEN TRANSFORMATION MODE
+
+REFERENCE IMAGE:
+${imageSource}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HIGHEST PRIORITY — STRUCTURE LOCK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The original image is a REAL photograph and MUST remain structurally identical.
+
+NEVER CHANGE:
+✓ boundary of the garden/land
+✓ house/building structure
+✓ walls, fences, gates
+✓ camera angle & perspective
+✓ visible frame area
+✓ ground shape & size
+
+STRICTLY FORBIDDEN:
+❌ do not expand garden area
+❌ do not add extra land
+❌ do not change layout
+❌ do not move structures
+❌ do not add buildings
+❌ do not generate new background
+❌ do not extend image beyond original frame
+❌ do not invent unseen areas
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VISIBLE AREA ONLY RULE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ Transform ONLY what is visible in the image
+✓ Do NOT generate anything outside the frame
+✓ Do NOT add sky/landscape beyond what is shown
+✓ Do NOT complete missing areas
+✓ If something is not visible → do NOT create it
+
+The result must match the original image boundaries exactly.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GARDEN STYLE APPLICATION: \${gardenTemplate}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Apply style ONLY on existing space:
+
+STYLE DETAILS:
+${styleDetails}
+
+Style includes:
+- plant types & colors
+- grass texture
+- pathway design
+- lighting mood
+- decorative theme
+- furniture style
+
+DO NOT change structure — only visual design.
+
+${customSection}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+QUALITY & REALISM REQUIREMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Output must be:
+✓ photorealistic
+✓ natural lighting & realistic shadows
+✓ professional landscaping design
+✓ consistent with original image
+✓ high detail textures
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FINAL RESULT DEFINITION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+"The EXACT same garden image, with identical boundaries and layout,
+professionally redesigned in \${gardenTemplate} style,
+with optional custom elements placed naturally inside existing space,
+without adding or changing any structural or unseen parts."
 """;
   }
 }

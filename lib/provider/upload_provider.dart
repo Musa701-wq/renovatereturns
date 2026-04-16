@@ -26,7 +26,7 @@ class UploadProvider with ChangeNotifier {
     'Music Room', 'Science Laboratory', 'Living room', 'Bedroom', 'Bathroom',
     'Kitchen', 'Dining room', 'Attic', 'Study room', 'Home office', 'Family Room',
     'Formal Dining Room', 'Home Theater', 'Kids Room', 'Balcony', 'Gaming room',
-    'Meeting room', 'Workshop'
+    'Meeting room', 'Workshop', 'Kitchen'
   ];
 
   // Floor types list
@@ -797,6 +797,69 @@ $prompt
 
 
 // FILL SPACE FEATURE METHODS (NEW)
+  Future<String> generateKitchenImage({required String customPrompt}) async {
+    try {
+      if (_selectedImage == null) {
+        throw Exception('Please select an image');
+      }
+
+      print('=== GENERATING KITCHEN DESIGN ===');
+      print('Custom Requirements: ${customPrompt.substring(0, customPrompt.length > 50 ? 50 : customPrompt.length)}...');
+      print('Image Path: ${_selectedImage!.path}');
+      print('========================');
+
+      String generatedImageUrl = await GeminiService.generateImageFromPrompt(
+        prompt: customPrompt,
+        imageFile: _selectedImage!,
+      );
+
+      return generatedImageUrl;
+
+    } catch (e) {
+      throw Exception('Kitchen design generation failed: $e');
+    }
+  }
+
+  String generateKitchenAIPrompt({String? customRequirements}) {
+    if (_selectedImage == null) throw Exception('Please select an image');
+
+    // Use the new specialized KitchenPromptGenerator
+    String prompt = KitchenPromptGenerator.generateKitchenPrompt(
+      style: _selectedStyle ?? 'Modern',
+      imageSource: _selectedImageSource ?? 'Unknown',
+      customRequirements: customRequirements,
+    );
+
+    _saveKitchenPromptToFile(prompt);
+
+    return prompt;
+  }
+
+  Future<void> _saveKitchenPromptToFile(String prompt) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}/kitchen_design_prompts_history.txt');
+
+      String timestamp = DateTime.now().toString().split('.')[0];
+      String savedText = '''
+=== KITCHEN DESIGN PROMPT - $timestamp ===
+Image Source: $_selectedImageSource
+Image Path: ${_selectedImage?.path}
+
+PROMPT:
+$prompt
+================================
+\n
+''';
+
+      await file.writeAsString(savedText, mode: FileMode.append);
+      print('✅ Kitchen Prompt saved to: ${file.path}');
+    } catch (e) {
+      print('❌ Error saving kitchen prompt: $e');
+    }
+  }
+
+// FILL SPACE FEATURE METHODS (NEW)
   Future<String> generateFillSpaceImage({required String fillInstruction}) async {
     try {
       if (_selectedImage == null) {
@@ -898,15 +961,11 @@ $prompt
       return 'Error reading fill space prompt history: $e';
     }
   }
-  // ========================================
-// STEP 2.1: upload_provider.dart mein YEH CODE ADD KARO
-// ========================================
-
-// 📍 CLASS KE STARTING MEIN (properties ke saath):
+// REFERENCE TRANSFORM PROPERTIES
   File? _secondaryImage;
   String? _secondaryImageSource;
 
-// 📍 GETTERS KE SECTION MEIN:
+// GETTERS
   File? get secondaryImage => _secondaryImage;
   String? get secondaryImageSource => _secondaryImageSource;
 
@@ -914,7 +973,7 @@ $prompt
     return _selectedImage != null && _secondaryImage != null;
   }
 
-// 📍 SETTERS KE SECTION MEIN:
+// SETTERS
   void setSecondaryImage(File? image) {
     _secondaryImage = image;
     notifyListeners();
@@ -925,7 +984,7 @@ $prompt
     notifyListeners();
   }
 
-// 📍 IMAGE PICKER METHODS KE SAATH (openCamera/openGallery ke baad):
+// REFERENCE TRANSFORM METHODS
   Future<void> openSecondaryCamera() async {
     try {
       final XFile? image = await _imagePicker.pickImage(
@@ -964,7 +1023,6 @@ $prompt
     }
   }
 
-// 📍 REFERENCE TRANSFORM METHODS (FILE KE END MEIN, reset() se pehle):
   Future<String> generateReferenceTransformImage({String? additionalInstruction}) async {
     try {
       if (_selectedImage == null) {
@@ -1071,10 +1129,7 @@ $prompt
     }
   }
 
-// Add these methods to your existing UploadProvider class
-// Yeh methods existing generateImage() aur generateAIPrompt() ke saath rahenge
-
-// NEW METHOD 1: Generate image with optional customization
+// CUSTOMIZATION METHODS
   Future<String> generateImageWithCustomization({String? customization}) async {
     try {
       if (_selectedRoomType == null) {
@@ -1219,6 +1274,77 @@ $prompt
       return results;
     } catch (e) {
       throw Exception('Multiple variations generation failed: $e');
+    }
+  }
+
+  // GARDEN REDESIGN METHODS
+  Future<String> generateGardenImage({
+    required String gardenTemplate,
+    String? customInstructions,
+    Map<String, int>? customItems,
+  }) async {
+    try {
+      if (_selectedImage == null) {
+        throw Exception('Please select a garden image');
+      }
+
+      print('=== GENERATING GARDEN REDESIGN ===');
+      print('Template: $gardenTemplate');
+      print('Custom Instructions: $customInstructions');
+      print('Custom Items: $customItems');
+      print('Image Path: ${_selectedImage!.path}');
+      print('========================');
+
+      String prompt = GardenPromptGenerator.generateGardenPrompt(
+        gardenTemplate: gardenTemplate,
+        imageSource: _selectedImageSource ?? 'Unknown',
+        customInstructions: customInstructions,
+        customItems: customItems,
+      );
+
+      // Save prompt to history
+      _saveGardenPromptToFile(prompt, gardenTemplate, customInstructions, customItems);
+
+      String generatedImageUrl = await GeminiService.generateImageFromPrompt(
+        prompt: prompt,
+        imageFile: _selectedImage!,
+      );
+
+      return generatedImageUrl;
+    } catch (e) {
+      throw Exception('Garden redesign failed: $e');
+    }
+  }
+
+  Future<void> _saveGardenPromptToFile(
+    String prompt,
+    String template,
+    String? custom,
+    Map<String, int>? items,
+  ) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}/garden_design_prompts_history.txt');
+
+      String timestamp = DateTime.now().toString().split('.')[0];
+      String savedText = '''
+=== GARDEN DESIGN PROMPT - $timestamp ===
+Template: $template
+Custom: $custom
+Items: $items
+Image Source: $_selectedImageSource
+Image Path: ${_selectedImage?.path}
+
+PROMPT:
+$prompt
+================================
+\n
+''';
+
+      await file.writeAsString(savedText, mode: FileMode.append);
+      print('✅ Garden Prompt saved to: ${file.path}');
+    } catch (e) {
+      print('❌ Error saving garden prompt: $e');
     }
   }
 }

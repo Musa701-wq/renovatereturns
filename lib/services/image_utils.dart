@@ -36,7 +36,7 @@ class ImageUtils {
     return tempFile;
   }
 
-  /// Adds a dimmed watermark (assets/images/logo.png) to the bottom-left corner of the base64 image
+  /// Adds a dimmed watermark (assets/images/logo.jpeg) to the bottom-left corner of the base64 image
   static Future<String> addWatermarkToBase64(String base64ImageString) async {
     try {
       print('💧 Adding watermark to generated image...');

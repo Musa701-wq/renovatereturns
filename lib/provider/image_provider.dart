@@ -52,6 +52,18 @@ class ImageDataProvider with ChangeNotifier {
       title: 'Reference Transform',
       subtitle: 'Apply style from reference image',
     ),
+    ImageComparison(
+      beforeImage: 'assets/kitchen/Classic.jpg',
+      afterImage: 'assets/kitchen/Luxury.jpg',
+      title: 'Kitchen Design',
+      subtitle: 'Modern kitchen makeover',
+    ),
+    ImageComparison(
+      beforeImage: 'assets/images/ext1.jpg',
+      afterImage: 'assets/garden/japanese.jpg',
+      title: 'Garden Redesign',
+      subtitle: 'Premium landscape transformation',
+    ),
   ];
 
   List<ImageComparison> get imageList => _imageList;

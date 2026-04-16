@@ -499,11 +499,13 @@ class _ResultScreenState extends State<ResultScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildDetailItem('Room', widget.roomType),
-          _buildDetailItem('Style', widget.style),
-          _buildDetailItem(
-            'Budget',
-            widget.budget == "Not Specified" ? "-" : widget.budget,
+          Expanded(child: _buildDetailItem('Room', widget.roomType)),
+          Expanded(child: _buildDetailItem('Style', widget.style)),
+          Expanded(
+            child: _buildDetailItem(
+              'Budget',
+              widget.budget == "Not Specified" ? "-" : widget.budget,
+            ),
           ),
         ],
       ),
@@ -512,9 +514,13 @@ class _ResultScreenState extends State<ResultScreen> {
 
   Widget _buildDetailItem(String title, String value) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           title,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: TextStyle(
             fontSize: 12,
             color: AppTheme.primaryColor.withOpacity(0.6),
@@ -523,6 +529,9 @@ class _ResultScreenState extends State<ResultScreen> {
         const SizedBox(height: 4),
         Text(
           value,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: const TextStyle(
             fontSize: 14,
             color: AppTheme.primaryColor,

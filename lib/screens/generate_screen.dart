@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../in_app_purchase/credit_manager.dart';
 import '../in_app_purchase/i_ap_manager.dart';
 import '../widgets/animated_special_offer_banner.dart';
+import 'partial_remodel_screen.dart';
 import 'special_offer_screen.dart';
 import '../provider/image_provider.dart';
 import '../services/google_analytics_services.dart';
@@ -18,7 +19,8 @@ import 'fill_spce_screen.dart';
 import 'floor_redesign.dart';
 import 'package:ai_remodeling/screens/replace_screen.dart';
 import 'package:provider/provider.dart';
-import 'package:ai_remodeling/screens/partial_remodel_screen.dart';
+import 'kitchen_design_screen.dart';
+import 'garden_redesign_screen.dart';
 
 class GenerateScreen extends StatefulWidget {
   const GenerateScreen({super.key});
@@ -49,6 +51,10 @@ class _GenerateScreenState extends State<GenerateScreen> {
         return 'assets/images/replace.png';
       case 'Fill Space':
         return 'assets/images/fill.png';
+      case 'Kitchen Design':
+        return 'assets/images/interior.png';
+      case 'Garden Redesign':
+        return 'assets/images/exterior.png';
       default:
         return null;
     }
@@ -244,6 +250,44 @@ class _GenerateScreenState extends State<GenerateScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => const PartialRemodelScreen()),
+                      );
+                    },
+                  ),
+                  
+                  SizedBox(height: getCardSpacing()),
+
+                  // CARD 9 - Kitchen Design
+                  ComparisonCardWidget(
+                    beforeImage: 'assets/kitchen/Classic.jpg',
+                    afterImage: 'assets/kitchen/Luxury.jpg',
+                    title: 'Kitchen Design',
+                    subtitle: 'AI-powered kitchen transformation',
+                    isLiked: false,
+                    categoryIconPath: _getIconPathForTitle('Kitchen Design'),
+                    onLikePressed: () {},
+                    onArrowPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const KitchenDesignScreen()),
+                      );
+                    },
+                  ),
+
+                  SizedBox(height: getCardSpacing()),
+
+                  // CARD 10 - Garden Redesign
+                  ComparisonCardWidget(
+                    beforeImage: 'assets/images/ext1.jpg',
+                    afterImage: 'assets/garden/japanese.jpg',
+                    title: 'Garden Redesign',
+                    subtitle: 'Exterior and landscape transformation',
+                    isLiked: false,
+                    categoryIconPath: _getIconPathForTitle('Garden Redesign'),
+                    onLikePressed: () {},
+                    onArrowPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const GardenRedesignScreen()),
                       );
                     },
                   ),
