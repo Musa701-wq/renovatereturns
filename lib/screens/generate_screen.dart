@@ -29,10 +29,19 @@ class GenerateScreen extends StatefulWidget {
   State<GenerateScreen> createState() => _GenerateScreenState();
 }
 
-class _GenerateScreenState extends State<GenerateScreen> {
+class _GenerateScreenState extends State<GenerateScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   String? _getIconPathForTitle(String title) {
@@ -55,6 +64,8 @@ class _GenerateScreenState extends State<GenerateScreen> {
         return 'assets/images/interior.png';
       case 'Garden Redesign':
         return 'assets/images/exterior.png';
+      case 'Reference Design':
+        return 'assets/images/interior.png';
       default:
         return null;
     }
@@ -288,6 +299,25 @@ class _GenerateScreenState extends State<GenerateScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => const GardenRedesignScreen()),
+                      );
+                    },
+                  ),
+
+                  SizedBox(height: getCardSpacing()),
+
+                  // CARD 11 - Reference Design
+                  ComparisonCardWidget(
+                    beforeImage: 'assets/images/re1.jpg',
+                    afterImage: 'assets/images/re.jpg',
+                    title: 'Reference Design',
+                    subtitle: 'Redesign spaces using a reference image',
+                    isLiked: false,
+                    categoryIconPath: _getIconPathForTitle('Reference Design'),
+                    onLikePressed: () {},
+                    onArrowPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ReferenceTransformScreen()),
                       );
                     },
                   ),

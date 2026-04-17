@@ -2,6 +2,7 @@ import 'package:ai_remodeling/utils/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../provider/auth_provider.dart';
+import '../screens/chatbot_screen.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({super.key});
@@ -23,6 +24,19 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       foregroundColor: AppTheme.primaryColor,
       iconTheme: AppTheme.appBarIconTheme(context),
       actions: [
+        IconButton(
+          icon: Image.asset(
+            'assets/icons/chat-bot.png',
+            width: AppTheme.appBarIconTheme(context).size,
+            height: AppTheme.appBarIconTheme(context).size,
+          ),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ChatbotScreen()),
+            );
+          },
+        ),
         IconButton(
           icon: Icon(
             Icons.logout,

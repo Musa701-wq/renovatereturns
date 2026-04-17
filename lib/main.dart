@@ -3,6 +3,7 @@ import 'package:ai_remodeling/in_app_purchase/credit_manager.dart';
 import 'package:ai_remodeling/provider/auth_provider.dart';
 import 'package:ai_remodeling/provider/image_provider.dart';
 import 'package:ai_remodeling/provider/navbar_provider.dart';
+import 'package:ai_remodeling/provider/chat_provider.dart';
 import 'package:ai_remodeling/provider/upload_provider.dart' show UploadProvider;
 import 'package:ai_remodeling/screens/login_screen.dart';
 import 'package:ai_remodeling/screens/main_screen.dart';
@@ -52,6 +53,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UploadProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => CreditManager()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

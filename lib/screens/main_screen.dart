@@ -9,6 +9,7 @@ import '../widgets/nav_bar.dart';
 import 'generate_screen.dart' show GenerateScreen;
 import 'community_screen.dart';
 import 'history_screen.dart';
+import 'chatbot_screen.dart';
 import '../in_app_purchase/credit_purchase_screen.dart';
 import '../in_app_purchase/i_ap_manager.dart';
 import '../in_app_purchase/credit_manager.dart';

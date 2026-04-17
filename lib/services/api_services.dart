@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:image/image.dart' as img;
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'exception_handler.dart';
 import 'image_utils.dart';
 import 'prompt_v2.dart';
@@ -79,9 +81,97 @@ class GeminiService {
     }
   }
 
+  static String userPreferences = "";
+
+  static Future<void> _loadUserPreferences() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      userPreferences = "None specified";
+      return;
+    }
+
+    try {
+      final DatabaseReference dbRef = FirebaseDatabase.instance.ref("users");
+      final snapshot = await dbRef.child(uid).get();
+      if (snapshot.exists) {
+        final data = Map<String, dynamic>.from(snapshot.value as Map);
+
+        final region = data["region"] ?? "Unknown region";
+        final style = data["styleType"] ?? "general interior design";
+        final favColors = (data["favoriteColors"] as List?)?.join(", ") ?? "no preference";
+        final budget = data["budgetTier"] ?? "medium";
+
+        userPreferences = """
+Region: $region
+Style Preferences: $style
+Favorite Colors: $favColors
+Budget: $budget
+""";
+      } else {
+        userPreferences = "None specified";
+      }
+    } catch (e) {
+      print("Error loading preferences: $e");
+      userPreferences = "None specified";
+    }
+  }
+
+  /// Chatbot text generation using Gemini with User Preferences
+  static Future<String> chatMessage({required String userMessage, int retries = 3}) async {
+    await _loadUserPreferences();
+
+    final systemPrompt = """
+You are a professional interior design and decoration AI assistant in a remodeling app.
+Only answer questions about interior design, decoration, room layouts, colors, or styling.
+Base your suggestions on the provided user preferences: $userPreferences.
+Provide concise, highly relevant, and professional advice. Do not include unnecessary conversational filler.
+""";
+
+    int attempt = 0;
+    while (attempt < retries) {
+      try {
+        if (_apiKey == null) throw Exception('API key not found');
+
+        final requestBody = {
+          "contents": [
+            {
+              "parts": [
+                {
+                  "text": "$systemPrompt\nUser: $userMessage"
+                }
+              ]
+            }
+          ],
+          "generationConfig": {"temperature": 0.7, "maxOutputTokens": 500},
+        };
+
+        final response = await http.post(
+          Uri.parse("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$_apiKey"),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(requestBody),
+        );
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          return data['candidates'][0]['content']['parts'][0]['text'] as String;
+        } else {
+          print("API Error ${response.statusCode}: ${response.body}");
+        }
+      } catch (e) {
+        print("Chatbot error attempt $attempt: $e");
+      }
+      attempt++;
+      await Future.delayed(Duration(seconds: 2 * attempt));
+    }
+    return "Server is busy or temporarily unavailable. Please try again later.";
+  }
+
   // GeminiService class ke andar, generateImageFromPrompt() method ke BAAD
   // yeh naya method add kar do:
 
+  /// 2-Step Reference Style Transfer:
+  /// Step 1: Analyze the reference image to extract a rich style description.
+  /// Step 2: Use that description + target image to generate the transformed output.
   static Future<String> generateImageFromDualPrompt({
     required String prompt,
     required File referenceImageFile,
@@ -93,15 +183,11 @@ class GeminiService {
       }
 
       print('🔑 Using API Key: ${_apiKey!.substring(0, 10)}...');
-      print('🚀 Starting Gemini PRO VISION for Dual Image Generation...');
-      print('📝 Prompt: ${prompt.substring(0, 100)}...');
-      print('🖼️ Reference Image: ${referenceImageFile.path}');
-      print('🖼️ Target Image: ${targetImageFile.path}');
+      print('🚀 Starting 2-Step Reference Style Transfer...');
 
-      const String _dualImageEndpoint =
-          "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image:generateContent";
+      // ── STEP 1: Analyze reference image to get a rich style description ────
+      print('📸 Step 1: Analyzing reference image for style extraction...');
 
-      // Compress & Resize images for global optimization (Quality 85%, Max 1024px)
       File compressedReference = await ImageUtils.compressImage(
         referenceImageFile,
         quality: 85,
@@ -113,62 +199,173 @@ class GeminiService {
         maxDimension: 1024,
       );
 
-      // DONO images ko read karo
-      List<int> referenceImageBytes = await compressedReference.readAsBytes();
-      List<int> targetImageBytes = await compressedTarget.readAsBytes();
+      String referenceBase64 = base64Encode(await compressedReference.readAsBytes());
+      String targetBase64 = base64Encode(await compressedTarget.readAsBytes());
 
-      // DONO ko base64 mein convert karo
-      String referenceBase64 = base64Encode(referenceImageBytes);
-      String targetBase64 = base64Encode(targetImageBytes);
-
-      // ✅ SIMPLIFIED REQUEST BODY - Gemini ke format mein
-      final requestBody = {
+      // Text-only call to extract style
+      final styleAnalysisBody = {
         "contents": [
           {
             "parts": [
-              {"text": prompt},
               {
-                "inline_data": {
-                  "mime_type": "image/jpeg",
-                  "data": referenceBase64, // Reference image
-                },
+                "text": """You are a world-class interior design forensic analyst. Your job is to produce the most detailed, precise style fingerprint possible of this image so another AI can FULLY REPLICATE this aesthetic in a completely different room.
+
+Analyze EVERY visual element with obsessive precision:
+
+1. DOMINANT COLOR PALETTE:
+   - List all main colors with specific names (e.g. "deep espresso brown", "warm amber gold", "dusty rose blush")
+   - What is the overall color temperature? (warm / cool / neutral)
+   - What emotion do the colors evoke?
+
+2. CONTEXTUAL STATE & CONDITION (CRITICAL):
+   - Is the room pristine, clean, messy, dirty, or ruined?
+   - What is the era/theme? (e.g., modern, vintage, medieval, prehistoric, futuristic sci-fi, post-apocalyptic)
+   - Describe the level of wear, tear, rust, aging, or decay.
+
+3. ENVIRONMENTAL & ATMOSPHERIC EFFECTS:
+   - Are there specific effects present? (fog, smoke, dust in the air, spiderwebs, mold, water puddles, futuristic neon holograms, vines overgrown)
+   - Describe any scattered clutter, trash, or specific "mess" elements on the floor or surfaces.
+
+4. WALL SURFACES (describe as if painting them):
+   - Exact color name and finish (matte, satin, gloss)
+   - Material (plaster, wood panel, exposed brick, wallpaper pattern etc.)
+   - Any patterns, textures, decorative moldings, or damage/peeling?
+
+5. FLOOR SURFACES (describe so someone can buy the exact material):
+   - Material type (marble, hardwood, herringbone oak, terracotta tiles etc.)
+   - Color and finish
+   - Pattern or layout (plank direction, tile size, grout color)
+
+6. FURNITURE VISUAL STYLE:
+   - Design era / style name
+   - Upholstery material and color on seating
+   - Frame material and structural condition (e.g., pristine wood vs. broken iron)
+
+7. LIGHTING ATMOSPHERE:
+   - Is it warm (orange/amber) or cool (white/blue)?
+   - Intensity: dim and moody OR bright and airy?
+   - Shadow depth and contrast level
+   - Visible light fixtures style
+
+8. ONE-SENTENCE STYLE & STATE LABEL:
+   Write a precise style name, e.g. "Pristine Luxury Modern", "Dirty Abandoned Kitchen", "Old-Times Victorian with Dust", "Cyberpunk Neon Mess"
+
+9. OVERALL ATMOSPHERE SUMMARY:
+   Describe the feeling someone would get walking into this room — the vibe, the luxury/decay level, the mood.
+
+This description MUST be detailed enough that someone reading it could fully recreate this exact interior aesthetic and its physical STATE without ever seeing the image."""
               },
               {
-                "inline_data": {
-                  "mime_type": "image/jpeg",
-                  "data": targetBase64, // Target image
-                },
+                "inline_data": {"mime_type": "image/jpeg", "data": referenceBase64},
               },
             ],
           },
         ],
-        "generationConfig": {"temperature": 0.7, "maxOutputTokens": 2048},
+        "generationConfig": {"temperature": 0.1, "maxOutputTokens": 2048},
       };
 
-      print('📤 Sending dual-image request to Gemini Pro Vision...');
-
-      // ✅ CORRECT ENDPOINT USE KARO
-      final response = await http.post(
-        Uri.parse('$_dualImageEndpoint?key=$_apiKey'),
+      final styleResponse = await http.post(
+        Uri.parse(
+          "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$_apiKey",
+        ),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(requestBody),
+        body: jsonEncode(styleAnalysisBody),
+      );
+
+      String styleDescription = "a sophisticated, carefully designed interior space";
+      if (styleResponse.statusCode == 200) {
+        final styleData = jsonDecode(styleResponse.body);
+        try {
+          styleDescription = styleData['candidates'][0]['content']['parts'][0]['text'] as String;
+          print('✅ Step 1 Complete. Style extracted (${styleDescription.length} chars)');
+          print('🎨 Style Description:\n${styleDescription.substring(0, styleDescription.length.clamp(0, 300))}...');
+        } catch (_) {
+          print('⚠️ Style extraction partial - using fallback description');
+        }
+      } else {
+        print('⚠️ Step 1 failed (${styleResponse.statusCode}), proceeding with generic style');
+      }
+
+      // ── STEP 2: Transform target image using extracted style ────────────────
+      print('🎨 Step 2: Transforming target image using extracted style...');
+
+      final transformBody = {
+        "contents": [
+          {
+            "role": "user",
+            "parts": [
+              {
+                "text": """You are an expert condition and design rendering AI. You will receive a room photo and a detailed style/state description. Your job is to OUTPUT a new version of that room photo, completely morphed to match the described style and STATE (clean, dirty, old, futuristic), while keeping the room's physical layout identical.
+
+⚠️ IMPORTANT: Your output must be the TARGET ROOM restyled — NOT the reference image. Generate a new image of the room below.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+THE ROOM TO RESTYLE (your output must show this room):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
+              },
+              {
+                "inline_data": {"mime_type": "image/jpeg", "data": targetBase64},
+              },
+              {
+                "text": """━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STYLE & CONDITION TO APPLY TO THE ROOM ABOVE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+$styleDescription
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+WHAT TO KEEP UNCHANGED (from the room photo):
+• Room shape, dimensions, and camera angle — identical
+• All wall, window, door positions — identical
+• All furniture positions and silhouettes — identical
+• Ceiling height and architectural layout — identical
+
+WHAT TO CHANGE (APPLY WITH MAXIMUM INTENSITY AND OBSESSIVE DETAILING):
+• STATE & ERA → OVERRIDE COMPLETELY: If the style says "old times", "ruined", or "dirty", apply extreme weathering, dirt, damage, aging, or futuristic elements to all surfaces of the target room. Ensure the room fully embodies the target era and condition.
+• Wall surfaces → OVERRIDE COMPLETELY: Use the exact specified colors, deeply detailed textures, materials, and any damage/aging from the style recipe.
+• Floor → OVERRIDE COMPLETELY: Replace entirely with the specific floor material, finish, pattern, and clutter/dirt level from the style recipe.
+• Furniture finishes → OVERRIDE COMPLETELY: Re-skin all upholstery, wood/metal finishes, and materials to strictly match the requested condition, colors, and rich textures.
+• Lighting & Shadows → OVERRIDE COMPLETELY: Shift the color temperature and mood, but ensure the scene is beautifully illuminated with high contrast and depth. No flat or dull lighting!
+• Color Grading & Vibrancy → PUMP UP THE COLORS: Ensure the final output has incredibly rich, vivid, and highly saturated colors. Eliminate any washed-out, dim, or dull fading. The image must visually "pop" and look incredibly lively and immersive.
+• Decorations, Mess & Details → AGGRESSIVELY ADD DETAILING: Inject rugs, rich curtains, textured cushions, thematic art, or contextual clutter (trash, cobwebs, vines, neon) that perfectly embodies the style and state recipe. Make it look highly detailed and professionally painted.
+• SHARPNESS & RENDERING QUALITY → RAZOR SHARP: The output MUST be an 8k-quality photorealistic render. Every texture, line, and material must be razor-sharp and crystal clear. ❌ NO BLUR, NO SMUDGING, NO SOFT/WASHED PIXELS.
+
+FINAL CHECK BEFORE GENERATING:
+✅ Is the structural layout identical to the room photo? Yes → proceed
+✅ Is the visual style AND physical condition/messiness applied with extreme intensity? Yes → proceed
+✅ Is the image crystal clear, razor-sharp, and highly detailed? Yes → proceed
+✅ Output is the ROOM restyled (not the reference image) → YES"""
+              },
+            ],
+          },
+        ],
+        "generationConfig": <String, dynamic>{
+          "temperature": 0.65,
+          "topK": 40,
+          "topP": 0.95,
+          "maxOutputTokens": 8192,
+          "responseModalities": ["IMAGE"],
+        },
+      };
+
+      print('📤 Step 2: Sending transform request to Gemini...');
+
+      final response = await http.post(
+        Uri.parse('$_imageGenEndpoint?key=$_apiKey'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(transformBody),
       );
 
       print('📥 Response Status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
-        print('✅ Gemini Dual Image Generation Success!');
+        print('✅ Step 2 Complete — Style Transfer Success!');
 
         if (data['usageMetadata'] != null) {
           final usage = data['usageMetadata'];
           print('📊 Token Usage:');
-          print(
-            '   Input Tokens (Prompt Text + Image): ${usage["promptTokenCount"]}',
-          );
-          print(
-            '   Output Tokens (Generated Content): ${usage["candidatesTokenCount"]}',
-          );
+          print('   Input Tokens: ${usage["promptTokenCount"]}');
+          print('   Output Tokens: ${usage["candidatesTokenCount"]}');
           print('   Total Tokens: ${usage["totalTokenCount"]}');
         }
 
@@ -180,7 +377,7 @@ class GeminiService {
         throw Exception('Gemini API Error: ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ Dual Image Generation Failed: $e');
+      print('❌ 2-Step Style Transfer Failed: $e');
       throw Exception('Reference transform generation failed: $e');
     }
   }

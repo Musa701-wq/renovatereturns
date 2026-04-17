@@ -1047,79 +1047,72 @@ class ReferenceTransformPromptGenerator {
     if (additionalInstruction != null && additionalInstruction.isNotEmpty) {
       additionalText = '''
 
-ADDITIONAL USER INSTRUCTIONS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ADDITIONAL USER INSTRUCTIONS (MUST FOLLOW):
 "\$additionalInstruction"
-
-CRITICAL: Follow these additional instructions while performing the style transfer.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ''';
     }
 
     return """
-REFERENCE-BASED IMAGE TRANSFORMATION - DUAL IMAGE STYLE TRANSFER
+You have been given two images above.
 
-TASK OVERVIEW:
-You are performing STYLE TRANSFER using TWO images:
-- IMAGE A (Reference): Source of style/aesthetic (\$referenceImageSource)
-- IMAGE B (Target): Image to be transformed (\$targetImageSource)
-
-YOUR TASK: Apply visual style, aesthetic, color palette, and mood from IMAGE A to IMAGE B while preserving IMAGE B's content and structure.
+IMAGE 1 (provided above) = THE STYLE MASTER / REFERENCE
+IMAGE 2 (provided above) = THE STRUCTURAL CANVAS / TARGET
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STEP 1: ANALYZE IMAGE A (REFERENCE)
+YOUR TASK: GENERATE A NEW IMAGE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-EXTRACT FROM IMAGE A:
-1. COLOR PALETTE: Primary colors, temperature, saturation, contrast
-2. LIGHTING: Direction, intensity, shadows, highlights, mood
-3. STYLE: Visual style, texture, edges, patterns
-4. MOOD: Emotional tone, ambiance, energy level
-5. POST-PROCESSING: Color grading, vignetting, blur, grain, filters
+Generate a SINGLE output image that:
+✅ Uses the LAYOUT and STRUCTURE from IMAGE 2 (room shape, walls, furniture placement, perspective)
+✅ Uses the STYLE, COLORS, MATERIALS, and ATMOSPHERE from IMAGE 1 (color palette, lighting mood, surface textures, design language)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STEP 2: ANALYZE IMAGE B (TARGET)
+STEP 1 — ANALYZE IMAGE 1 (REFERENCE STYLE SOURCE)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-UNDERSTAND FROM IMAGE B:
-1. CONTENT: Main subjects, objects, spatial layout
-2. STRUCTURE: Composition, positions, relationships
-3. PRESERVE: ALL objects, layout, perspective, architecture
+From IMAGE 1, extract and remember:
+- Dominant color palette (exact hues, saturation, tones)
+- Lighting: warm/cool, bright/dim, shadows, ambiance
+- Wall materials and finishes (paint, plaster, wood, tile, brick, etc.)
+- Floor surface and pattern
+- Furniture style and upholstery
+- Overall design language (modern, rustic, gothic, industrial, luxury, etc.)
+- Mood and atmosphere
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STEP 3: APPLY STYLE TRANSFER
+STEP 2 — ANALYZE IMAGE 2 (STRUCTURAL CANVAS)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+From IMAGE 2, extract and remember:
+- Room dimensions and camera angle
+- Wall positions, window and door locations
+- Furniture placement and shapes
+- Ceiling height
 
-APPLY FROM A TO B:
-✓ Replace B's colors with A's color palette
-✓ Match A's lighting direction and intensity
-✓ Apply A's texture and style treatment
-✓ Transfer A's mood and atmosphere
-✓ Apply A's post-processing effects
+LOCK these structural elements. Do NOT change them.
 
-PRESERVE IN B:
-✓ Exact room/space structure
-✓ All object positions
-✓ Architectural elements
-✓ Spatial relationships
-✓ Camera perspective
-✓ Image composition
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 3 — EXECUTE THE TRANSFORMATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Now generate the output image:
+1. Keep the exact room layout from IMAGE 2
+2. Replace ALL wall surfaces with the materials/colors from IMAGE 1
+3. Replace ALL floor surfaces with the flooring aesthetic from IMAGE 1
+4. Re-style ALL furniture to match the design language of IMAGE 1
+5. Apply the exact lighting mood and shadows from IMAGE 1
+6. The final image must be UNMISTAKABLY inspired by IMAGE 1
 
-❌ FORBIDDEN:
-❌ Do NOT move objects
-❌ Do NOT add/remove objects
-❌ Do NOT change layout
-❌ Do NOT alter perspective
+❌ FORBIDDEN — DO NOT:
+- Keep any original colors, textures, or materials from IMAGE 2
+- Change the room shape, wall positions, or furniture layout from IMAGE 2
+- Make subtle or half-hearted changes — the transformation must be DRAMATIC and COMPLETE
+- Blend the two styles — IMAGE 1 style must completely dominate
 \$additionalText
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-FINAL RESULT
+FINAL OUTPUT REQUIREMENT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Generate photorealistic image showing:
-- IMAGE B's CONTENT (100% preserved)
-- IMAGE A's STYLE (100% applied)
-- Seamless style integration
-- Natural, believable result
-
-Result should look like: "Image B shot/edited in the same style as Image A"
+The output must look like a professional 3D render where the raw geometry of IMAGE 2 has been completely re-textured, re-lit, and re-styled to perfectly replicate the aesthetic world of IMAGE 1. 
+A viewer looking at the output must instantly say: "This looks exactly like Image 1's style, but in the room from Image 2."
 """;
   }
 }

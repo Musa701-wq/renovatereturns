@@ -21,23 +21,20 @@ class GenerateButtonWidget extends StatelessWidget {
             uploadProvider.selectedBudget != null;
 
         return ElevatedButton(
-          onPressed: isGenerateEnabled
-              ? onGeneratePressed
-              : null,
+          onPressed: onGeneratePressed,
           style: ElevatedButton.styleFrom(
-            backgroundColor: isGenerateEnabled ? AppTheme.primaryColor : Colors.green.withOpacity(0.3),
+            backgroundColor: AppTheme.primaryColor,
             foregroundColor: Colors.white,
             padding: EdgeInsets.symmetric(
               vertical: AppTheme.responsiveSize(context, phone: 15, tablet: 22),
+              horizontal: AppTheme.responsiveSize(context, phone: 30, tablet: 50),
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppTheme.responsiveSize(context, phone: 12, tablet: 18)),
             ),
           ),
           child: Text(
-            isGenerateEnabled
-                ? 'Generate Design'
-                : 'Select All Options to Generate',
+            'Generate',
             style: TextStyle(
               fontSize: AppTheme.responsiveFont(context, phone: 16, tablet: 22),
               fontWeight: FontWeight.bold,
