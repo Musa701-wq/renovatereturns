@@ -16,7 +16,7 @@ class UserModel {
     this.email,
     this.photoUrl,
     this.createdAt,
-    this.updatedAt, // Add this in constructor
+    this.updatedAt,
   });
 
   Map<String, dynamic> toJson() {
@@ -26,7 +26,6 @@ class UserModel {
       "email": email,
       "photoUrl": photoUrl,
       "createdAt": createdAt?.toIso8601String(),
-      "updatedAt": updatedAt?.toIso8601String(), // Add this
     };
   }
 
@@ -39,7 +38,7 @@ class UserModel {
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : null,
-      updatedAt: json['updatedAt'] != null // Add this
+      updatedAt: json['updatedAt'] != null
           ? DateTime.parse(json['updatedAt'])
           : null,
     );
@@ -52,7 +51,7 @@ class UserModel {
       email: user.email,
       photoUrl: user.photoURL,
       createdAt: DateTime.now(),
-      updatedAt: DateTime.now(), // Add this
+      updatedAt: DateTime.now(),
     );
   }
 

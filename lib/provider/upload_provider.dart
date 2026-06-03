@@ -1251,6 +1251,7 @@ $prompt
     required String basePrompt,
     required File imageFile,
     int count = 3,
+    double? temperature,
   }) async {
     try {
       print('🚀 Starting multiple variations (count: $count)...');
@@ -1268,6 +1269,7 @@ $prompt
         String url = await GeminiService.generateImageFromVariationPrompt(
           prompt: variedPrompt,
           imageFile: imageFile,
+          temperature: temperature,
         );
         results.add(url);
       }

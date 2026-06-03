@@ -149,22 +149,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ),
                                   ),
                                 ),
-                                Positioned(
-                                  bottom: 0,
-                                  right: 0,
-                                  child: GestureDetector(
-                                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen())),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.primaryColor,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(color: Colors.white, width: 2),
+                                  if (user != null)
+                                    Positioned(
+                                      bottom: 0,
+                                      right: 0,
+                                      child: GestureDetector(
+                                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen())),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.primaryColor,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(color: Colors.white, width: 2),
+                                          ),
+                                          child: const Icon(Icons.edit, color: Colors.white, size: 18),
+                                        ),
                                       ),
-                                      child: const Icon(Icons.edit, color: Colors.white, size: 18),
                                     ),
-                                  ),
-                                ),
                               ],
                             ),
                             const SizedBox(height: 16),
@@ -246,7 +247,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OtherProductsScreen()))),
                             const SizedBox(height: 30),
                             
-                            _buildLogoutDeleteRow(context),
+                            if (user != null)
+                              _buildLogoutDeleteRow(context)
+                            else
+                              _buildLoginButton(context),
                           ],
                         ),
                       ),
@@ -304,6 +308,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _buildLoginButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 55,
+      child: ElevatedButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+          );
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppTheme.primaryColor,
+          foregroundColor: AppTheme.secondaryColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          elevation: 2,
+        ),
+        child: const Text(
+          'Login / Sign Up',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildLogoutDeleteRow(BuildContext context) {
     return Container(
       height: 55,
@@ -343,12 +377,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showDeleteConfirmation(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Account'),
-        content: const Text('Are you sure? This cannot be undone.'),
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppTheme.secondaryColor,
+        title: Text('Delete Account', style: TextStyle(color: AppTheme.primaryColor)),
+        content: Text('Are you sure? This cannot be undone.', style: TextStyle(color: AppTheme.primaryColor)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          TextButton(onPressed: () => _signOutAndRedirect(context), child: const Text('Delete', style: TextStyle(color: Colors.red))),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text('Cancel', style: TextStyle(color: AppTheme.primaryColor))),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              _signOutAndRedirect(context);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          ),
         ],
       ),
     );
@@ -357,12 +400,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showLogoutConfirmation(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirm Logout'),
-        content: const Text('Are you sure you want to sign out?'),
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppTheme.secondaryColor,
+        title: Text('Confirm Logout', style: TextStyle(color: AppTheme.primaryColor)),
+        content: Text('Are you sure you want to sign out?', style: TextStyle(color: AppTheme.primaryColor)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          TextButton(onPressed: () => _signOutAndRedirect(context), child: const Text('Logout')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text('Cancel', style: TextStyle(color: AppTheme.primaryColor))),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              _signOutAndRedirect(context);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryColor),
+            child: const Text('Logout', style: TextStyle(color: AppTheme.secondaryColor)),
+          ),
         ],
       ),
     );
@@ -371,6 +423,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _signOutAndRedirect(BuildContext context) async {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     await auth.signOut();
-    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => LoginScreen()), (route) => false);
+    // AuthGate will handle the state change and transition back to Guest state
   }
 }

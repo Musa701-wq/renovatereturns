@@ -13,28 +13,23 @@ class NavbarProvider with ChangeNotifier {
     NavItem(icon: Icons.person, label: "Profile", index: 4),
   ];
 
-  // Getters
   int get currentIndex => _currentIndex;
   List<NavItem> get navItems => _navItems;
   NavItem get currentNavItem => _navItems[_currentIndex];
 
-  // Set current index
   void setCurrentIndex(int index) {
     _currentIndex = index;
     notifyListeners();
   }
 
-  // Check if item is selected
   bool isSelected(int index) {
     return _currentIndex == index;
   }
 
-  // Get next index (for navigation)
   int getNextIndex() {
     return (_currentIndex + 1) % _navItems.length;
   }
 
-  // Get previous index (for navigation)
   int getPreviousIndex() {
     return (_currentIndex - 1) % _navItems.length;
   }

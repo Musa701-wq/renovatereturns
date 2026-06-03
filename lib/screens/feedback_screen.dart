@@ -106,7 +106,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               ),
               const SizedBox(height: 30),
 
-              // Email Field
               _buildLabel('Your Email'),
               const SizedBox(height: 8),
               _buildTextField(
@@ -123,7 +122,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Feedback Field
               _buildLabel('Feedback'),
               const SizedBox(height: 8),
               _buildTextField(

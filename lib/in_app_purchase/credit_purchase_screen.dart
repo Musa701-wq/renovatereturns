@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../utils/theme.dart';
+import '../screens/login_screen.dart';
+import '../provider/auth_provider.dart';
 
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'credit_manager.dart';
@@ -53,6 +55,12 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
   }
 
   Future<void> _handlePurchase(ProductDetails product) async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    if (auth.currentUser == null) {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+      return;
+    }
+
     if (_isPurchasing) {
       debugPrint("⚠️ [Purchase Screen] Purchase already in progress");
       return;
@@ -1268,11 +1276,11 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
                         ),
                         _buildFAQItem(
                           'How many credits do I start with?',
-                          'Fresh installs get 30 complimentary Renovate AI credits to explore makeovers.',
+                          'Fresh installs get 10 complimentary Renovate AI credits as a free tier to explore makeovers.',
                         ),
                         _buildFAQItem(
                           'How do I add more credits?',
-                          'You can watch rewarded ads to earn bonus credits or buy a Renovate AI pack below.',
+                          'Once your free credits are used, you can purchase a professional Renovate AI pack below to continue your design journey.',
                           isLast: true,
                         ),
                       ],

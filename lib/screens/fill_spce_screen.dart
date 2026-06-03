@@ -468,6 +468,8 @@ import '../services/image_storage_service.dart';
 import '../utils/theme.dart';
 import '../widgets/credit_dialog.dart';
 import '../widgets/image_selection_widget.dart';
+import '../screens/login_screen.dart';
+import '../provider/auth_provider.dart';
 import '../widgets/loading_overlay.dart';
 
 class FillSpaceScreen extends StatefulWidget {
@@ -792,6 +794,12 @@ class _FillSpaceScreenState extends State<FillSpaceScreen> {
       UploadProvider uploadProvider,
       BuildContext context,
       ) async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    if (auth.currentUser == null) {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+      return;
+    }
+
     final creditManager = Provider.of<CreditManager>(context, listen: false);
     final int cost = uploadProvider.isMultipleVariationsEnabled ? 15 : 5;
 

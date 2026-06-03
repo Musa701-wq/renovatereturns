@@ -173,7 +173,6 @@ class _ResultScreenState extends State<ResultScreen> {
       } else if (result == 'purchased') {
         await performSave(bytes);
       }
-      // If result is null (closed), do nothing (no performSave called)
     } else {
       await performSave(bytes);
     }
@@ -205,7 +204,6 @@ class _ResultScreenState extends State<ResultScreen> {
     final isPremium = Provider.of<CreditManager>(context, listen: false).hasPurchased;
 
     if (!isPremium) {
-      // Auto-watermark for share with no dialog as requested
       final watermarkedBytes = await ImageUtils.addWatermarkToBytes(bytes);
       await performShare(watermarkedBytes);
     } else {

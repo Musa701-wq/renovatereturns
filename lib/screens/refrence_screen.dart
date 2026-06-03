@@ -1,5 +1,3 @@
-// lib/screens/reference_transform_screen.dart
-// Yeh poori file copy karo
 
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -12,6 +10,8 @@ import '../widgets/dual_image_selection.dart';
 import '../services/image_storage_service.dart';
 import 'result_screen.dart';
 import '../widgets/loading_overlay.dart';
+import '../screens/login_screen.dart';
+import '../provider/auth_provider.dart';
 
 class ReferenceTransformScreen extends StatefulWidget {
   const ReferenceTransformScreen({super.key});
@@ -280,6 +280,12 @@ class _ReferenceTransformScreenState extends State<ReferenceTransformScreen> {
   }
 
   void _generateReferenceTransform(UploadProvider uploadProvider, BuildContext context) async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    if (auth.currentUser == null) {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+      return;
+    }
+
     final creditManager = Provider.of<CreditManager>(context, listen: false);
     final int cost = uploadProvider.isMultipleVariationsEnabled ? 15 : 5;
 

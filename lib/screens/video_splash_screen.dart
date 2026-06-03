@@ -88,7 +88,7 @@ class _VideoSplashScreenState extends State<VideoSplashScreen> {
 
   void _checkAndNavigate() {
     if (_attHandled && _readyToNavigate && mounted) {
-      runApp(const MyApp());
+      Navigator.pushReplacementNamed(context, '/auth');
     }
   }
 
@@ -182,17 +182,12 @@ class _VideoSplashScreenState extends State<VideoSplashScreen> {
                       ],
                     ),
                     clipBehavior: Clip.antiAlias,
-                    child: Image.asset(
-                      "assets/images/logo.jpeg",
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Icon(
-                        Icons.auto_awesome,
-                        size: getLogoSize() * 0.5,
-                        color: AppTheme.primaryColor,
+                      child: Image.asset(
+                        'assets/images/new_logo.png',
+                        fit: BoxFit.cover,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 24),
                   // Title
                   Text(
                     "AI Remodeling",

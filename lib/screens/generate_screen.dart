@@ -21,6 +21,7 @@ import 'package:ai_remodeling/screens/replace_screen.dart';
 import 'package:provider/provider.dart';
 import 'kitchen_design_screen.dart';
 import 'garden_redesign_screen.dart';
+import 'room_furnishing_screen.dart';
 
 class GenerateScreen extends StatefulWidget {
   const GenerateScreen({super.key});
@@ -65,6 +66,8 @@ class _GenerateScreenState extends State<GenerateScreen> with SingleTickerProvid
       case 'Garden Redesign':
         return 'assets/images/exterior.png';
       case 'Reference Design':
+        return 'assets/images/interior.png';
+      case 'Room Furnishing':
         return 'assets/images/interior.png';
       default:
         return null;
@@ -307,8 +310,8 @@ class _GenerateScreenState extends State<GenerateScreen> with SingleTickerProvid
 
                   // CARD 11 - Reference Design
                   ComparisonCardWidget(
-                    beforeImage: 'assets/images/re1.jpg',
-                    afterImage: 'assets/images/re.jpg',
+                    beforeImage: 'assets/images/ref.png',
+                    afterImage: 'assets/images/ref.png', // Corrected to ref.png
                     title: 'Reference Design',
                     subtitle: 'Redesign spaces using a reference image',
                     isLiked: false,
@@ -318,6 +321,25 @@ class _GenerateScreenState extends State<GenerateScreen> with SingleTickerProvid
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => const ReferenceTransformScreen()),
+                      );
+                    },
+                  ),
+
+                  SizedBox(height: getCardSpacing()),
+
+                  // CARD 12 - Room Furnishing
+                  ComparisonCardWidget(
+                    beforeImage: 'assets/kitchen/Minimalist.jpg', // Using a clean 'before' style
+                    afterImage: 'assets/room_furnashing/Modern.jpg', // Real furnished example
+                    title: 'Room Furnishing',
+                    subtitle: 'Upload your room, choose items & get AI-designed interior',
+                    isLiked: false,
+                    categoryIconPath: _getIconPathForTitle('Room Furnishing'),
+                    onLikePressed: () {},
+                    onArrowPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const RoomFurnishingScreen()),
                       );
                     },
                   ),

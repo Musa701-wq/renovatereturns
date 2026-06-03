@@ -26,7 +26,6 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize IAP early so products are ready when needed
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         final creditManager = Provider.of<CreditManager>(context, listen: false);
@@ -39,21 +38,6 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
     final currentUser = auth.currentUser;
-
-if (currentUser == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => LoginScreen())
-        );
-      });
-      return Scaffold(
-        backgroundColor: const Color(0xFF192338),
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-
 
     return Consumer<NavbarProvider>(
       builder: (context, navbarProvider, child) {
@@ -100,7 +84,6 @@ if (currentUser == null) {
           ),
         );
       } else {
-        // It's a URL from Google/Apple login
         return Padding(
           padding: const EdgeInsets.only(left: 8.0),
           child: CircleAvatar(
@@ -109,7 +92,6 @@ if (currentUser == null) {
         );
       }
     } catch (e) {
-      // If any error, show default avatar
       print('Error loading app bar profile image: $e');
       return const Padding(
         padding: EdgeInsets.only(left: 8.0),

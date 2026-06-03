@@ -4,12 +4,13 @@ description: "A new Flutter project."
 publish_to: 'none'
 
 
-version: 4.0.3+4
+version: 4.0.4+5
 environment:
   sdk: ^3.10.1
 dependencies:
   flutter:
     sdk: flutter
+  app_tracking_transparency: ^2.0.6+1
   cupertino_icons: ^1.0.8
   provider: ^6.1.5+1
   google_fonts: ^6.2.1
@@ -66,6 +67,7 @@ flutter:
     - assets/icons/
     - assets/video/
     - assets/home_images/
+    - assets/room_furnashing/
     - assets/images/logo.jpeg
 
 

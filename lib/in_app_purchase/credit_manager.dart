@@ -25,8 +25,8 @@ class CreditManager extends ChangeNotifier {
 
   bool get hasPurchased => false;
 
-  // ✅ BYPASS CREDITS FOR TESTING (Set to true to allow free generation)
-  static const bool _isBypassEnabled = true;
+  // ✅ BYPASS CREDITS FOR TESTING (Set to false for production)
+  static const bool _isBypassEnabled = false;
 
   CreditManager() {
     _authSubscription = _auth.authStateChanges().listen((user) {

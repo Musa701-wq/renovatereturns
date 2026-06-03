@@ -122,6 +122,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.secondaryColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Navigator.canPop(context) 
+          ? IconButton(
+              icon: Icon(Icons.arrow_back_ios, color: AppTheme.primaryColor),
+              onPressed: () => Navigator.pop(context),
+            )
+          : null,
+      ),
+      extendBodyBehindAppBar: true,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -221,7 +232,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                         try {
                                           bool success = await auth.loginWithGoogle(creditManager);
                                           if (success && context.mounted) {
-                                            Navigator.pushReplacementNamed(context, '/main');
+                                            if (Navigator.canPop(context)) {
+                                              Navigator.pop(context);
+                                            } else {
+                                              Navigator.pushReplacementNamed(context, '/main');
+                                            }
                                           }
                                         } catch (e) {
                                           if (context.mounted) {
@@ -295,7 +310,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                         try {
                                           bool success = await auth.loginWithApple(creditManager);
                                           if (success && context.mounted) {
-                                            Navigator.pushReplacementNamed(context, '/main');
+                                            if (Navigator.canPop(context)) {
+                                              Navigator.pop(context);
+                                            } else {
+                                              Navigator.pushReplacementNamed(context, '/main');
+                                            }
                                           }
                                         } catch (e) {
                                           if (context.mounted) {

@@ -4,8 +4,6 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:image/image.dart' as img;
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'exception_handler.dart';
 import 'image_utils.dart';
 import 'prompt_v2.dart';
@@ -17,11 +15,6 @@ class GeminiService {
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent";
   static const String _variationEndpoint =
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent";
-  // ==========================================
-  // api_services.dart - SIRF YEH METHOD ADD KARO
-  // ==========================================
-
-  /// Detects objects in an image and returns a list of bounding boxes.
   static Future<List<Map<String, dynamic>>> detectObjects({
     required File imageFile,
   }) async {
@@ -81,89 +74,51 @@ class GeminiService {
     }
   }
 
-  static String userPreferences = "";
-
-  static Future<void> _loadUserPreferences() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-      userPreferences = "None specified";
-      return;
-    }
-
+  /// Chatbot text generation using Gemini
+  static Future<String> getChatbotResponse({required String userMessage}) async {
     try {
-      final DatabaseReference dbRef = FirebaseDatabase.instance.ref("users");
-      final snapshot = await dbRef.child(uid).get();
-      if (snapshot.exists) {
-        final data = Map<String, dynamic>.from(snapshot.value as Map);
+      final apiKey = dotenv.env['GEMINI_API_KEY'];
+      if (apiKey == null || apiKey.isEmpty) return "API key not found in .env file.";
 
-        final region = data["region"] ?? "Unknown region";
-        final style = data["styleType"] ?? "general interior design";
-        final favColors = (data["favoriteColors"] as List?)?.join(", ") ?? "no preference";
-        final budget = data["budgetTier"] ?? "medium";
+      final requestBody = {
+        "contents": [
+          {
+            "parts": [
+              {
+                "text": "You are a professional interior design and decoration AI assistant in a remodeling app. "
+                        "A user asks you: \"$userMessage\"\n\n"
+                        "Provide a concise, highly relevant, and professional decoration suggestion or piece of advice. "
+                        "Do not include unnecessary conversational filler, just give the best interior design advice."
+              }
+            ]
+          }
+        ],
+        "generationConfig": {"temperature": 0.7, "maxOutputTokens": 256},
+      };
 
-        userPreferences = """
-Region: $region
-Style Preferences: $style
-Favorite Colors: $favColors
-Budget: $budget
-""";
+      final response = await http.post(
+        Uri.parse("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey"),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
+
+      print("Chatbot Status code: ${response.statusCode}");
+      print("Chatbot Response body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['candidates'] != null && data['candidates'].isNotEmpty) {
+           return data['candidates'][0]['content']['parts'][0]['text'] as String;
+        } else {
+           return "Received empty response from the AI.";
+        }
       } else {
-        userPreferences = "None specified";
+        return "Connection trouble. Status: ${response.statusCode}. Please try again.";
       }
     } catch (e) {
-      print("Error loading preferences: $e");
-      userPreferences = "None specified";
+      print('Chatbot error: $e');
+      return "An error occurred while generating a response: $e";
     }
-  }
-
-  /// Chatbot text generation using Gemini with User Preferences
-  static Future<String> chatMessage({required String userMessage, int retries = 3}) async {
-    await _loadUserPreferences();
-
-    final systemPrompt = """
-You are a professional interior design and decoration AI assistant in a remodeling app.
-Only answer questions about interior design, decoration, room layouts, colors, or styling.
-Base your suggestions on the provided user preferences: $userPreferences.
-Provide concise, highly relevant, and professional advice. Do not include unnecessary conversational filler.
-""";
-
-    int attempt = 0;
-    while (attempt < retries) {
-      try {
-        if (_apiKey == null) throw Exception('API key not found');
-
-        final requestBody = {
-          "contents": [
-            {
-              "parts": [
-                {
-                  "text": "$systemPrompt\nUser: $userMessage"
-                }
-              ]
-            }
-          ],
-          "generationConfig": {"temperature": 0.7, "maxOutputTokens": 500},
-        };
-
-        final response = await http.post(
-          Uri.parse("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$_apiKey"),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode(requestBody),
-        );
-
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          return data['candidates'][0]['content']['parts'][0]['text'] as String;
-        } else {
-          print("API Error ${response.statusCode}: ${response.body}");
-        }
-      } catch (e) {
-        print("Chatbot error attempt $attempt: $e");
-      }
-      attempt++;
-      await Future.delayed(Duration(seconds: 2 * attempt));
-    }
-    return "Server is busy or temporarily unavailable. Please try again later.";
   }
 
   // GeminiService class ke andar, generateImageFromPrompt() method ke BAAD
@@ -619,6 +574,7 @@ FINAL CHECK BEFORE GENERATING:
   static Future<String> generateImageFromPrompt({
     required String prompt,
     required File imageFile,
+    double? temperature,
   }) async {
     /*
     try {
@@ -739,7 +695,7 @@ FINAL CHECK BEFORE GENERATING:
           },
         ],
         "generationConfig": <String, dynamic>{
-          "temperature": 0.9,
+          "temperature": temperature ?? 0.9,
           "topK": 40,
           "topP": 0.95,
           "maxOutputTokens": 2048,
@@ -788,6 +744,7 @@ FINAL CHECK BEFORE GENERATING:
   static Future<String> generateImageFromVariationPrompt({
     required String prompt,
     required File imageFile,
+    double? temperature,
   }) async {
     try {
       if (_apiKey == null) {
@@ -822,7 +779,7 @@ FINAL CHECK BEFORE GENERATING:
           },
         ],
         "generationConfig": <String, dynamic>{
-          "temperature": 0.9,
+          "temperature": temperature ?? 0.9,
           "topK": 40,
           "topP": 0.95,
           "maxOutputTokens": 2048,

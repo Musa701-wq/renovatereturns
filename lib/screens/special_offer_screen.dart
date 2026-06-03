@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../provider/auth_provider.dart';
+import '../screens/main_screen.dart';
+import '../screens/login_screen.dart';
 import '../in_app_purchase/i_ap_manager.dart';
 import '../utils/theme.dart';
 import '../in_app_purchase/credit_purchase_screen.dart';
@@ -26,6 +31,13 @@ class _SpecialOfferScreenState extends State<SpecialOfferScreen> with SingleTick
     _scaleAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
+
+    _markFirstTimeHandled();
+  }
+
+  Future<void> _markFirstTimeHandled() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isFirstTimeInstall', false);
   }
 
   @override
@@ -35,6 +47,12 @@ class _SpecialOfferScreenState extends State<SpecialOfferScreen> with SingleTick
   }
 
   void _buySpecialOffer() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    if (auth.currentUser == null) {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+      return;
+    }
+
     setState(() {
       _isPurchasing = true;
     });
@@ -59,7 +77,11 @@ class _SpecialOfferScreenState extends State<SpecialOfferScreen> with SingleTick
       final result = await iapManager.purchaseProduct(product);
       if (mounted) {
         if (result) {
-          Navigator.of(context).pop();
+          if (Navigator.canPop(context)) {
+             Navigator.of(context).pop();
+          } else {
+             Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainScreen()));
+          }
         } else {
           setState(() {
             _isPurchasing = false;
@@ -126,7 +148,16 @@ class _SpecialOfferScreenState extends State<SpecialOfferScreen> with SingleTick
                 top: MediaQuery.of(context).padding.top + 8,
                 right: 16,
                 child: GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
+                  onTap: () {
+                    if (Navigator.of(context).canPop()) {
+                      Navigator.of(context).pop();
+                    } else {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const MainScreen()),
+                      );
+                    }
+                  },
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(

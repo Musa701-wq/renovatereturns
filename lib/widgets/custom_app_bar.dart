@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../provider/auth_provider.dart';
 import '../screens/chatbot_screen.dart';
+import '../screens/login_screen.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({super.key});
@@ -16,9 +17,29 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     return AppBar(
       toolbarHeight: AppTheme.appBarHeight(context),
-      title: Text(
-        "RenovateAI: Smart Home Decor",
-        style: AppTheme.appBarTitleStyle(context).copyWith(color: AppTheme.primaryColor),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            "RenovateAI",
+            style: AppTheme.appBarTitleStyle(context).copyWith(
+              color: AppTheme.primaryColor,
+              fontSize: AppTheme.responsiveFont(context, phone: 22, tablet: 28),
+              fontWeight: FontWeight.w700,
+              height: 1.1,
+            ),
+          ),
+          Text(
+            "Smart Home Decor",
+            style: TextStyle(
+              fontSize: AppTheme.responsiveFont(context, phone: 12, tablet: 15),
+              color: AppTheme.primaryColor.withOpacity(0.7),
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.8,
+            ),
+          ),
+        ],
       ),
       backgroundColor: AppTheme.secondaryColor,
       foregroundColor: AppTheme.primaryColor,
@@ -27,7 +48,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         IconButton(
           icon: Image.asset(
             'assets/icons/chat-bot.png',
-            width: AppTheme.appBarIconTheme(context).size,
+            width: AppTheme.appBarIconTheme(context).size, // Removed +8 for better default fit
             height: AppTheme.appBarIconTheme(context).size,
           ),
           onPressed: () {
@@ -37,16 +58,44 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             );
           },
         ),
-        IconButton(
-          icon: Icon(
-            Icons.logout,
-            color: AppTheme.primaryColor,
-            size: AppTheme.appBarIconTheme(context).size,
+        if (auth.currentUser == null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                );
+              },
+              style: TextButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'Login',
+                style: TextStyle(
+                  color: AppTheme.secondaryColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          )
+        else
+          IconButton(
+            icon: Icon(
+              Icons.logout,
+              color: AppTheme.primaryColor,
+              size: AppTheme.appBarIconTheme(context).size,
+            ),
+            onPressed: () {
+              _showLogoutConfirmation(context, auth);
+            },
           ),
-          onPressed: () {
-            _showLogoutConfirmation(context, auth);
-          },
-        ),
       ],
     );
   }

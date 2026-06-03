@@ -57,24 +57,20 @@ class AuthProvider extends ChangeNotifier {
     try {
       final uid = user.uid;
 
-      // Check existing user
       UserModel? existingUser = await fetchUserFromFirestore(uid);
 
       UserModel userModel;
 
       if (existingUser != null) {
-        // Existing user
         userModel = existingUser.copyWith(
           photoUrl: existingUser.photoUrl?.isNotEmpty == true
               ? existingUser.photoUrl
               : user.photoURL,
         );
       } else {
-        // New user
         userModel = UserModel.fromFirebaseUser(user);
       }
 
-      // Save to Firestore
       await _firestore.collection('users').doc(uid).set({
         'uid': uid,
         'name': userModel.name,
@@ -88,7 +84,6 @@ class AuthProvider extends ChangeNotifier {
       await userModel.saveToPrefs();
       _currentUser = userModel;
 
-      // ✅ IMPORTANT: Initialize credits after user data is stored
       await creditManager.init();
 
       notifyListeners();

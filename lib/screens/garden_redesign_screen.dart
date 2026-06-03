@@ -15,6 +15,8 @@ import '../widgets/item_design_card.dart';
 import '../services/image_storage_service.dart';
 import '../widgets/credit_dialog.dart';
 import '../in_app_purchase/i_ap_manager.dart';
+import '../screens/login_screen.dart';
+import '../provider/auth_provider.dart';
 
 class GardenRedesignScreen extends StatefulWidget {
   const GardenRedesignScreen({super.key});
@@ -325,6 +327,12 @@ class _GardenRedesignScreenState extends State<GardenRedesignScreen> with Single
   }
 
   void _handleGenerate(UploadProvider uploadProvider, BuildContext context) async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    if (auth.currentUser == null) {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+      return;
+    }
+
     final creditManager = Provider.of<CreditManager>(context, listen: false);
     final int cost = uploadProvider.isMultipleVariationsEnabled ? 15 : 5;
 

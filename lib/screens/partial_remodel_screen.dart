@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'package:ai_remodeling/screens/login_screen.dart';
+import 'package:ai_remodeling/provider/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
@@ -33,9 +35,7 @@ class _PartialRemodelScreenState extends State<PartialRemodelScreen> {
   final TextEditingController _promptController = TextEditingController();
   double _currentWidth = 20.0;
 
-  // Actual canvas dimensions (set by LayoutBuilder)
   Size _canvasSize = Size.zero;
-  // Actual image pixel dimensions
   int _imgW = 1, _imgH = 1;
 
   @override
@@ -53,7 +53,6 @@ class _PartialRemodelScreenState extends State<PartialRemodelScreen> {
     super.dispose();
   }
 
-  /// Load image pixel size so we can maintain true aspect ratio
   Future<void> _loadImage(File f) async {
     final bytes = await f.readAsBytes();
     final codec = await ui.instantiateImageCodec(bytes);
@@ -69,6 +68,12 @@ class _PartialRemodelScreenState extends State<PartialRemodelScreen> {
   void _clearCanvas() => setState(() => _paths.clear());
 
   Future<void> _generateInpaint() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    if (auth.currentUser == null) {
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+      return;
+    }
+
     final up = Provider.of<UploadProvider>(context, listen: false);
     final cm = Provider.of<CreditManager>(context, listen: false);
 
@@ -82,7 +87,6 @@ class _PartialRemodelScreenState extends State<PartialRemodelScreen> {
     try {
       LoadingOverlay.show(context, message: 'Generating remodel...');
 
-      // Build mask at the ORIGINAL image pixel size for correct API alignment
       final maskBytes = await _buildMaskAtImageSize();
       if (maskBytes == null) {
         if (mounted) Navigator.pop(context);
@@ -119,12 +123,10 @@ class _PartialRemodelScreenState extends State<PartialRemodelScreen> {
     }
   }
 
-  /// Renders paths onto a canvas scaled to the ORIGINAL image pixel dimensions.
-  /// This ensures the mask perfectly aligns with the image when passed to the API.
+
   Future<Uint8List?> _buildMaskAtImageSize() async {
     if (_canvasSize == Size.zero || _imgW == 1) return null;
 
-    // Scale factor from canvas pixels to image pixels
     final double sx = _imgW / _canvasSize.width;
     final double sy = _imgH / _canvasSize.height;
 
@@ -132,7 +134,6 @@ class _PartialRemodelScreenState extends State<PartialRemodelScreen> {
       final recorder = ui.PictureRecorder();
       final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, _imgW.toDouble(), _imgH.toDouble()));
 
-      // Black background = "keep this area"
       canvas.drawRect(Rect.fromLTWH(0, 0, _imgW.toDouble(), _imgH.toDouble()), Paint()..color = Colors.black);
 
       for (final p in _paths) {
@@ -213,7 +214,6 @@ class _PartialRemodelScreenState extends State<PartialRemodelScreen> {
             ),
             body: Column(
               children: [
-                // ─── Content Area (Image or Selection Widget) ────────────
                 Expanded(
                   flex: 3,
                   child: up.selectedImage == null
@@ -236,7 +236,6 @@ class _PartialRemodelScreenState extends State<PartialRemodelScreen> {
                                 aspectRatio: imgAspect,
                                 child: LayoutBuilder(
                                   builder: (_, constraints) {
-                                    // Track canvas size for coordinate math
                                     final newSize = constraints.biggest;
                                     if (_canvasSize != newSize) {
                                       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -293,7 +292,6 @@ class _PartialRemodelScreenState extends State<PartialRemodelScreen> {
                           ],
                         ),
                 ),
-                // ─── Tab Bar ─────────────────────────────────────────────
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
@@ -424,7 +422,6 @@ class DrawingPath {
   DrawingPath({required this.points, required this.tool, required this.isDeselection, required this.isRect, this.width = 20.0});
 }
 
-// ─── Painter ──────────────────────────────────────────────────────────────────
 class MaskPainter extends CustomPainter {
   final List<DrawingPath> paths;
   MaskPainter({required this.paths});

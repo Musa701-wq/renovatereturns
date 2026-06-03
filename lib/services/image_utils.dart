@@ -55,7 +55,7 @@ class ImageUtils {
       if (decodedImg == null) return base64ImageString;
 
       // Load watermark from assets
-      final ByteData watermarkData = await rootBundle.load('assets/images/logo-watermark.png');
+      final ByteData watermarkData = await rootBundle.load('assets/images/new_logo.png');
       final Uint8List watermarkBytes = watermarkData.buffer.asUint8List();
       img.Image? watermarkImg = img.decodeImage(watermarkBytes);
       
@@ -98,7 +98,7 @@ class ImageUtils {
       img.Image? decodedImg = img.decodeImage(imageBytes);
       if (decodedImg == null) return imageBytes;
 
-      final ByteData watermarkData = await rootBundle.load('assets/images/logo-watermark.png');
+      final ByteData watermarkData = await rootBundle.load('assets/images/new_logo.png');
       final Uint8List watermarkBytes = watermarkData.buffer.asUint8List();
       img.Image? watermarkImg = img.decodeImage(watermarkBytes);
 

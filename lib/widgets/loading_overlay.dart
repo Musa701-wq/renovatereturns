@@ -61,12 +61,12 @@ class _LoadingWidgetState extends State<_LoadingWidget> with SingleTickerProvide
             FadeTransition(
               opacity: _animation,
               child: Image.asset(
-                'assets/images/logo-watermark.png',
+                'assets/images/new_logo.png',
                 width: 120,
                 height: 120,
               ),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 20),
             Text(
               widget.message,
               style: TextStyle(

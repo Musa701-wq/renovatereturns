@@ -328,7 +328,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               child: TextFormField(
                 controller: _nameController,
                 style: TextStyle(
-                //  color: AppTheme.secondaryColor,
                   color: AppTheme.primaryColor,
                   fontSize: getFontSize(),
                 ),
@@ -340,7 +339,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                   prefixIcon: Icon(
                     Icons.person,
-                  //  color: AppTheme.secondaryColor,
                     color: AppTheme.primaryColor,
                     size: getIconSize(),
                   ),
@@ -355,7 +353,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
             SizedBox(height: getSpacing()),
 
-            // Email Field
             Container(
               decoration: BoxDecoration(
                 color: AppTheme.tilescolor,
@@ -396,7 +393,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
             SizedBox(height: getSpacing() * 2),
 
-            // Save Button with Primary Color and Secondary Foreground
             SizedBox(
               width: double.infinity,
 
@@ -431,7 +427,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
             ),
 
-            // Additional Info Text
             Padding(
               padding: EdgeInsets.only(top: getSpacing()),
               child: Text(
@@ -500,7 +495,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
         );
       } else {
-        // It's a URL from Google/Apple login
         return ClipRRect(
           borderRadius: BorderRadius.circular(100),
           child: Image.network(
