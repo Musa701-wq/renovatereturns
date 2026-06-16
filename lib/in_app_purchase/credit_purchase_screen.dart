@@ -152,7 +152,7 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
                     tablet: 110,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.08),
+                    color: AppTheme.primaryColor.withValues(alpha: 0.08),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -210,7 +210,7 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
                     ),
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.08),
+                    color: AppTheme.primaryColor.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(
                       AppTheme.responsiveSize(context, phone: 12, tablet: 16),
                     ),
@@ -527,7 +527,7 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
                     tablet: 110,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.1),
+                    color: AppTheme.primaryColor.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -585,7 +585,7 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
                     ),
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.08),
+                    color: AppTheme.primaryColor.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(
                       AppTheme.responsiveSize(context, phone: 12, tablet: 16),
                     ),
@@ -748,6 +748,7 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
   @override
   Widget build(BuildContext context) {
     final creditManager = context.watch<CreditManager>();
+    final auth = Provider.of<AuthProvider>(context);
 
     return Scaffold(
       backgroundColor: AppTheme.secondaryColor,
@@ -828,56 +829,85 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
                     ),
                     child: Column(
                       children: [
-                        Text(
-                          'Your Credits',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: AppTheme.responsiveFont(
-                              context,
-                              phone: 16,
-                              tablet: 20,
+                        if (auth.currentUser == null)
+                          Column(
+                            children: [
+                              Text(
+                                "Login to purchase & view credits",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: AppTheme.responsiveFont(context, phone: 20, tablet: 24),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: AppTheme.primaryColor,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                ),
+                                child: const Text("Login Now", style: TextStyle(fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          )
+                        else ...[
+                          Text(
+                            'Your Credits',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: AppTheme.responsiveFont(
+                                context,
+                                phone: 16,
+                                tablet: 20,
+                              ),
+                              fontWeight: FontWeight.w500,
                             ),
-                            fontWeight: FontWeight.w500,
                           ),
-                        ),
-                        SizedBox(
-                          height: AppTheme.responsiveSize(
-                            context,
-                            phone: 12,
-                            tablet: 18,
-                          ),
-                        ),
-                        Text(
-                          '${creditManager.credits}',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: AppTheme.responsiveFont(
+                          SizedBox(
+                            height: AppTheme.responsiveSize(
                               context,
-                              phone: 64,
-                              tablet: 80,
-                            ),
-                            fontWeight: FontWeight.bold,
-                            height: 1.0,
-                          ),
-                        ),
-                        SizedBox(
-                          height: AppTheme.responsiveSize(
-                            context,
-                            phone: 8,
-                            tablet: 12,
-                          ),
-                        ),
-                        Text(
-                          'Use credits for AI features',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: AppTheme.responsiveFont(
-                              context,
-                              phone: 14,
+                              phone: 12,
                               tablet: 18,
                             ),
                           ),
-                        ),
+                          Text(
+                            '${creditManager.credits}',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: AppTheme.responsiveFont(
+                                context,
+                                phone: 64,
+                                tablet: 80,
+                              ),
+                              fontWeight: FontWeight.bold,
+                              height: 1.0,
+                            ),
+                          ),
+                          SizedBox(
+                            height: AppTheme.responsiveSize(
+                              context,
+                              phone: 8,
+                              tablet: 12,
+                            ),
+                          ),
+                          Text(
+                            'Use credits for AI features',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: AppTheme.responsiveFont(
+                                context,
+                                phone: 14,
+                                tablet: 18,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -892,7 +922,7 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
                         AppTheme.responsiveSize(context, phone: 16, tablet: 20),
                       ),
                       decoration: BoxDecoration(
-                        color: AppTheme.secondaryColor1.withOpacity(0.8),
+                        color: AppTheme.secondaryColor1.withValues(alpha: 0.8),
                         borderRadius: BorderRadius.circular(
                           AppTheme.responsiveSize(
                             context,
@@ -996,7 +1026,7 @@ class _CreditsPurchaseScreenState extends State<CreditsPurchaseScreen> {
                         AppTheme.responsiveSize(context, phone: 16, tablet: 20),
                       ),
                       decoration: BoxDecoration(
-                        color: AppTheme.secondaryColor1.withOpacity(0.8),
+                        color: AppTheme.secondaryColor1.withValues(alpha: 0.8),
                         borderRadius: BorderRadius.circular(
                           AppTheme.responsiveSize(
                             context,
@@ -1366,7 +1396,7 @@ class NatureCreditCard extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.primaryColor.withOpacity(0.1),
+                color: AppTheme.primaryColor.withValues(alpha: 0.1),
                 blurRadius: AppTheme.responsiveSize(
                   context,
                   phone: 8,

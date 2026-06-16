@@ -1,4 +1,5 @@
 import 'package:ai_remodeling/screens/result_screen.dart';
+import '../services/backend_api_service.dart';
 import '../services/prompt_.dart';
 import '../widgets/loading_overlay.dart';
 import 'package:flutter/material.dart';
@@ -396,10 +397,10 @@ class _GardenRedesignScreenState extends State<GardenRedesignScreen> with Single
       }
 
       if (results.isNotEmpty) {
-        for (final img in results) {
-          await ImageStorageService.uploadAndStore(img);
-        }
+        // 1. Upload "before" image to get a public URL
+        String? beforeUrl = await BackendApiService.uploadImage(uploadProvider.selectedImage!);
 
+        // History saving is now handled by ResultScreen to prevent duplicates
         await creditManager.deductCredits(cost, reason: 'garden_redesign');
 
         if (context.mounted) {

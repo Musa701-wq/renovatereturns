@@ -551,11 +551,8 @@ class _WaalRedesignState extends State<WaalRedesign> {
         generatedImageUrls = [url];
       }
 
-      if (generatedImageUrls.isNotEmpty) {
-        for (final img in generatedImageUrls) {
-          await ImageStorageService.uploadAndStore(img);
-        }
-      }
+      // Use generated ones (Base64). ResultScreen will handle S3 upload and history save.
+      final finalDisplayUrls = generatedImageUrls;
 
       final deductionSucceeded = await creditManager.deductCredits(
         cost,
@@ -577,10 +574,10 @@ class _WaalRedesignState extends State<WaalRedesign> {
           context,
           MaterialPageRoute(
             builder: (context) => ResultScreen(
-              generatedImageUrls: generatedImageUrls,
-              roomType: uploadProvider.selectedRoomType!,
-              style: "Wall Design",
-              budget: "Not Specified",
+              generatedImageUrls: finalDisplayUrls,
+              roomType: uploadProvider.selectedRoomType ?? "Wall",
+              style: uploadProvider.selectedStyle ?? "Soft",
+              budget: uploadProvider.selectedBudget ?? "Medium",
               prompt: finalPrompt,
               beforeImageUrl: uploadProvider.selectedImage?.path,
             ),

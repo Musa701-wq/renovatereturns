@@ -86,11 +86,15 @@ class _ObjectRemoveState extends State<ObjectRemove> {
 
         if (p.isRect && p.points.length >= 2) {
           paint.style = PaintingStyle.fill;
-          final r = Rect.fromPoints(
-            Offset(p.points[0]!.dx * sx, p.points[0]!.dy * sy),
-            Offset(p.points[1]!.dx * sx, p.points[1]!.dy * sy),
-          );
-          canvas.drawRect(r, paint);
+          final p0 = p.points[0];
+          final p1 = p.points[1];
+          if (p0 != null && p1 != null) {
+            final r = Rect.fromPoints(
+              Offset(p0.dx * sx, p0.dy * sy),
+              Offset(p1.dx * sx, p1.dy * sy),
+            );
+            canvas.drawRect(r, paint);
+          }
         } else if (p.tool == RemoveDrawingTool.brush) {
           paint.style = PaintingStyle.stroke;
           paint.strokeWidth = p.width * sx;
@@ -104,14 +108,17 @@ class _ObjectRemoveState extends State<ObjectRemove> {
             }
           }
         } else if (p.tool == RemoveDrawingTool.lasso && p.points.length >= 3) {
-          paint.style = PaintingStyle.fill;
-          final path = Path();
-          path.moveTo(p.points[0]!.dx * sx, p.points[0]!.dy * sy);
-          for (final pt in p.points) {
-            if (pt != null) path.lineTo(pt.dx * sx, pt.dy * sy);
+          final startPt = p.points[0];
+          if (startPt != null) {
+            paint.style = PaintingStyle.fill;
+            final path = Path();
+            path.moveTo(startPt.dx * sx, startPt.dy * sy);
+            for (final pt in p.points) {
+              if (pt != null) path.lineTo(pt.dx * sx, pt.dy * sy);
+            }
+            path.close();
+            canvas.drawPath(path, paint);
           }
-          path.close();
-          canvas.drawPath(path, paint);
         }
       }
 
@@ -179,7 +186,7 @@ class _ObjectRemoveState extends State<ObjectRemove> {
 
       if (generatedImageUrls.isNotEmpty) {
         for (var res in generatedImageUrls) {
-             await ImageStorageService.uploadAndStore(res);
+             // History saving is now handled by ResultScreen to prevent duplicates
         }
       }
 

@@ -7,6 +7,8 @@ import '../in_app_purchase/credit_purchase_screen.dart';
 import '../in_app_purchase/credit_manager.dart';
 import '../in_app_purchase/i_ap_manager.dart';
 import '../utils/theme.dart';
+import '../provider/auth_provider.dart';
+import '../screens/login_screen.dart';
 
 class CreditDialog extends StatefulWidget {
   final String message;
@@ -210,6 +212,44 @@ class _CreditDialogState extends State<CreditDialog> {
                 ),
                 
                 const SizedBox(height: 24),
+
+                // GUEST LOGIN PROMPT
+                if (Provider.of<AuthProvider>(context, listen: false).currentUser == null)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 24),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: primaryColor.withValues(alpha: 0.3)),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          "New here? Login to get 10 FREE credits instantly!",
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: primaryColor,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          child: const Text("Login Now"),
+                        ),
+                      ],
+                    ),
+                  ),
 
                 // THE SMALLEST PRODUCT CARD (Clickable)
                 if (smallestProduct != null)

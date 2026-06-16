@@ -13,6 +13,7 @@ import 'chatbot_screen.dart';
 import '../in_app_purchase/credit_purchase_screen.dart';
 import '../in_app_purchase/i_ap_manager.dart';
 import '../in_app_purchase/credit_manager.dart';
+import '../provider/image_provider.dart';
 
 
 class MainScreen extends StatefulWidget {
@@ -30,6 +31,10 @@ class _MainScreenState extends State<MainScreen> {
       if (mounted) {
         final creditManager = Provider.of<CreditManager>(context, listen: false);
         IAPManager().init(creditManager);
+
+        final imageProvider = Provider.of<ImageDataProvider>(context, listen: false);
+        imageProvider.fetchHistory();
+        imageProvider.fetchPublicGallery();
       }
     });
   }

@@ -348,11 +348,7 @@ FINAL RESULT: The generated image must show the SAME building (same size, same s
       }
 
       final bool isFreeTier = !creditManager.hasPurchased;
-      if (generatedImageUrls.isNotEmpty) {
-        for (final img in generatedImageUrls) {
-          await ImageStorageService.uploadAndStore(img);
-        }
-      }
+      // History saving is now handled by ResultScreen to prevent duplicates
 
       final deductionSucceeded = await creditManager.deductCredits(
         cost,

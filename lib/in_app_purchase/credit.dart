@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'credit_manager.dart';
 import 'credit_purchase_screen.dart' show CreditsPurchaseScreen;
-import '../utils/theme.dart'; // ADD THIS IMPORT
+import '../utils/theme.dart';
+import '../provider/auth_provider.dart';
+import '../screens/login_screen.dart';
 
 class CreditsCard extends StatelessWidget {
   final VoidCallback? onGetPressed;
@@ -17,6 +19,7 @@ class CreditsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final creditManager = context.watch<CreditManager>();
+    final auth = Provider.of<AuthProvider>(context);
 
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
@@ -44,7 +47,7 @@ class CreditsCard extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -59,7 +62,7 @@ class CreditsCard extends StatelessWidget {
                   padding: EdgeInsets.all(AppTheme.responsiveSize(context, phone: 8, tablet: 10)),
                   decoration: BoxDecoration(
                     // CHANGED: Your theme color
-                    color: AppTheme.primaryColor.withOpacity(0.2),
+                    color: AppTheme.primaryColor.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(AppTheme.responsiveSize(context, phone: 8, tablet: 10)),
                   ),
                   child: Icon(
@@ -89,7 +92,16 @@ class CreditsCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (creditManager.isLoading)
+                      if (auth.currentUser == null)
+                        Text(
+                          'Login to see your credits',
+                          style: TextStyle(
+                            color: AppTheme.primaryColor,
+                            fontSize: AppTheme.responsiveFont(context, phone: 18, tablet: 22),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      else if (creditManager.isLoading)
                         CircularProgressIndicator(
                           valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
                         )
@@ -104,28 +116,36 @@ class CreditsCard extends StatelessWidget {
                         ),
                       SizedBox(height: AppTheme.responsiveSize(context, phone: 4, tablet: 8)),
                       Text(
-                        'Use credits for AI styling features',
+                        auth.currentUser == null
+                            ? 'Gain access to premium AI features'
+                            : 'Use credits for AI styling features',
                         style: TextStyle(
-                          color: AppTheme.primaryColor.withOpacity(0.8),
+                          color: AppTheme.primaryColor.withValues(alpha: 0.8),
                           fontSize: AppTheme.responsiveFont(context, phone: 12, tablet: 16),
                         ),
                       ),
                     ],
                   ),
                 ),
-                OutlinedButton(
+                ElevatedButton(
                   onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const CreditsPurchaseScreen(),
-                      ),
-                    );
+                    if (auth.currentUser == null) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const LoginScreen(),
+                        ),
+                      );
+                    } else {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const CreditsPurchaseScreen(),
+                        ),
+                      );
+                    }
                   },
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(
-                      color: AppTheme.primaryColor,
-                      width: AppTheme.responsiveSize(context, phone: 1.5, tablet: 2),
-                    ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: AppTheme.secondaryColor,
                     padding: EdgeInsets.symmetric(
                       horizontal: AppTheme.responsiveSize(context, phone: 14, tablet: 20),
                       vertical: AppTheme.responsiveSize(context, phone: 10, tablet: 14),
@@ -133,15 +153,13 @@ class CreditsCard extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppTheme.responsiveSize(context, phone: 8, tablet: 12)),
                     ),
-                    minimumSize: const Size(0, 0),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    elevation: 2,
                   ),
                   child: Text(
-                    'Get More',
+                    auth.currentUser == null ? 'Login' : 'Get More',
                     style: TextStyle(
-                      color: AppTheme.primaryColor,
                       fontSize: AppTheme.responsiveFont(context, phone: 14, tablet: 18),
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),

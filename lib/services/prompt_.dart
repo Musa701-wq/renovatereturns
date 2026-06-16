@@ -156,9 +156,9 @@ TRANSFORMATION APPROACH:
 3. IDENTIFY all structural elements (walls, doors, windows)
 4. LOCK those structural elements in your mind
 5. UNDERSTAND the space limitations - work within them
-6. \${customRequirements != null && customRequirements.trim().isNotEmpty ? 'REVIEW user\'s custom requirements' : 'Now REDESIGN only the interior elements'}
+6. Now REDESIGN only the interior elements
 7. Choose furniture that FITS the actual room size
-8. \${customRequirements != null && customRequirements.trim().isNotEmpty ? 'INCORPORATE custom requirements appropriately' : 'Arrange furniture appropriate for \$roomType within available space'}
+8. Arrange furniture appropriate for $roomType within available space
 9. Apply colors and materials matching \$budget level
 10. Add decorations and finishes per \${_interventionLevel[style]}
 11. Keep everything proportional to the REAL room size
@@ -375,105 +375,16 @@ class ReplacePromptGenerator {
     required String imageSource,
   }) {
     return """
-OBJECT REPLACEMENT TRANSFORMATION - CRITICAL AI REPLACEMENT PROMPT
+100% VISUAL RESPONSE ONLY. NO CHAT. NO TEXT.
+TASK: Replace object(s) in result image.
 
-REFERENCE IMAGE ANALYSIS:
-- Analyze the provided image completely and carefully (\$imageSource)
-- Study the entire scene composition, perspective, and layout
-- Identify all objects, their positions, sizes, and relationships
-- Understand the lighting conditions, shadows, and ambiance
-- Note the background, foreground, and overall context
+INSTRUCTION: "$replaceInstruction"
 
-REPLACEMENT INSTRUCTION FROM USER:
-"\$replaceInstruction"
-
-MANDATORY PRESERVATION REQUIREMENTS:
-- MAINTAIN the EXACT SAME image composition and perspective
-- KEEP all other objects and elements completely unchanged
-- PRESERVE identical room layout, structure, and proportions
-- RETAIN the same camera angle, viewpoint, and framing
-- MAINTAIN identical lighting conditions, color temperature, and atmosphere
-- PRESERVE all background elements exactly as they appear
-- KEEP the same image quality and resolution
-
-REPLACEMENT PROCESS - STEP BY STEP:
-1. IDENTIFY the object(s) to be replaced based on user instruction
-2. UNDERSTAND the replacement object specifications from instruction
-3. REMOVE the original object(s) completely
-4. PLACE the new object(s) in the same position
-5. MATCH the scale and proportion realistically
-6. INTEGRATE with proper lighting and shadows
-7. BLEND seamlessly with surroundings
-8. ENSURE photorealistic appearance
-
-CRITICAL REPLACEMENT RULES:
-- ONLY replace what is specified in the instruction
-- MATCH the size and scale appropriately for the space
-- MAINTAIN realistic perspective and positioning
-- CREATE proper shadows and reflections for new object
-- ENSURE lighting matches the scene (direction, intensity, color)
-- PRESERVE depth and spatial relationships
-- KEEP surrounding elements completely untouched
-- MAINTAIN photorealistic quality throughout
-
-LIGHTING AND SHADOW REQUIREMENTS:
-- Match existing lighting direction and intensity
-- Create appropriate shadows for the new object
-- Maintain consistent light source behavior
-- Add reflections if surface materials require
-- Preserve ambient lighting conditions
-- Keep color temperature consistent
-
-INTEGRATION REQUIREMENTS:
-- Seamless blending with floor/surface contact points
-- Natural occlusion with other objects if needed
-- Proper perspective distortion matching room geometry
-- Realistic material properties for new object
-- Appropriate texture and surface details
-- Natural color grading matching the scene
-
-SPATIAL AWARENESS:
-- Respect room boundaries and available space
-- Maintain proper distance from walls and other objects
-- Ensure new object fits naturally in the space
-- Keep appropriate clearance and spacing
-- Preserve realistic room proportions
-
-QUALITY STANDARDS:
-- Generate photorealistic output
-- High-resolution details and textures
-- Professional-grade image quality
-- No visible artifacts or inconsistencies
-- Natural and believable final result
-- Sharp focus and clarity
-
-FORBIDDEN ACTIONS - DO NOT:
-❌ Change the room layout or structure
-❌ Alter camera perspective or angle
-❌ Modify lighting conditions
-❌ Change background elements
-❌ Add objects not specified in instruction
-❌ Remove objects not specified in instruction
-❌ Alter colors of unchanged elements
-❌ Modify room dimensions or proportions
-
-FINAL OUTPUT REQUIREMENTS:
-- The result must look like a professional photograph
-- The replacement must appear completely natural
-- No one should be able to tell it's AI-generated
-- The new object must blend perfectly with the scene
-- All other elements must remain pixel-perfect unchanged
-- The image should maintain original quality and resolution
-
-REPLACEMENT INSTRUCTION INTERPRETATION:
-Parse the user instruction carefully:
-- Identify WHAT to replace (source object)
-- Identify WITH WHAT to replace (target object)
-- Note any specific details (color, style, material, size)
-- Understand any positioning requirements
-- Follow any additional specifications given
-
-FINAL RESULT: Generate a photorealistic image where ONLY the specified replacement has been made according to the instruction "\$replaceInstruction", while everything else remains identical to the reference image.
+RULES:
+1. Identify object(s) specified in instruction.
+2. Replace with requested item(s).
+3. Preserve all other elements (structure, layout, lighting) exactly.
+4. Scale and perspective must be realistic.
 """;
   }
 
@@ -1241,6 +1152,8 @@ Lighting & Mood:
 
 Flooring:
 \${styleData['flooring']}
+
+\${customSection}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 VISUAL QUALITY DIRECTIVES

@@ -515,11 +515,7 @@ class _FloorRedesignState extends State<FloorRedesign> {
         generatedImageUrls = [url];
       }
 
-      if (generatedImageUrls.isNotEmpty) {
-        for (final img in generatedImageUrls) {
-          await ImageStorageService.uploadAndStore(img);
-        }
-      }
+      // History saving is now handled by ResultScreen to prevent duplicates
 
       final deductionSucceeded = await creditManager.deductCredits(
         cost,

@@ -29,7 +29,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  bool _isCommunityShareEnabled = true;
+  bool _isCommunityShareEnabled = false;
 
   @override
   void initState() {
@@ -44,7 +44,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _isCommunityShareEnabled = prefs.getBool('share_to_community') ?? true;
+      _isCommunityShareEnabled = prefs.getBool('share_to_community') ?? false;
     });
   }
 

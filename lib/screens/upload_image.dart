@@ -15,6 +15,7 @@ import '../services/prompt_v2.dart';
 import '../services/image_storage_service.dart';
 import '../screens/login_screen.dart';
 import '../provider/auth_provider.dart';
+import '../services/backend_api_service.dart';
 
 class UploadScreen extends StatefulWidget {
   const UploadScreen({super.key});
@@ -567,8 +568,26 @@ class _UploadScreenState extends State<UploadScreen> {
       }
 
       if (generatedImageUrls.isNotEmpty) {
+        print('✅ [Generation] Success: Received ${generatedImageUrls.length} image(s)');
+        for (int i = 0; i < generatedImageUrls.length; i++) {
+          print('   - Image ${i + 1}: ${generatedImageUrls[i]}');
+        }
+
+        // 1. Upload "before" image to get a public URL
+        String? beforeUrl = await BackendApiService.uploadImage(uploadProvider.selectedImage!);
+        print('📸 [Generation] Before Image Uploaded: ${beforeUrl ?? "Failed"}');
+        
         for (final img in generatedImageUrls) {
-          await ImageStorageService.uploadAndStore(img);
+          // 2. Upload "after" image and save to history
+          await ImageStorageService.uploadAndStore(
+            img,
+            historyData: {
+              'beforeImageUrl': beforeUrl ?? '',
+              'prompt': prompt,
+              'category': uploadProvider.selectedRoomType ?? 'Interior',
+              'isPublic': true, // Defaulting to public for now
+            },
+          );
         }
       }
 

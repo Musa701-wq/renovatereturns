@@ -13,6 +13,9 @@ import '../services/database_services.dart';
 import '../widgets/full_screen_view.dart';
 import '../widgets/history_card.dart';
 import '../widgets/loading_overlay.dart';
+import '../provider/image_provider.dart';
+import '../services/backend_api_service.dart';
+import '../models/image_model.dart';
 
 class HistoryScreen extends StatefulWidget {
   final bool showBackButton;
@@ -24,8 +27,7 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen> {
   final DatabaseHelper _dbHelper = DatabaseHelper();
-  List<Map<String, dynamic>> _historyItems = [];
-  List<Map<String, dynamic>> _filteredItems = [];
+  List<ImageComparison> _filteredItems = [];
   bool _isLoading = true;
   String? _error;
 
@@ -63,55 +65,47 @@ class _HistoryScreenState extends State<HistoryScreen> {
     });
 
     try {
-      final items = await _dbHelper.getAllImages();
-      setState(() {
-        _historyItems = items;
-        _filteredItems = items;
-        _isLoading = false;
-      });
+      final imageProvider = Provider.of<ImageDataProvider>(context, listen: false);
+      await imageProvider.fetchHistory();
+      
+      if (mounted) {
+        setState(() {
+          _filteredItems = imageProvider.historyList;
+          _isLoading = false;
+        });
+        // Apply current filter after load
+        _filterByCategory(_selectedCategory);
+      }
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
     }
   }
 
   void _filterByCategory(String category) {
     setState(() {
       _selectedCategory = category;
+      final allItems = Provider.of<ImageDataProvider>(context, listen: false).historyList;
+      
       if (category == 'All') {
-        _filteredItems = _historyItems;
+        _filteredItems = allItems;
       } else {
-        _filteredItems = _historyItems.where((item) {
-          final itemCategory = item['category']?.toString().toLowerCase() ?? '';
+        _filteredItems = allItems.where((item) {
+          final itemCategory = item.subtitle.toLowerCase();
           final selectedCategory = category.toLowerCase();
 
-          if (itemCategory == selectedCategory) {
-            return true;
-          }
-
-          if (selectedCategory == 'interior') {
-            if (itemCategory.isEmpty) {
-              final name = item['name']?.toString().toLowerCase() ?? '';
-              final desc = item['description']?.toString().toLowerCase() ?? '';
-              if (!name.contains('exterior') && !name.contains('wall design') &&
-                  !name.contains('floor design') && !name.contains('object removal') &&
-                  !desc.contains('exterior') && !desc.contains('wall design') &&
-                  !desc.contains('floor design') && !desc.contains('object removal')) {
-                return true;
-              }
-            }
-            return itemCategory == 'interior';
-          }
-
-          return itemCategory.contains(selectedCategory);
+          return itemCategory.contains(selectedCategory) || 
+                 selectedCategory.contains(itemCategory);
         }).toList();
       }
     });
   }
 
-  void _deleteItem(int id) {
+  void _deleteItem(ImageComparison item) {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -144,21 +138,41 @@ class _HistoryScreenState extends State<HistoryScreen> {
             onPressed: () async {
               Navigator.pop(dialogContext);
               try {
-                await _dbHelper.deleteImage(id);
-                await _loadHistoryItems();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Item deleted successfully'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
+                final imageProvider = Provider.of<ImageDataProvider>(context, listen: false);
+                
+                // 1. Remove locally immediately for better UI feedback
+                if (mounted) {
+                  setState(() {
+                    _filteredItems.removeWhere((i) => i.id == item.id);
+                  });
+                }
+
+                final backendId = item.id;
+                if (backendId != null) {
+                  print('🗑️ Deleting from backend: $backendId');
+                  await BackendApiService.deleteHistory(backendId);
+                }
+                
+                // 2. Refresh the provider in background
+                imageProvider.fetchHistory();
+                
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Item deleted successfully'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
               } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Failed to delete: $e'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to delete: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               }
             },
             child: const Text(
@@ -171,19 +185,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  Future<void> _shareToCommunity(Map<String, dynamic> item, Uint8List? imageData) async {
-    if (imageData == null || imageData.isEmpty) {
+  Future<void> _shareToCommunity(ImageComparison item) async {
+    if (item.id == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No image data found to share.')),
+        const SnackBar(content: Text('Cannot share: Image ID missing.')),
       );
       return;
     }
 
-    final auth = Provider.of<AuthProvider>(context, listen: false);
-    final user = auth.getFirebaseUser();
-    if (user == null) {
+    if (item.isPublic) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please login to share with community.')),
+        const SnackBar(content: Text('This image is already in the Community Gallery.')),
       );
       return;
     }
@@ -191,89 +203,30 @@ class _HistoryScreenState extends State<HistoryScreen> {
     LoadingOverlay.show(context, message: 'Sharing to Community...');
 
     try {
-      // 1. Check if already shared (using local SQLite column)
-      if (item['is_public'] == 1) {
+      final success = await BackendApiService.shareHistory(item.id!);
+
+      if (mounted) {
         LoadingOverlay.hide(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('This masterpiece is already in the community!'),
-            backgroundColor: AppTheme.primaryColor,
-          ),
-        );
-        return;
-      }
-
-      // Check Firestore as fallback (using local ID as a reference)
-      final existing = await FirebaseFirestore.instance
-          .collection('images')
-          .where('original_history_id', isEqualTo: item['id'])
-          .where('uid', isEqualTo: user.uid)
-          .get();
-
-      if (existing.docs.isNotEmpty) {
-        // Update local database to match Firestore ground truth
-        await _dbHelper.updateImagePublicStatus(item['id'] as int, true);
-        
-        LoadingOverlay.hide(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('This image has already been shared!')),
-        );
-        _loadHistoryItems(); // Refresh UI
-        return;
-      }
-
-      // 2. Upload to S3 API (similar to ImageStorageService)
-      final apiUrl = dotenv.env['S3_UPLOAD_URL'] ?? 'https://s3-upload.mirdemy.com/upload';
-      final apiKey = dotenv.env['S3_API_KEY'] ?? '';
-
-      final request = http.MultipartRequest('POST', Uri.parse(apiUrl));
-      request.headers['x-api-key'] = apiKey;
-      request.files.add(http.MultipartFile.fromBytes(
-        'image',
-        imageData,
-        filename: 'community_${DateTime.now().millisecondsSinceEpoch}.png',
-        contentType: MediaType('image', 'png'),
-      ));
-
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        final String? uploadedUrl = data['url'];
-
-        if (uploadedUrl != null && uploadedUrl.isNotEmpty) {
-          // 3. Save to Firestore as Public
-          await FirebaseFirestore.instance.collection('images').add({
-            'uid': user.uid,
-            'url': uploadedUrl,
-            'createdAt': FieldValue.serverTimestamp(),
-            'isPublic': true,
-            'original_history_id': item['id'],
-            'type': 'community_share',
-            'favBy': [],
-            'userName': user.displayName ?? 'AI Designer',
-            'userPhoto': user.photoURL,
+        if (success) {
+          setState(() {
+            item.isPublic = true;
           });
-
-          // 4. Update local SQLite ground truth
-          await _dbHelper.updateImagePublicStatus(item['id'] as int, true);
-
-          if (mounted) {
-            LoadingOverlay.hide(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Masterpiece shared with community!'),
-                backgroundColor: Colors.green,
-              ),
-            );
-            _loadHistoryItems(); // Refresh UI to show updated status
-          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Design shared with community!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          // Refresh gallery in background
+          Provider.of<ImageDataProvider>(context, listen: false).fetchPublicGallery();
         } else {
-          throw Exception('Failed to get upload URL');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to share design. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
         }
-      } else {
-        throw Exception('Upload failed: ${response.statusCode}');
       }
     } catch (e) {
       if (mounted) {
@@ -285,28 +238,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
-  void _openFullScreenImage(Map<String, dynamic> item) {
-    final dynamic imageDataValue = item['image_data'];
-    Uint8List? imageData;
-
-    if (imageDataValue is Uint8List) {
-      imageData = imageDataValue;
-    } else if (imageDataValue is List<int>) {
-      imageData = Uint8List.fromList(imageDataValue);
-    }
-
-    if (imageData != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => FullScreenImageView(
-            imageData: imageData!,
-            title: item['name']?.toString() ?? 'AI Design',
-            description: item['description']?.toString() ?? '',
-          ),
+  void _openFullScreenImage(ImageComparison item) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FullScreenImageView(
+          imageUrl: item.afterImage,
+          title: item.title,
+          description: item.subtitle,
         ),
-      );
-    }
+      ),
+    );
   }
 
   IconData _getCategoryIcon(String category) {
@@ -376,12 +318,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
     final double categoriesSectionHeight =
     AppTheme.responsiveSize(context, phone: 110, tablet: 100);
-
-    double getExpandedHeight() {
-      final double topPadding = MediaQuery.of(context).padding.top;
-      final double appBarHeight = kToolbarHeight;
-      return topPadding + appBarHeight + categoriesSectionHeight;
-    }
 
     return Scaffold(
       backgroundColor: AppTheme.secondaryColor,
@@ -489,11 +425,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
-                  '${_filteredItems.length} items',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: isTablet || isDesktop ? 14 : 12,
+                Consumer<ImageDataProvider>(
+                  builder: (context, imageProvider, _) => Text(
+                    '${imageProvider.historyList.length} items',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: isTablet || isDesktop ? 14 : 12,
+                    ),
                   ),
                 ),
               ],
@@ -573,71 +511,76 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         ),
                       ),
                     )
-                  : _filteredItems.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: getPadding(),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.image_not_supported,
-                              size: isTablet || isDesktop ? 80 : 60,
-                              color: Colors.grey.withValues(alpha: 0.5),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No items found',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: isTablet || isDesktop ? 20.0 : 18.0,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Try selecting a different category',
-                              style: TextStyle(
-                                color: Colors.grey.withValues(alpha: 0.7),
-                                fontSize: isTablet || isDesktop ? 16 : 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  : GridView.builder(
-                      padding: getPadding(),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: getCrossAxisCount(),
-                        crossAxisSpacing: getGridSpacing(),
-                        mainAxisSpacing: getGridSpacing(),
-                        childAspectRatio: getChildAspectRatio(),
-                      ),
-                      itemCount: _filteredItems.length,
-                      itemBuilder: (context, index) {
-                        final item = _filteredItems[index];
-                        final dynamic imageDataValue = item['image_data'];
-                        Uint8List? imageData;
+                  : Consumer<ImageDataProvider>(
+                      builder: (context, imageProvider, child) {
+                        final historyItems = _filteredItems;
 
-                        if (imageDataValue is Uint8List) {
-                          imageData = imageDataValue;
-                        } else if (imageDataValue is List<int>) {
-                          imageData = Uint8List.fromList(imageDataValue);
+                        if (historyItems.isEmpty && !_isLoading) {
+                          return _buildEmptyState(isTablet, isDesktop);
                         }
 
-                        return HistoryCardWidget(
-                          imageData: imageData,
-                          title: item['name']?.toString() ?? 'AI Design',
-                          date: item['created_at']?.toString() ?? '',
-                          onTap: () => _openFullScreenImage(item),
-                          onDelete: () => _deleteItem(item['id'] as int),
-                          onShare: () => _shareToCommunity(item, imageData),
+                        // Default flat grid (reverted from grouped view)
+                        return GridView.builder(
+                          padding: getPadding(),
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: getCrossAxisCount(),
+                            crossAxisSpacing: getGridSpacing(),
+                            mainAxisSpacing: getGridSpacing(),
+                            childAspectRatio: getChildAspectRatio(),
+                          ),
+                          itemCount: historyItems.length,
+                          itemBuilder: (context, index) {
+                            final item = historyItems[index];
+
+                            return HistoryCardWidget(
+                              imageUrl: item.afterImage,
+                              title: item.title,
+                              date: 'Recently',
+                              onTap: () => _openFullScreenImage(item),
+                              onDelete: () => _deleteItem(item),
+                              onShare: () => _shareToCommunity(item),
+                            );
+                          },
                         );
                       },
                     ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(bool isTablet, bool isDesktop) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.image_not_supported,
+              size: isTablet || isDesktop ? 80 : 60,
+              color: Colors.grey.withValues(alpha: 0.5),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No items found',
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: isTablet || isDesktop ? 20.0 : 18.0,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Start generating some designs!',
+              style: TextStyle(
+                color: Colors.grey.withValues(alpha: 0.7),
+                fontSize: isTablet || isDesktop ? 16 : 14,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

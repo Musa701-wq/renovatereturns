@@ -104,7 +104,7 @@ class _PartialRemodelScreenState extends State<PartialRemodelScreen> {
       final result = await GeminiService.generateImageInpaint(prompt: prompt, imageFile: up.selectedImage!, maskFile: maskFile);
 
       if (result != null) {
-        await ImageStorageService.uploadAndStore(result);
+        // History saving is now handled by ResultScreen to prevent duplicates
       }
 
       await cm.deductCredits(10, reason: 'partial_remodel');

@@ -9,6 +9,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
+import '../provider/image_provider.dart';
+import '../services/backend_api_service.dart';
 import '../services/database_services.dart';
 import '../services/image_utils.dart';
 import '../in_app_purchase/credit_manager.dart';
@@ -71,7 +73,13 @@ class _ResultScreenState extends State<ResultScreen> {
   Future _loadImage() async {
     setState(() => _isLoading = true);
     for (String url in widget.generatedImageUrls) {
+      print('📥 [ResultScreen] Starting download for image: $url');
       Uint8List? bytes = await _getImageBytesFromUrl(url);
+      if (bytes != null) {
+        print('✅ [ResultScreen] Successfully downloaded ${bytes.length} bytes');
+      } else {
+        print('❌ [ResultScreen] Failed to download image bytes');
+      }
       _imagesBytes.add(bytes);
     }
     await Future.delayed(const Duration(milliseconds: 500));
@@ -92,6 +100,13 @@ class _ResultScreenState extends State<ResultScreen> {
         final response = await HttpClient().getUrl(Uri.parse(url));
         final res = await response.close();
         return await consolidateHttpClientResponseBytes(res);
+      } else {
+        // Handle raw base64 strings
+        try {
+          return base64Decode(url);
+        } catch (e) {
+          print('Raw base64 decode error in ResultScreen: $e');
+        }
       }
     } catch (e) {
       print('Image bytes error for $url: $e');
@@ -106,11 +121,12 @@ class _ResultScreenState extends State<ResultScreen> {
       String category = _determineCategory();
       
       final prefs = await SharedPreferences.getInstance();
-      final bool isPublic = prefs.getBool('share_to_community') ?? true;
+      final bool isPublic = prefs.getBool('share_to_community') ?? false;
 
       for (int i = 0; i < _imagesBytes.length; i++) {
         if (_imagesBytes[i] == null) continue;
 
+        // 1. Save locally
         await _dbHelper.insertImage(
           name:
               '${widget.roomType} - ${widget.style} ${widget.generatedImageUrls.length > 1 ? "(Var ${i + 1})" : ""}',
@@ -119,8 +135,44 @@ class _ResultScreenState extends State<ResultScreen> {
           category: category,
           isPublic: isPublic,
         );
+
+        // 2. Sync to Backend (Only if we have a valid URL or can upload one)
+        try {
+          String imageUrl = widget.generatedImageUrls[i];
+          
+          // If the URL is actually base64 data, we must upload it to S3 first
+          if (imageUrl.startsWith('data:image') || !imageUrl.startsWith('http')) {
+            print('📦 [ResultScreen] Item is Base64, uploading to S3 before sync...');
+            final filename = 'gen_${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
+            final uploadedUrl = await BackendApiService.uploadBase64Image(imageUrl, filename);
+            if (uploadedUrl != null) {
+              imageUrl = uploadedUrl;
+            }
+          }
+
+          if (imageUrl.startsWith('http')) {
+            print('🌐 [ResultScreen] Syncing with backend history: $imageUrl');
+            await BackendApiService.saveHistory({
+              'beforeImageUrl': widget.beforeImageUrl ?? "",
+              'afterImageUrl': imageUrl,
+              'prompt': widget.prompt, // Use full prompt for accuracy
+              'category': category,
+              'isPublic': isPublic,
+            });
+          }
+        } catch (backendErr) {
+          print('❌ [ResultScreen] Backend sync failed: $backendErr');
+        }
       }
       _isAutoSaved = true;
+      
+      // Update history provider so home screen and history screen are fresh
+      if (mounted) {
+        Provider.of<ImageDataProvider>(context, listen: false).fetchHistory();
+        if (isPublic) {
+          Provider.of<ImageDataProvider>(context, listen: false).fetchPublicGallery();
+        }
+      }
     } catch (e) {
       print('Auto save error: $e');
     }
@@ -332,6 +384,7 @@ class _ResultScreenState extends State<ResultScreen> {
         Expanded(
           child: PageView.builder(
             controller: _pageController,
+            physics: const BouncingScrollPhysics(), // Better feel
             itemCount: widget.generatedImageUrls.length,
             onPageChanged: (index) => setState(() => _currentPage = index),
             itemBuilder: (context, index) {
@@ -417,7 +470,7 @@ class _ResultScreenState extends State<ResultScreen> {
   }
 
   Widget _currentPageContent(int index, Uint8List? bytes) {
-    if (_autoBeforeImageUrl != null && widget.generatedImageUrls.length == 1) {
+    if (_autoBeforeImageUrl != null) {
       return BeforeAfterSlider(
         beforeImageUrl: _autoBeforeImageUrl,
         afterImage: bytes ?? widget.generatedImageUrls[index],

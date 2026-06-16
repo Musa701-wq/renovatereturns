@@ -1,9 +1,12 @@
 import 'dart:typed_data';
-import 'package:ai_remodeling/utils/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:ai_remodeling/utils/theme.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/cupertino.dart';
 
 class HistoryCardWidget extends StatelessWidget {
   final Uint8List? imageData;
+  final String? imageUrl;
   final String title;
   final String date;
   final VoidCallback onTap;
@@ -13,7 +16,8 @@ class HistoryCardWidget extends StatelessWidget {
 
   const HistoryCardWidget({
     super.key,
-    required this.imageData,
+    this.imageData,
+    this.imageUrl,
     required this.title,
     required this.date,
     required this.onTap,
@@ -56,9 +60,16 @@ class HistoryCardWidget extends StatelessWidget {
                     fit: BoxFit.cover,
                     width: double.infinity,
                     height: double.infinity,
-                    errorBuilder: (context, error, stackTrace) {
-                      return _buildErrorWidget(context);
-                    },
+                    errorBuilder: (context, error, stackTrace) => _buildErrorWidget(context),
+                  )
+                      : imageUrl != null && imageUrl!.isNotEmpty
+                      ? CachedNetworkImage(
+                    imageUrl: imageUrl!,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                    placeholder: (context, url) => const Center(child: CupertinoActivityIndicator()),
+                    errorWidget: (context, url, error) => _buildErrorWidget(context),
                   )
                       : _buildPlaceholderWidget(context),
                 ),

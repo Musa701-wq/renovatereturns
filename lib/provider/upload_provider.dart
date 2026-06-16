@@ -141,7 +141,7 @@ class UploadProvider with ChangeNotifier {
       print('Style: $_selectedStyle');
       print('Budget: $_selectedBudget');
       print('Image Source: $_selectedImageSource');
-      print('Image Path: ${_selectedImage!.path}');
+      print('Image Path: ${_selectedImage?.path ?? "No image"}');
       print('========================');
       String generatedImageUrl = await generateImageWithAPI();
 
@@ -185,7 +185,7 @@ Room Type: $_selectedRoomType
 AI Intervention: $_selectedStyle
 Budget: $_selectedBudget
 Image Source: $_selectedImageSource
-Image Path: ${_selectedImage?.path}
+Image Path: ${_selectedImage?.path ?? "No image"}
 
 PROMPT:
 $prompt
@@ -264,7 +264,7 @@ $prompt
 
       print('=== GENERATING EXTERIOR DESIGN ===');
       print('Design Style: $_selectedRoomType');
-      print('Image Path: ${_selectedImage!.path}');
+      print('Image Path: ${_selectedImage?.path ?? "No image"}');
       print('========================');
 
       String generatedImageUrl = await generateExteriorImageWithAPI();
@@ -287,7 +287,7 @@ $prompt
       print('=== GENERATING FLOOR DESIGN WITH CUSTOM PROMPT ===');
       print('Floor Type: $_selectedRoomType');
       print('Custom Requirements: ${customPrompt.substring(0, 50)}...');
-      print('Image Path: ${_selectedImage!.path}');
+      print('Image Path: ${_selectedImage?.path ?? "No image"}');
       print('========================');
 
       String generatedImageUrl = await GeminiService.generateImageFromPrompt(
@@ -328,7 +328,7 @@ $prompt
 === EXTERIOR DESIGN PROMPT - $timestamp ===
 Design Style: $_selectedRoomType
 Image Source: $_selectedImageSource
-Image Path: ${_selectedImage?.path}
+Image Path: ${_selectedImage?.path ?? "No image"}
 
 PROMPT:
 $prompt
@@ -379,7 +379,7 @@ $prompt
 
       print('=== GENERATING FLOOR DESIGN ===');
       print('Floor Type: $_selectedRoomType');
-      print('Image Path: ${_selectedImage!.path}');
+      print('Image Path: ${_selectedImage?.path ?? "No image"}');
       print('========================');
 
       String generatedImageUrl = await generateFloorImageWithAPI();
@@ -416,7 +416,7 @@ $prompt
 === FLOOR DESIGN PROMPT - $timestamp ===
 Floor Type: $_selectedRoomType
 Image Source: $_selectedImageSource
-Image Path: ${_selectedImage?.path}
+Image Path: ${_selectedImage?.path ?? "No image"}
 
 PROMPT:
 $prompt
@@ -487,7 +487,7 @@ $prompt
 
       print('=== GENERATING OBJECT REMOVAL ===');
       print('Object to Remove: $objectToRemove');
-      print('Image Path: ${_selectedImage!.path}');
+      print('Image Path: ${_selectedImage?.path ?? "No image"}');
       print('========================');
 
       String generatedImageUrl = await generateObjectRemoveImageWithAPI(
@@ -524,7 +524,7 @@ $prompt
 === OBJECT REMOVAL PROMPT - $timestamp ===
 Object to Remove: $objectToRemove
 Image Source: $_selectedImageSource
-Image Path: ${_selectedImage?.path}
+Image Path: ${_selectedImage?.path ?? "No image"}
 
 PROMPT:
 $prompt
@@ -598,7 +598,7 @@ $prompt
 
       print('=== GENERATING WALL DESIGN ===');
       print('Wall Type: $_selectedRoomType');
-      print('Image Path: ${_selectedImage!.path}');
+      print('Image Path: ${_selectedImage?.path ?? "No image"}');
       print('========================');
 
       String generatedImageUrl = await generateWallImageWithAPI();
@@ -635,7 +635,7 @@ $prompt
 === WALL DESIGN PROMPT - $timestamp ===
 Wall Type: $_selectedRoomType
 Image Source: $_selectedImageSource
-Image Path: ${_selectedImage?.path}
+Image Path: ${_selectedImage?.path ?? "No image"}
 
 PROMPT:
 $prompt
@@ -703,7 +703,7 @@ $prompt
 
       print('=== GENERATING OBJECT REPLACEMENT ===');
       print('Instruction: $replaceInstruction');
-      print('Image Path: ${_selectedImage!.path}');
+      print('Image Path: ${_selectedImage?.path ?? "No image"}');
       print('========================');
 
       String generatedImageUrl = await generateReplaceImageWithAPI(
@@ -741,7 +741,7 @@ $prompt
 === REPLACE PROMPT - $timestamp ===
 Instruction: $replaceInstruction
 Image Source: $_selectedImageSource
-Image Path: ${_selectedImage?.path}
+Image Path: ${_selectedImage?.path ?? "No image"}
 
 PROMPT:
 $prompt
@@ -805,7 +805,7 @@ $prompt
 
       print('=== GENERATING KITCHEN DESIGN ===');
       print('Custom Requirements: ${customPrompt.substring(0, customPrompt.length > 50 ? 50 : customPrompt.length)}...');
-      print('Image Path: ${_selectedImage!.path}');
+      print('Image Path: ${_selectedImage?.path ?? "No image"}');
       print('========================');
 
       String generatedImageUrl = await GeminiService.generateImageFromPrompt(
@@ -844,7 +844,7 @@ $prompt
       String savedText = '''
 === KITCHEN DESIGN PROMPT - $timestamp ===
 Image Source: $_selectedImageSource
-Image Path: ${_selectedImage?.path}
+Image Path: ${_selectedImage?.path ?? "No image"}
 
 PROMPT:
 $prompt
@@ -872,7 +872,7 @@ $prompt
 
       print('=== GENERATING FILL SPACE ===');
       print('Instruction: $fillInstruction');
-      print('Image Path: ${_selectedImage!.path}');
+      print('Image Path: ${_selectedImage?.path ?? "No image"}');
       print('========================');
 
       String generatedImageUrl = await generateFillSpaceImageWithAPI(
@@ -910,7 +910,7 @@ $prompt
 === FILL SPACE PROMPT - $timestamp ===
 Instruction: $fillInstruction
 Image Source: $_selectedImageSource
-Image Path: ${_selectedImage?.path}
+Image Path: ${_selectedImage?.path ?? "No image"}
 
 PROMPT:
 $prompt
@@ -1033,7 +1033,7 @@ $prompt
       }
 
       print('=== GENERATING REFERENCE TRANSFORM ===');
-      print('Reference Image (A): ${_selectedImage!.path}');
+      print('Reference Image (A): ${_selectedImage?.path ?? "No image"}');
       print('Target Image (B): ${_secondaryImage!.path}');
       if (additionalInstruction != null && additionalInstruction.isNotEmpty) {
         print('Additional Instructions: $additionalInstruction');
@@ -1145,7 +1145,7 @@ $prompt
       print('Budget: $_selectedBudget');
       print('Image Source: $_selectedImageSource');
       print('Customization: ${customization ?? "None"}');
-      print('Image Path: ${_selectedImage!.path}');
+      print('Image Path: ${_selectedImage?.path ?? "No image"}');
       print('========================');
 
       String generatedImageUrl = await generateImageWithAPIAndCustomization(
@@ -1202,7 +1202,7 @@ AI Intervention: $_selectedStyle
 Budget: $_selectedBudget
 Image Source: $_selectedImageSource
 $customText
-Image Path: ${_selectedImage?.path}
+Image Path: ${_selectedImage?.path ?? "No image"}
 
 PROMPT:
 $prompt
@@ -1294,7 +1294,7 @@ $prompt
       print('Template: $gardenTemplate');
       print('Custom Instructions: $customInstructions');
       print('Custom Items: $customItems');
-      print('Image Path: ${_selectedImage!.path}');
+      print('Image Path: ${_selectedImage?.path ?? "No image"}');
       print('========================');
 
       String prompt = GardenPromptGenerator.generateGardenPrompt(
@@ -1335,7 +1335,7 @@ Template: $template
 Custom: $custom
 Items: $items
 Image Source: $_selectedImageSource
-Image Path: ${_selectedImage?.path}
+Image Path: ${_selectedImage?.path ?? "No image"}
 
 PROMPT:
 $prompt

@@ -84,271 +84,258 @@ class _GenerateScreenState extends State<GenerateScreen> with SingleTickerProvid
       appBar: CustomAppBar(),
       backgroundColor: AppTheme.secondaryColor,
       body: SafeArea(
-        child: Consumer<ImageDataProvider>(
-          builder: (context, imageProvider, _) {
-            final list = imageProvider.imageList;
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              SizedBox(height: getTopSpacing()),
 
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  SizedBox(height: getTopSpacing()),
+              // Special Offer Banner
+              const AnimatedSpecialOfferBanner(),
+              SizedBox(height: getCardSpacing()),
 
-                  // Special Offer Banner
-                  const AnimatedSpecialOfferBanner(),
-                  SizedBox(height: getCardSpacing()),
+              // CARD 1 - Instant Redesign
+              ComparisonCardWidget(
+                beforeImage: 'assets/images/inta.jpg',
+                afterImage: 'assets/images/int1.jpg',
+                title: 'Instant Redesign',
+                subtitle: 'Transform your room instantly',
+                isLiked: false,
+                categoryIconPath: _getIconPathForTitle('Instant Redesign'),
+                onLikePressed: () {},
+                onArrowPressed: () {
+                  AnalyticsService.logInstantClick();
 
-                  // CARD 1 - Instant Redesign
-                  if (list.isNotEmpty)
-                    ComparisonCardWidget(
-                      beforeImage: list[0].beforeImage,
-                      afterImage: list[0].afterImage,
-                      title: list[0].title,
-                      subtitle: list[0].subtitle,
-                      isLiked: list[0].isLiked,
-                      categoryIconPath: _getIconPathForTitle(list[0].title),
-                      onLikePressed: () => imageProvider.toggleLike(0),
-                      onArrowPressed: () {
-                        AnalyticsService.logInstantClick();
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const UploadScreen()),
-                        );
-                      },
-                    ),
-
-
-
-                  SizedBox(height: getCardSpacing()),
-                  
-                  // CARD 2 - Replace
-                  ComparisonCardWidget(
-                    beforeImage: 'assets/images/re1.jpg',
-                    afterImage: 'assets/images/re.jpg',
-                    title: 'Replace',
-                    subtitle: 'Replace any object with AI',
-                    isLiked: false,
-                    categoryIconPath: _getIconPathForTitle('Replace'),
-                    onLikePressed: () {},
-                    onArrowPressed: () {
-                      AnalyticsService.logReplaceClick();
-
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const ReplaceScreen()),
-                      );
-                    },
-                  ),
-
-                  SizedBox(height: getCardSpacing()),
-
-                  // CARD 3 - Exterior Redesign
-                  if (list.length > 1)
-                    ComparisonCardWidget(
-                      beforeImage: list[1].beforeImage,
-                      afterImage: list[1].afterImage,
-                      title: list[1].title,
-                      subtitle: list[1].subtitle,
-                      isLiked: list[1].isLiked,
-                      categoryIconPath: _getIconPathForTitle(list[1].title),
-                      onLikePressed: () => imageProvider.toggleLike(1),
-                      onArrowPressed: () {
-                        AnalyticsService.logExteriorClick();
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const ExteriorRedesign()),
-                        );
-                      },
-                    ),
-
-                  SizedBox(height: getCardSpacing()),
-
-                  // CARD 4 - Fill Space
-                  ComparisonCardWidget(
-                    beforeImage: 'assets/images/fi1.jpeg',
-                    afterImage: 'assets/images/fi.png',
-                    title: 'Fill Space',
-                    subtitle: 'Fill empty areas intelligently',
-                    isLiked: false,
-                    categoryIconPath: _getIconPathForTitle('Fill Space'),
-                    onLikePressed: () {},
-                    onArrowPressed: () {
-                      AnalyticsService.logFillSpaceClick();
-
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const FillSpaceScreen()),
-                      );
-                    },
-                  ),
-                  
-                  SizedBox(height: getCardSpacing()),
-
-                  // CARD 5 - Wall Redesign
-                  if (list.length > 2)
-                    ComparisonCardWidget(
-                      beforeImage: list[2].beforeImage,
-                      afterImage: list[2].afterImage,
-                      title: list[2].title,
-                      subtitle: list[2].subtitle,
-                      isLiked: list[2].isLiked,
-                      categoryIconPath: _getIconPathForTitle(list[2].title),
-                      onLikePressed: () => imageProvider.toggleLike(2),
-                      onArrowPressed: () {
-                        AnalyticsService.logWallClick();
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const WaalRedesign()),
-                        );
-                      },
-                    ),
-
-                  SizedBox(height: getCardSpacing()),
-
-                  // CARD 6 - Floor Redesign
-                  if (list.length > 3)
-                    ComparisonCardWidget(
-                      beforeImage: list[3].beforeImage,
-                      afterImage: list[3].afterImage,
-                      title: list[3].title,
-                      subtitle: list[3].subtitle,
-                      isLiked: list[3].isLiked,
-                      categoryIconPath: _getIconPathForTitle(list[3].title),
-                      onLikePressed: () => imageProvider.toggleLike(3),
-                      onArrowPressed: () {
-                        AnalyticsService.logFloorClick();
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const FloorRedesign()),
-                        );
-                      },
-                    ),
-
-                  SizedBox(height: getCardSpacing()),
-
-                  // CARD 7 - Remove Object
-                  if (list.length > 4)
-                    ComparisonCardWidget(
-                      beforeImage: list[4].beforeImage,
-                      afterImage: list[4].afterImage,
-                      title: list[4].title,
-                      subtitle: list[4].subtitle,
-                      isLiked: list[4].isLiked,
-                      categoryIconPath: _getIconPathForTitle(list[4].title),
-                      onLikePressed: () => imageProvider.toggleLike(4),
-                      onArrowPressed: () {
-                        AnalyticsService.logRemoveObjectClick();
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const ObjectRemove()),
-                        );
-                      },
-                    ),
-
-                  SizedBox(height: getCardSpacing()),
-
-                  // CARD 8 - Partial Remodel
-                  ComparisonCardWidget(
-                    beforeImage: 'assets/images/exta.jpg',
-                    afterImage: 'assets/images/partial.jpeg',
-                    title: 'Partial Remodel',
-                    subtitle: 'Select and remodel specific areas',
-                    isLiked: false,
-                    categoryIconPath: _getIconPathForTitle('Partial Remodel'),
-                    onLikePressed: () {},
-                    onArrowPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const PartialRemodelScreen()),
-                      );
-                    },
-                  ),
-                  
-                  SizedBox(height: getCardSpacing()),
-
-                  // CARD 9 - Kitchen Design
-                  ComparisonCardWidget(
-                    beforeImage: 'assets/kitchen/Classic.jpg',
-                    afterImage: 'assets/kitchen/Luxury.jpg',
-                    title: 'Kitchen Design',
-                    subtitle: 'AI-powered kitchen transformation',
-                    isLiked: false,
-                    categoryIconPath: _getIconPathForTitle('Kitchen Design'),
-                    onLikePressed: () {},
-                    onArrowPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const KitchenDesignScreen()),
-                      );
-                    },
-                  ),
-
-                  SizedBox(height: getCardSpacing()),
-
-                  // CARD 10 - Garden Redesign
-                  ComparisonCardWidget(
-                    beforeImage: 'assets/images/ext1.jpg',
-                    afterImage: 'assets/garden/japanese.jpg',
-                    title: 'Garden Redesign',
-                    subtitle: 'Exterior and landscape transformation',
-                    isLiked: false,
-                    categoryIconPath: _getIconPathForTitle('Garden Redesign'),
-                    onLikePressed: () {},
-                    onArrowPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const GardenRedesignScreen()),
-                      );
-                    },
-                  ),
-
-                  SizedBox(height: getCardSpacing()),
-
-                  // CARD 11 - Reference Design
-                  ComparisonCardWidget(
-                    beforeImage: 'assets/images/ref.png',
-                    afterImage: 'assets/images/ref.png', // Corrected to ref.png
-                    title: 'Reference Design',
-                    subtitle: 'Redesign spaces using a reference image',
-                    isLiked: false,
-                    categoryIconPath: _getIconPathForTitle('Reference Design'),
-                    onLikePressed: () {},
-                    onArrowPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const ReferenceTransformScreen()),
-                      );
-                    },
-                  ),
-
-                  SizedBox(height: getCardSpacing()),
-
-                  // CARD 12 - Room Furnishing
-                  ComparisonCardWidget(
-                    beforeImage: 'assets/kitchen/Minimalist.jpg', // Using a clean 'before' style
-                    afterImage: 'assets/room_furnashing/Modern.jpg', // Real furnished example
-                    title: 'Room Furnishing',
-                    subtitle: 'Upload your room, choose items & get AI-designed interior',
-                    isLiked: false,
-                    categoryIconPath: _getIconPathForTitle('Room Furnishing'),
-                    onLikePressed: () {},
-                    onArrowPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const RoomFurnishingScreen()),
-                      );
-                    },
-                  ),
-
-                  SizedBox(height: getCardSpacing()),
-                ],
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const UploadScreen()),
+                  );
+                },
               ),
-            );
-          },
+
+              SizedBox(height: getCardSpacing()),
+              
+              // CARD 2 - Replace
+              ComparisonCardWidget(
+                beforeImage: 'assets/images/re1.jpg',
+                afterImage: 'assets/images/re.jpg',
+                title: 'Replace',
+                subtitle: 'Replace any object with AI',
+                isLiked: false,
+                categoryIconPath: _getIconPathForTitle('Replace'),
+                onLikePressed: () {},
+                onArrowPressed: () {
+                  AnalyticsService.logReplaceClick();
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ReplaceScreen()),
+                  );
+                },
+              ),
+
+              SizedBox(height: getCardSpacing()),
+
+              // CARD 3 - Exterior Redesign
+              ComparisonCardWidget(
+                beforeImage: 'assets/images/exta.jpg',
+                afterImage: 'assets/images/ext1.jpg',
+                title: 'Exterior Redesign',
+                subtitle: 'Redesign your building exterior',
+                isLiked: false,
+                categoryIconPath: _getIconPathForTitle('Exterior Redesign'),
+                onLikePressed: () {},
+                onArrowPressed: () {
+                  AnalyticsService.logExteriorClick();
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ExteriorRedesign()),
+                  );
+                },
+              ),
+
+              SizedBox(height: getCardSpacing()),
+
+              // CARD 4 - Fill Space
+              ComparisonCardWidget(
+                beforeImage: 'assets/images/fi1.jpeg',
+                afterImage: 'assets/images/fi.png',
+                title: 'Fill Space',
+                subtitle: 'Fill empty areas intelligently',
+                isLiked: false,
+                categoryIconPath: _getIconPathForTitle('Fill Space'),
+                onLikePressed: () {},
+                onArrowPressed: () {
+                  AnalyticsService.logFillSpaceClick();
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const FillSpaceScreen()),
+                  );
+                },
+              ),
+              
+              SizedBox(height: getCardSpacing()),
+
+              // CARD 5 - Wall Redesign
+              ComparisonCardWidget(
+                beforeImage: 'assets/images/wall1.jpg',
+                afterImage: 'assets/images/wall1.jpg',
+                title: 'Wall Redesign',
+                subtitle: 'Change wall colors and textures',
+                isLiked: false,
+                categoryIconPath: _getIconPathForTitle('Wall Redesign'),
+                onLikePressed: () {},
+                onArrowPressed: () {
+                  AnalyticsService.logWallClick();
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const WaalRedesign()),
+                  );
+                },
+              ),
+
+              SizedBox(height: getCardSpacing()),
+
+              // CARD 6 - Floor Redesign
+              ComparisonCardWidget(
+                beforeImage: 'assets/images/floora.jpg',
+                afterImage: 'assets/images/floor1.jpg',
+                title: 'Floor Redesign',
+                subtitle: 'Redesign your floors with AI',
+                isLiked: false,
+                categoryIconPath: _getIconPathForTitle('Floor Redesign'),
+                onLikePressed: () {},
+                onArrowPressed: () {
+                  AnalyticsService.logFloorClick();
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const FloorRedesign()),
+                  );
+                },
+              ),
+
+              SizedBox(height: getCardSpacing()),
+
+              // CARD 7 - Remove Object
+              ComparisonCardWidget(
+                beforeImage: 'assets/images/obj1.jpg',
+                afterImage: 'assets/images/obj1.jpg',
+                title: 'Remove Object',
+                subtitle: 'Remove any unwanted object',
+                isLiked: false,
+                categoryIconPath: _getIconPathForTitle('Remove Object'),
+                onLikePressed: () {},
+                onArrowPressed: () {
+                  AnalyticsService.logRemoveObjectClick();
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ObjectRemove()),
+                  );
+                },
+              ),
+
+              SizedBox(height: getCardSpacing()),
+
+              // CARD 8 - Partial Remodel
+              ComparisonCardWidget(
+                beforeImage: 'assets/images/exta.jpg',
+                afterImage: 'assets/images/partial.jpeg',
+                title: 'Partial Remodel',
+                subtitle: 'Select and remodel specific areas',
+                isLiked: false,
+                categoryIconPath: _getIconPathForTitle('Partial Remodel'),
+                onLikePressed: () {},
+                onArrowPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const PartialRemodelScreen()),
+                  );
+                },
+              ),
+              
+              SizedBox(height: getCardSpacing()),
+
+              // CARD 9 - Kitchen Design
+              ComparisonCardWidget(
+                beforeImage: 'assets/kitchen/Classic.jpg',
+                afterImage: 'assets/kitchen/Luxury.jpg',
+                title: 'Kitchen Design',
+                subtitle: 'AI-powered kitchen transformation',
+                isLiked: false,
+                categoryIconPath: _getIconPathForTitle('Kitchen Design'),
+                onLikePressed: () {},
+                onArrowPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const KitchenDesignScreen()),
+                  );
+                },
+              ),
+
+              SizedBox(height: getCardSpacing()),
+
+              // CARD 10 - Garden Redesign
+              ComparisonCardWidget(
+                beforeImage: 'assets/images/ext1.jpg',
+                afterImage: 'assets/garden/japanese.jpg',
+                title: 'Garden Redesign',
+                subtitle: 'Exterior and landscape transformation',
+                isLiked: false,
+                categoryIconPath: _getIconPathForTitle('Garden Redesign'),
+                onLikePressed: () {},
+                onArrowPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const GardenRedesignScreen()),
+                  );
+                },
+              ),
+
+              SizedBox(height: getCardSpacing()),
+
+              // CARD 11 - Reference Design
+              ComparisonCardWidget(
+                beforeImage: 'assets/images/ref.png',
+                afterImage: 'assets/images/ref.png',
+                title: 'Reference Design',
+                subtitle: 'Redesign spaces using a reference image',
+                isLiked: false,
+                categoryIconPath: _getIconPathForTitle('Reference Design'),
+                onLikePressed: () {},
+                onArrowPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ReferenceTransformScreen()),
+                  );
+                },
+              ),
+
+              SizedBox(height: getCardSpacing()),
+
+              // CARD 12 - Room Furnishing
+              ComparisonCardWidget(
+                beforeImage: 'assets/kitchen/Minimalist.jpg',
+                afterImage: 'assets/room_furnashing/Modern.jpg',
+                title: 'Room Furnishing',
+                subtitle: 'Upload your room, choose items & get AI-designed interior',
+                isLiked: false,
+                categoryIconPath: _getIconPathForTitle('Room Furnishing'),
+                onLikePressed: () {},
+                onArrowPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const RoomFurnishingScreen()),
+                  );
+                },
+              ),
+
+              SizedBox(height: getCardSpacing()),
+            ],
+          ),
         ),
       ),
     );

@@ -325,7 +325,7 @@ class _ReferenceTransformScreenState extends State<ReferenceTransformScreen> {
       final bool isFreeTier = !creditManager.hasPurchased;
       if (generatedImageUrls.isNotEmpty) {
         for (final img in generatedImageUrls) {
-          await ImageStorageService.uploadAndStore(img);
+      // History saving is now handled by ResultScreen to prevent duplicates
         }
       }
 

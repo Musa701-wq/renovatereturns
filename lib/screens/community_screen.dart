@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import '../provider/auth_provider.dart';
+import '../provider/image_provider.dart';
 import '../utils/theme.dart';
 import '../widgets/full_screen_view.dart';
 import 'other_user_profile_screen.dart';
@@ -20,53 +21,18 @@ class _CommunityScreenState extends State<CommunityScreen> {
   // Cache for user profiles to avoid redundant Firestore fetches during scroll
   static final Map<String, Map<String, dynamic>> _userCache = {};
   
-  // Ephemeral Cache: Persistent Stream Subscription and Local List
-  StreamSubscription<QuerySnapshot>? _streamSubscription;
-  List<DocumentSnapshot> _images = [];
-  bool _isLoading = true;
-  String? _error;
-
   // Filter State
   bool _showOnlyFavorites = false;
 
   @override
   void initState() {
     super.initState();
-    _setupStream();
+    // Fetch handled in MainScreen or manually here if needed
   }
 
   @override
   void dispose() {
-    _streamSubscription?.cancel();
     super.dispose();
-  }
-
-  void _setupStream() {
-    _streamSubscription = FirebaseFirestore.instance
-        .collection('images')
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .listen((snapshot) {
-      if (mounted) {
-        setState(() {
-          // Local Filter: Only show public images in Community Feed
-          _images = snapshot.docs.where((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            return data['isPublic'] == true;
-          }).toList();
-          
-          _isLoading = false;
-          _error = null;
-        });
-      }
-    }, onError: (err) {
-      if (mounted) {
-        setState(() {
-          _error = 'Error loading feed';
-          _isLoading = false;
-        });
-      }
-    });
   }
 
   @override
@@ -139,17 +105,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
     EdgeInsets Function() getPadding,
     double Function() getChildAspectRatio
   ) {
-    if (_isLoading && _images.isEmpty) {
+    final imageProvider = Provider.of<ImageDataProvider>(context);
+    
+    if (imageProvider.isLoading && imageProvider.galleryList.isEmpty) {
       return const Center(child: CupertinoActivityIndicator(radius: 16));
     }
 
-    if (_error != null && _images.isEmpty) {
-      return Center(
-        child: Text(_error!, style: TextStyle(color: AppTheme.primaryColor.withOpacity(0.6))),
-      );
-    }
-
-    if (_images.isEmpty) {
+    if (imageProvider.galleryList.isEmpty) {
       return Center(
         child: Text('No creations yet.', style: TextStyle(color: AppTheme.primaryColor.withOpacity(0.6))),
       );
@@ -158,14 +120,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final currentUid = auth.getFirebaseUser()?.uid;
 
-    // Filter images based on favorites toggle
     final filteredImages = _showOnlyFavorites 
-        ? _images.where((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            final List favBy = data['favBy'] ?? [];
-            return favBy.contains(currentUid);
-          }).toList()
-        : _images;
+        ? imageProvider.galleryList.where((item) => item.isLiked).toList()
+        : imageProvider.galleryList;
 
     if (filteredImages.isEmpty && _showOnlyFavorites) {
       return Center(
@@ -180,14 +137,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 color: AppTheme.primaryColor.withOpacity(0.6),
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Support the community by liking creations!',
-              style: TextStyle(
-                color: AppTheme.primaryColor.withOpacity(0.4),
-                fontSize: 14,
               ),
             ),
           ],
@@ -207,21 +156,15 @@ class _CommunityScreenState extends State<CommunityScreen> {
       ),
       itemCount: filteredImages.length,
       itemBuilder: (context, index) {
-        final doc = filteredImages[index];
-        final data = doc.data() as Map<String, dynamic>;
-        final url = data['url'] as String?;
-        final uid = data['uid'] as String?;
-        final List favBy = data['favBy'] ?? [];
+        final item = filteredImages[index];
         
-        if (url == null || uid == null) return const SizedBox.shrink();
-
         return RepaintBoundary(
           child: _CommunityGridItem(
-            key: ValueKey(doc.id),
-            url: url,
-            uid: uid,
-            docId: doc.id,
-            favBy: favBy,
+            key: ValueKey(item.afterImage),
+            url: item.afterImage,
+            uid: item.userId ?? 'system', // Use dynamic userId
+            docId: 'backend_${index}',
+            favBy: item.isLiked ? ['user'] : [],
             userCache: _userCache,
           ),
         );
