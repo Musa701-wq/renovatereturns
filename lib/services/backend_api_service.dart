@@ -10,12 +10,8 @@ class BackendApiService {
     String? envUrl = dotenv.env['BACKEND_BASE_URL'];
     if (envUrl != null && envUrl.isNotEmpty) return envUrl;
 
-    // Fallback for local development
-    // Android emulator uses 10.0.2.2 to access host's localhost
-    if (!kIsWeb && Platform.isAndroid) {
-      return 'http://10.0.2.2:3000/api/v1';
-    }
-    return 'http://localhost:3000/api/v1';
+    // Default to production to ensure no localhost is used
+    return 'https://apps-model-server.mirdemy.com/api/v1';
   }
 
   static String get _apiKey => dotenv.env['BACKEND_API_KEY'] ?? '';
